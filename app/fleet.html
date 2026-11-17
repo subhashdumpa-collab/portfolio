@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicle checks · demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/suite.css">
+<style>
+/* ----- shared by the office page and the driver app ----- */
+:root {
+  --page: var(--suite-page); --surface: var(--suite-surface); --sunk: var(--suite-sunk); --line: var(--suite-line); --line2: var(--suite-line-2);
+  --ink: var(--suite-ink); --body: var(--suite-body); --label: var(--suite-label);
+  --accent: var(--suite-accent); --accent-strong: var(--suite-accent-strong); --accent-ink: var(--suite-accent-ink);
+  --accent-tint: var(--suite-accent-tint); --accent-line: var(--suite-accent-line); --on-accent: var(--suite-on-accent);
+  --good: #1F7A4D; --good-tint: #E6F4EC; --good-line: #BFE0CD;
+  --bad: #B3261E; --bad-tint: #FBE9E7; --bad-line: #F1C4BF; --bad-fill: #B3261E;
+  --warn: #8A5A00; --warn-tint: #FCF1D9; --warn-line: #EBD49C;
+  --info: #1D4F91; --info-tint: #E5EEFA; --info-line: #BCD2F0;
+  --plate: #F7D33A; --plate-ink: #1A1A1A; --scrim: rgba(15, 18, 24, .42);
+}
+[data-theme="dark"] {
+  --good: #6CC59A; --good-tint: #173126; --good-line: #2A5440;
+  --bad: #F08A7E; --bad-tint: #3A1B18; --bad-line: #5E2C27; --bad-fill: #9E2A22;
+  --warn: #E9B65C; --warn-tint: #33270F; --warn-line: #5A4519;
+  --info: #86B4EE; --info-tint: #17263A; --info-line: #2B4366;
+  --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--suite-font); }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.plate { display: inline-block; background: var(--plate); color: var(--plate-ink); font: 700 13px/1.55 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; padding: 0 7px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, .28); white-space: nowrap; }
+.plate.tag { background: var(--sunk); color: var(--ink); border-color: var(--line2); }
+.plate.lg { font-size: 19px; padding: 1px 10px; border-radius: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; line-height: 1.5; padding: 1px 8px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+.pill.good { color: var(--good); background: var(--good-tint); border-color: var(--good-line); }
+.pill.bad { color: var(--bad); background: var(--bad-tint); border-color: var(--bad-line); }
+.pill.warn { color: var(--warn); background: var(--warn-tint); border-color: var(--warn-line); }
+.pill.info { color: var(--info); background: var(--info-tint); border-color: var(--info-line); }
+.pill.grey { color: var(--body); background: var(--sunk); border-color: var(--line2); }
+.more { font-size: 12px; color: var(--label); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 12px; cursor: pointer; text-decoration: none; }
+.btn:hover { background: var(--sunk); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn.link { border: 0; background: none; color: var(--accent-ink); padding: 0; font-weight: 600; }
+.btn.link:hover { text-decoration: underline; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.field { display: grid; gap: 4px; }
+.field > span, .lbl { font-size: 12.5px; font-weight: 600; color: var(--label); }
+input[type="text"], input[type="date"], input[type="search"], select, textarea { background: var(--surface); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 9px; width: 100%; }
+textarea { resize: vertical; min-height: 64px; }
+.exphoto { display: block; width: 160px; max-width: 100%; border-radius: 8px; border: 1px solid var(--line2); }
+.muted { color: var(--label); }
+.err { color: var(--bad); background: var(--bad-tint); border: 1px solid var(--bad-line); border-radius: 8px; padding: 8px 10px; font-weight: 500; }
+/* ----- office page ----- */
+.wrap { padding: 16px; max-width: 1760px; margin: 0 auto; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 24px; align-items: start; }
+.office { min-width: 0; position: relative; min-height: calc(100vh - var(--suite-bar-h) - 32px); }
+.card { container-type: inline-size; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.band { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between; padding: 16px 18px 12px; }
+.band h1 { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+.band .sub { color: var(--label); margin-top: 2px; }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.asbar { display: flex; gap: 10px; align-items: flex-start; background: var(--info-tint); border: 1px solid var(--info-line); color: var(--info); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.asbar b { font-weight: 700; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; padding: 0 18px 14px; }
+.tile { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: grid; gap: 1px; }
+.tile:hover { border-color: var(--line2); background: var(--sunk); }
+.tile .tn { font-size: 24px; font-weight: 700; line-height: 1.15; letter-spacing: -.01em; }
+.tile .tn small { font-size: 13px; font-weight: 500; color: var(--label); letter-spacing: 0; }
+.tile .l { font-size: 12.5px; color: var(--label); }
+.tile.bad { border-color: var(--bad-line); background: var(--bad-tint); } .tile.bad .tn { color: var(--bad); }
+.tile.warn { border-color: var(--warn-line); background: var(--warn-tint); } .tile.warn .tn { color: var(--warn); }
+.tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 10px 9px; font-weight: 600; color: var(--label); cursor: pointer; white-space: nowrap; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { color: var(--accent-ink); border-bottom-color: var(--accent); }
+.cnt { font-size: 11.5px; font-weight: 600; background: var(--sunk); color: var(--body); border-radius: 20px; padding: 0 7px; }
+.pane { padding: 14px 18px 18px; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line2); background: var(--surface); border-radius: 20px; padding: 3px 11px; font-weight: 500; cursor: pointer; }
+.chip:hover { background: var(--sunk); }
+.chip[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent-line); color: var(--accent-ink); font-weight: 600; }
+.chip .c { font-size: 12px; color: var(--label); }
+.search { position: relative; flex: 0 1 280px; }
+.search .ic { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--label); }
+.search input { padding-left: 30px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; font-size: 12px; font-weight: 600; color: var(--label); background: var(--sunk); padding: 7px 8px; white-space: nowrap; }
+td { padding: 9px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+tr[data-act] { cursor: pointer; }
+tr[data-act]:hover td { background: var(--accent-tint); }
+tr.flash td { animation: flash 2.4s ease-out; }
+@keyframes flash { 0%, 40% { background: var(--good-tint); } 100% { background: transparent; } }
+.d1 { font-weight: 500; white-space: nowrap; } .d2 { font-size: 12px; color: var(--label); }
+.d1.bad, .d2.bad { color: var(--bad); } .d1.warn, .d2.warn { color: var(--warn); }
+.dash { color: var(--label); font-size: 12.5px; white-space: nowrap; }
+@media (min-width: 761px) { #suite-slot select { max-width: 270px; } }
+.empty { text-align: center; color: var(--label); padding: 26px 10px; }
+.foot { font-size: 12.5px; color: var(--label); margin-top: 10px; }
+.cn { display: none; }
+@container (max-width: 860px) { .cw { display: none; } .cn { display: table-cell; } }
+/* vehicle page */
+.vhead { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin: 10px 0 12px; }
+.vhead h2 { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.vhead .grow { flex: 1; min-width: 160px; }
+.offbox { display: flex; gap: 10px; background: var(--bad-tint); border: 1px solid var(--bad-line); color: var(--bad); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-weight: 500; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 4px; }
+.fact { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+.fact .k { font-size: 12px; color: var(--label); font-weight: 600; }
+.fact .v { font-weight: 600; }
+.fact select { margin-top: 3px; padding: 4px 8px; }
+.sec { font-size: 14px; font-weight: 700; margin: 18px 0 8px; display: flex; align-items: center; gap: 6px; }
+.duegrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.duecard { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 3px; align-content: start; }
+.duecard.over { border-color: var(--bad-line); background: var(--bad-tint); } .duecard.soon { border-color: var(--warn-line); background: var(--warn-tint); }
+.duecard .k { display: flex; justify-content: space-between; gap: 6px; align-items: center; font-weight: 600; }
+.duecard .v { font-size: 17px; font-weight: 700; }
+.duecard .btn { justify-self: start; margin-top: 4px; padding: 4px 10px; font-size: 13px; }
+.rows { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.row { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); cursor: pointer; background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; text-align: left; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--accent-tint); }
+.row .grow { flex: 1; min-width: 0; }
+.row .t { font-weight: 600; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.log li { display: grid; grid-template-columns: 128px 1fr; gap: 10px; font-size: 13px; }
+.log .at { color: var(--label); }
+/* drawer */
+.dwrap { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: none; }
+.dwrap.open { display: block; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); border-radius: 12px; pointer-events: auto; }
+.drawer { position: sticky; top: calc(var(--suite-bar-h) + 16px); margin-left: auto; width: min(470px, 100%); height: calc(100vh - var(--suite-bar-h) - 32px); overflow-y: auto; pointer-events: auto; background: var(--surface); border: 1px solid var(--line2); border-radius: 12px; box-shadow: -10px 0 30px rgba(15, 18, 24, .18); }
+.dhead { position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 10px; align-items: flex-start; z-index: 1; }
+.dhead .grow { flex: 1; min-width: 0; }
+.dhead h2 { font-size: 16px; font-weight: 700; line-height: 1.3; }
+.dhead .ref { font-size: 12px; color: var(--label); font-weight: 600; }
+.dbody { padding: 14px 16px 28px; display: grid; gap: 14px; }
+.kv { display: grid; grid-template-columns: 110px 1fr; gap: 5px 10px; font-size: 13.5px; }
+.kv dt { color: var(--label); } .kv dd { margin: 0; }
+dl { margin: 0; }
+.quote { border-left: 3px solid var(--line2); padding: 2px 0 2px 10px; color: var(--body); }
+.box { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 10px; }
+.box h3 { font-size: 13.5px; font-weight: 700; }
+.two { display: grid; grid-template-columns: 1fr 150px; gap: 8px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.csec { font-size: 12.5px; font-weight: 700; color: var(--label); margin: 4px 0 2px; }
+.crow { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.crow .grow { flex: 1; }
+.crow .okk { color: var(--good); font-weight: 600; white-space: nowrap; } .crow .na { color: var(--label); white-space: nowrap; }
+/* phone column */
+.phonecol { position: sticky; top: calc(var(--suite-bar-h) + 16px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; justify-items: center; }
+.phonecol h2 { font-size: 15px; font-weight: 700; justify-self: start; display: flex; gap: 6px; align-items: center; }
+.phonecol .cap { font-size: 12.5px; color: var(--label); justify-self: start; }
+.phonecol .suite-phone { height: min(720px, calc(100vh - var(--suite-bar-h) - 176px)); min-height: 480px; }
+.phonecol .open { font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; display: inline-flex; gap: 5px; align-items: center; }
+.phonecol .open:hover { text-decoration: underline; }
+.jump { display: none; }
+.toast { position: fixed; left: calc(50% + var(--suite-rail-w) / 2); bottom: 26px; transform: translateX(-50%); background: var(--ink); color: var(--surface); border-radius: 10px; padding: 9px 14px; font-weight: 500; z-index: 895; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); max-width: min(92vw, 520px); }
+@media (min-width: 1181px) { html.try-open .wrap { padding-right: 376px; } }
+@media (max-width: 1180px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .phonecol { position: static; padding-top: 6px; min-width: 0; }
+  .phonecol > * { max-width: 100%; }
+  .phonecol h2, .phonecol .cap { justify-self: center; text-align: center; max-width: 420px; }
+  .phonecol .suite-phone { height: 700px; }
+  .jump { display: inline-flex; }
+  .office { min-height: 0; }
+  .dwrap { position: static; }
+  .scrim { position: fixed; left: var(--suite-rail-w); top: var(--suite-bar-h); right: 0; bottom: 0; border-radius: 0; z-index: 860; }
+  .drawer { position: fixed; top: var(--suite-bar-h); right: 0; bottom: 0; height: auto; width: 470px; max-width: 100vw; border-radius: 0; border-width: 0 0 0 1px; z-index: 870; }
+}
+@media (max-width: 760px) {
+  .wrap { padding: 10px; }
+  .band { padding: 12px 12px 10px; } .tiles { padding: 0 12px 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); } .pane { padding: 12px; }
+  .tabs { padding: 0 4px; }
+  .drawer { bottom: 58px; }
+  .toast { bottom: 70px; left: 50%; }
+  .two { grid-template-columns: 1fr; }
+  .log li { grid-template-columns: 1fr; gap: 0; }
+  #suite-slot label span { display: none; }
+  #suite-slot select { max-width: 104px; padding: 4px 4px; }
+  .suite-bar .suite-btn { padding: 5px 7px; }
+}
+@media print { .phonecol, .drawer, .scrim, .toast { display: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap" id="main">
+  <div class="cols">
+    <section class="office" aria-label="Fleet office">
+      <div id="asbar"></div>
+      <div class="card">
+        <div class="band">
+          <div>
+            <h1>Vehicle checks</h1>
+            <p class="sub"><span data-suite="company"></span> · vehicles, due dates, daily checks and defects</p>
+          </div>
+          <div class="acts">
+            <a class="btn jump" href="#driver-app" id="jumpBtn"></a>
+            <button class="btn" type="button" data-act="refresh" id="refreshBtn" title="Fetch anything sent from the driver app"></button>
+          </div>
+        </div>
+        <div class="tiles" id="tiles"></div>
+        <div class="tabs" id="tabs" role="tablist" aria-label="Fleet lists"></div>
+        <div class="pane" id="pane" role="tabpanel"></div>
+      </div>
+      <div class="dwrap" id="dwrap">
+        <div class="scrim" id="scrim" data-act="closeDrawer"></div>
+        <aside class="drawer" id="drawer" aria-label="Details"></aside>
+      </div>
+    </section>
+    <aside class="phonecol" id="driver-app" aria-label="Driver app">
+      <h2 id="phoneHead"></h2>
+      <p class="cap">This is the phone app a driver uses for the daily walk-round check. Send a check or report a defect here and it shows up in the office lists straight away.</p>
+      <div class="suite-phone"><iframe data-fleet src="fleet-driver.html?embed=1" title="Driver app"></iframe></div>
+      <a class="open" href="fleet-driver.html" target="_blank" rel="noopener" id="openOwn"></a>
+    </aside>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+  window.SUITE_MODULE = {
+    id: 'fleet', title: 'Vehicle checks',
+    intro: 'Keeps every vehicle, its due dates, the drivers\' daily checks and any defects in one place, with a phone app for the drivers.',
+    tryIt: [
+      { title: 'Send a daily check from the driver\'s phone', steps: [
+        'In the driver\'s phone on this page, press "Start today\'s check".',
+        'On each of the five sections press "Mark the rest OK", then "Next section".',
+        'On "Review and send", type a mileage a little above the last reading, tick the declaration and press "Submit check".',
+        'Open the "Checks" tab: the new check is at the top, and "Checks today" has gone up.' ] },
+      { title: 'Report a defect, then assign and close it', steps: [
+        'In the driver\'s phone, press "Report a defect". Choose "Tyres", then "Tread looks low", then press "Send report".',
+        'Open the "Defects" tab and click the new defect at the top.',
+        'Under "Assign", choose who will fix it and press "Assign". The phone now shows who it is with.',
+        'Type what was done and press "Close as repaired".' ] },
+      { title: 'See both sides with "View as"', steps: [
+        'In the top bar, change "View as" to "Owen Pritchard (driver)". The lists shrink to Owen\'s own vehicle and the phone becomes Owen\'s.',
+        'Change "View as" back to "Rob Fenwick (Fleet Coordinator)".',
+        'Click the "Off the road" tile, then the tipper CA70 WIN, to see why it is parked.',
+        'Open its handbrake defect, type what was done and press "Close as repaired". The tipper goes back on the road.' ] }
+    ],
+    themes: 'both'
+  };
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+/* ===== Fleet demo: shared data and rules. The same block is in fleet.html and fleet-driver.html. ===== */
+var Fleet = (function () {
+  'use strict';
+  var S = window.Suite, esc = S.esc, ID = 'fleet', VERSION = 1;
+  var DRIVERS = ['cb', 'jh', 'op'], COORD = 'rf';
+
+  var ICONS = {
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    alert: '<path d="M12 3.5l9.5 16.5h-19zM12 10v4.5M12 17.6v.1"/>',
+    stop: '<path d="M8.2 3h7.6L21 8.2v7.6L15.8 21H8.2L3 15.8V8.2zM12 8v5M12 16.3v.1"/>',
+    truck: '<path d="M2 7h11v9H2zM13 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>',
+    tool: '<path d="M15 4a4.5 4.5 0 0 0-4.3 6L4 16.7V20h3.3L14 13.3A4.5 4.5 0 0 0 20 9l-3 1.5L14.5 8 16 5a4.5 4.5 0 0 0-1-1z"/>',
+    clip: '<path d="M9 4h6v3H9zM7 5.5H5.5V21h13V5.5H17M9 14l2.2 2.2L15.5 12"/>',
+    cal: '<path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/>',
+    camera: '<path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13.5" r="3"/>',
+    left: '<path d="M14.5 5.5L8 12l6.5 6.5"/>',
+    right: '<path d="M9.5 5.5L16 12l-6.5 6.5"/>',
+    refresh: '<path d="M20 11a8 8 0 0 0-14.5-4M4 4v3.5h3.5M4 13a8 8 0 0 0 14.5 4M20 20v-3.5h-3.5"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1-4 4-5.5 7.5-5.5s6.5 1.5 7.5 5.5"/>',
+    gauge: '<path d="M4 18a9 9 0 1 1 16 0zM12 14l4-5"/>',
+    out: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
+    phone: '<path d="M7.5 2.5h9v19h-9zM11 18.5h2"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/>'
+  };
+  function ic(n, cls) {
+    return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (ICONS[n] || '') + '</svg>';
+  }
+
+  /* ---------- the walk-round checklist: a general daily check for a van or light commercial vehicle ---------- */
+  var SECTIONS = [
+    { id: 'cab', name: 'In the driver\'s seat', hint: 'Engine running, handbrake on.', items: [
+      { id: 'warn', name: 'Dashboard warning lights', ok: 'All go out once the engine is running', faults: [['Engine warning light stays on', 'repair'], ['Brake or ABS warning light stays on', 'stop'], ['Another warning light stays on', 'repair']] },
+      { id: 'steer', name: 'Steering', ok: 'Turns smoothly, with no knocking or slack', faults: [['Heavy or stiff', 'stop'], ['Too much free play', 'stop'], ['Knocking noise', 'repair']] },
+      { id: 'brakes', name: 'Brakes', ok: 'Pedal feels firm and the handbrake holds', faults: [['Handbrake does not hold', 'stop'], ['Pedal soft or sinks', 'stop'], ['Squeal or grinding', 'repair']] },
+      { id: 'horn', name: 'Horn', ok: 'Works when pressed', faults: [['Not working', 'repair']] },
+      { id: 'belt', name: 'Seat and seat belt', ok: 'Seat locked in place; belt clips in and pulls back', faults: [['Belt will not clip in', 'stop'], ['Belt frayed or cut', 'stop'], ['Seat moves about', 'stop'], ['Belt slow to pull back', 'repair']] },
+      { id: 'glass', name: 'Windscreen and mirrors', ok: 'Clear view; mirrors in place and not cracked', faults: [['Crack or chip in front of the driver', 'stop'], ['Chip away from the driver\'s view', 'minor'], ['Mirror cracked or missing', 'stop'], ['Mirror loose', 'repair']] },
+      { id: 'wipers', name: 'Wipers and washers', ok: 'Clear the screen; washer bottle has fluid', faults: [['Wipers not working', 'stop'], ['Blades smearing or split', 'repair'], ['Washers empty or blocked', 'repair']] }] },
+    { id: 'lights', name: 'Lights and plates', hint: 'Lights and hazards on, then walk right round.', items: [
+      { id: 'lights', name: 'Lights and indicators', ok: 'Every light works and no lens is broken', faults: [['Brake light out', 'stop'], ['Indicator out', 'stop'], ['Headlight out', 'repair'], ['Side, tail or number plate light out', 'repair'], ['Lens cracked', 'repair']] },
+      { id: 'plates', name: 'Number plates', ok: 'Fitted front and back, clean and easy to read', faults: [['Dirty, now cleaned', 'minor'], ['Cracked or loose', 'repair'], ['Missing', 'stop']] }] },
+    { id: 'wheels', name: 'Wheels and tyres', hint: 'Look at every wheel, including the inside edge.', items: [
+      { id: 'tyres', name: 'Tyres', ok: 'Properly inflated, good tread, no cuts or bulges', faults: [['Flat or very soft', 'stop'], ['Cut, bulge or cord showing', 'stop'], ['Tread looks low', 'repair'], ['Wearing unevenly', 'repair']] },
+      { id: 'nuts', name: 'Wheel nuts', ok: 'All there and none looks loose', faults: [['Nut missing', 'stop'], ['Nut looks loose', 'stop']] }] },
+    { id: 'body', name: 'Body and load', hint: 'Walk round the outside and glance underneath.', items: [
+      { id: 'bodywork', name: 'Bodywork and doors', ok: 'Doors shut and lock; nothing sharp or hanging off', faults: [['New dent or scratch', 'minor'], ['Door will not shut or lock', 'stop'], ['Loose trim or sharp edge', 'repair']] },
+      { id: 'leaks', name: 'Fluid leaks', ok: 'Nothing dripping underneath; fuel cap on', faults: [['Fuel leak', 'stop'], ['Oil or coolant drip', 'repair'], ['Fuel cap missing', 'repair']] },
+      { id: 'load', name: 'Load and racking', ok: 'Everything tied down or stowed; not overloaded', faults: [['Load not secured', 'stop'], ['Looks overloaded', 'stop'], ['Racking or tie-down point damaged', 'repair']] },
+      { id: 'tow', name: 'Tow bar and trailer plug', ok: 'Secure, and the trailer lights work', na: 'No tow bar', faults: [['Tow bar loose', 'stop'], ['Trailer lights not working', 'repair']] }] },
+    { id: 'kit', name: 'Safety kit', hint: 'Check what the vehicle should carry.', items: [
+      { id: 'firstaid', name: 'First aid kit', ok: 'In the vehicle and stocked', faults: [['Missing', 'repair'], ['Items used or out of date', 'minor']] },
+      { id: 'ext', name: 'Fire extinguisher', ok: 'In its bracket with the gauge in the green', faults: [['Missing', 'repair'], ['Gauge not in the green', 'repair']] }] }
+  ];
+  var ITEM = {};
+  SECTIONS.forEach(function (s) { s.items.forEach(function (i) { ITEM[i.id] = i; i.section = s.id; }); });
+  var OTHER = 'Something else';
+
+  var SEV = {
+    stop: { label: 'Do not drive', sub: 'Unsafe or not legal. The vehicle stays parked until it is fixed.', tone: 'bad', icon: 'stop' },
+    repair: { label: 'Needs repair', sub: 'Safe to drive today. Needs fixing soon.', tone: 'warn', icon: 'alert' },
+    minor: { label: 'Minor', sub: 'For the record. No repair needed yet.', tone: 'grey', icon: 'info' }
+  };
+  var DSTAT = {
+    'new': { label: 'Reported', tone: 'warn' },
+    assigned: { label: 'Assigned', tone: 'info' },
+    closed: { label: 'Repaired', tone: 'good' },
+    dismissed: { label: 'Not a defect', tone: 'grey' }
+  };
+  var DUES = [['mot', 'MOT'], ['tax', 'Road tax'], ['service', 'Service'], ['ins', 'Insurance']];
+  /* made-up repairers */
+  var REPAIRERS = ['Brookvale Motor Services', 'Quillfield Tyres', 'Pennymoor Auto Electrics'];
+
+  /* ---------- small helpers ---------- */
+  function p2(n) { return n < 10 ? '0' + n : '' + n; }
+  function pn(id) { var p = S.person(id); return p ? p.name : 'Unknown'; }
+  function pd(s) { var p = String(s).slice(0, 10).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dn(s) { return s ? S.daysUntil(pd(s)) : null; }
+  function daysAgo(dt) { var d = new Date(dt); d.setHours(0, 0, 0, 0); return Math.round((S.today().getTime() - d.getTime()) / 864e5); }
+  function fd(s) { return s ? S.fmtDate(String(s).length > 10 ? new Date(s) : pd(s)) : ''; }
+  function ft(dt) { var d = new Date(dt); return p2(d.getHours()) + ':' + p2(d.getMinutes()); }
+  function when(dt) { var n = daysAgo(dt); return (n === 0 ? 'Today' : n === 1 ? 'Yesterday' : fd(dt)) + ' ' + ft(dt); }
+  function num(n) { return Number(n).toLocaleString('en-GB'); }
+  function rel(n) {
+    if (n === null) return '';
+    if (n < 0) return (-n) + (n === -1 ? ' day' : ' days') + ' overdue';
+    return n === 0 ? 'due today' : n === 1 ? 'due tomorrow' : 'in ' + n + ' days';
+  }
+  function took(secs) { return secs < 60 ? Math.round(secs) + ' sec' : Math.floor(secs / 60) + ' min ' + p2(Math.round(secs % 60)) + ' sec'; }
+  function lcf(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+  function title(itemId, fault, note) {
+    var name = ITEM[itemId] ? ITEM[itemId].name : 'Other';
+    if (!fault || fault === OTHER) return name + ': ' + (String(note || '').trim().slice(0, 60) || 'other defect');
+    return name + ': ' + lcf(fault);
+  }
+  function photo() {
+    return '<svg class="exphoto" viewBox="0 0 160 110" role="img" aria-label="Example photo"><rect width="160" height="110" fill="#59626d"/><rect y="72" width="160" height="38" fill="#3a4047"/><rect x="28" y="46" width="78" height="34" rx="4" fill="#e9ecef"/><path d="M106 56h18l10 12v12h-28z" fill="#cfd5db"/><circle cx="50" cy="82" r="9" fill="#16181b"/><circle cx="116" cy="82" r="9" fill="#16181b"/><rect x="6" y="6" width="84" height="16" rx="3" fill="#000" fill-opacity=".55"/><text x="11" y="18" font-size="10" fill="#fff" font-family="sans-serif">Example photo</text></svg>';
+  }
+
+  /* ---------- sample data: every date is worked out from today ---------- */
+  function d(n) { return S.iso(S.daysFromNow(n)); }
+  function at(ago, h, m) {
+    var x = S.daysFromNow(-ago); x.setHours(h, m, 0, 0);
+    var now = new Date();
+    if (x > now) x = new Date(Math.max(S.today().getTime(), now.getTime() - 600000));
+    return x.toISOString();
+  }
+  function seed() {
+    var st = { seedDay: S.iso(S.today()), dirty: false, rev: 0, stamp: 'seed', cseq: 0, dseq: 10, viewAs: COORD, me: 'cb', today: {}, vehicles: [], checks: [], defects: [] };
+    function V(id, reg, make, model, type, fuel, year, driver, mileage, mot, tax, service) {
+      st.vehicles.push({ id: id, reg: reg, tag: '', make: make, model: model, type: type, fuel: fuel, year: year, driver: driver, mileage: mileage,
+        due: { mot: mot === null ? null : d(mot), tax: tax === null ? null : d(tax), service: d(service), ins: d(96) }, log: [] });
+    }
+    V('V1', 'CF72 HIL', 'Ford', 'Transit Custom', 'Van', 'Diesel', 2022, 'cb', 41820, 141, 212, 58);
+    V('V2', 'CA21 BIK', 'Vauxhall', 'Vivaro', 'Van', 'Diesel', 2021, 'jh', 67310, 12, 95, 74);
+    V('V3', 'CF23 TIR', 'Toyota', 'Hilux', 'Pickup', 'Diesel', 2023, 'op', 23988, 203, 150, 120);
+    V('V4', 'CA70 WIN', 'Ford', 'Transit 350 tipper', 'Tipper', 'Diesel', 2020, null, 88104, 66, 131, 39);
+    V('V5', 'CF19 KIT', 'Mercedes-Benz', 'Sprinter', 'Van', 'Diesel', 2019, null, 121560, 180, 44, -6);
+    V('V6', 'CA22 RIV', 'Renault', 'Trafic', 'Van', 'Diesel', 2022, null, 35402, 260, 21, 88);
+    V('V7', 'CF24 EIL', 'Peugeot', 'e-Partner', 'Van', 'Electric', 2024, null, 9120, 340, 170, 150);
+    V('V8', '', 'Plant trailer', '2.7 tonne twin axle', 'Trailer', '', 2021, null, null, null, null, 112);
+    st.vehicles[7].tag = 'TRL-01';
+    DRIVERS.forEach(function (id) { st.today[id] = st.vehicles.filter(function (v) { return v.driver === id; })[0].id; });
+
+    function C(vid, by, ago, h, m, back, secs, defs) {
+      var v = veh(st, vid);
+      return record(st, { vid: vid, by: by, at: at(ago, h, m), mileage: v.mileage - back, secs: secs, na: vid === 'V3' || vid === 'V4' ? [] : ['tow'], defs: defs || [], source: 'check', seed: true });
+    }
+    /* oldest first, so reference numbers run in date order */
+    var r4 = C('V3', 'op', 12, 7, 9, 520, 268, [{ item: 'lights', fault: 'Headlight out', sev: 'repair', note: 'Offside dipped beam not working', photo: false }]);
+    C('V5', 'op', 7, 7, 31, 64, 251);
+    [6, 5, 4, 3, 2, 1].forEach(function (n) {
+      C('V1', 'cb', n, 7, 4 + n * 3, n * 38, 230 + n * 9, n === 5 ? [{ item: 'bodywork', fault: 'New dent or scratch', sev: 'minor', note: 'Small dent low on the nearside rear door, about 5 cm across', photo: true }] : null);
+      C('V2', 'jh', n, 7, 12 + n * 2, n * 52, 205 + n * 7, n === 2 ? [{ item: 'wipers', fault: 'Blades smearing or split', sev: 'repair', note: 'Driver\'s side blade smears badly in rain', photo: false }] : null);
+      C('V3', 'op', n, 6, 48 + n, n * 44, 244 + n * 5);
+      if (n === 5) C('V7', 'jh', 5, 13, 20, 0, 221);
+      if (n === 4) C('V4', 'cb', 4, 12, 40, 35, 263);
+      if (n === 3) C('V6', 'cb', 3, 10, 15, 0, 239);
+      if (n === 2) C('V5', 'jh', 2, 11, 5, 0, 214);
+    });
+    var r1 = C('V4', 'op', 1, 13, 25, 0, 302, [{ item: 'brakes', fault: 'Handbrake does not hold', sev: 'stop', note: 'Rolled back on the yard ramp with the handbrake fully on', photo: true }]);
+    C('V2', 'jh', 0, 7, 14, 0, 226);
+    C('V3', 'op', 0, 6, 52, 0, 248);
+
+    var d4 = r4.defects[0], d2 = st.defects.filter(function (x) { return x.vid === 'V2'; })[0];
+    d4.status = 'closed'; d4.assignee = pn(COORD) + ' (in the yard)'; d4.closedAt = at(10, 15, 40); d4.closeNote = 'New bulb fitted in the yard and checked working.';
+    d4.hist.push({ at: at(11, 9, 5), by: COORD, what: 'Assigned to ' + d4.assignee });
+    d4.hist.push({ at: d4.closedAt, by: COORD, what: 'Closed as repaired: ' + d4.closeNote });
+    d2.status = 'assigned'; d2.assignee = REPAIRERS[0]; d2.due = d(3);
+    d2.hist.push({ at: at(2, 9, 30), by: COORD, what: 'Assigned to ' + d2.assignee + ', booked for ' + fd(d2.due) });
+    veh(st, 'V4').log.push({ at: r1.check.at, by: 'op', what: 'Taken off the road: ' + r1.defects[0].title });
+    veh(st, 'V1').log.push({ at: at(38, 14, 0), by: COORD, what: 'Service recorded. Next due ' + fd(veh(st, 'V1').due.service) });
+    veh(st, 'V7').log.push({ at: at(25, 10, 30), by: COORD, what: 'Road tax renewed. Next due ' + fd(veh(st, 'V7').due.tax) });
+    return st;
+  }
+
+  /* ---------- reading the data ---------- */
+  function veh(st, id) { for (var i = 0; i < st.vehicles.length; i++) if (st.vehicles[i].id === id) return st.vehicles[i]; return null; }
+  function isOpen(df) { return df.status === 'new' || df.status === 'assigned'; }
+  function defectsOf(st, vid) { return st.defects.filter(function (x) { return x.vid === vid; }).sort(function (a, b) { return a.at < b.at ? 1 : -1; }); }
+  function openDefects(st, vid) { return defectsOf(st, vid).filter(isOpen); }
+  function checksOf(st, vid) { return st.checks.filter(function (c) { return c.vid === vid; }).sort(function (a, b) { return a.at < b.at ? 1 : -1; }); }
+  function offRoad(st, v) { return openDefects(st, v.id).some(function (x) { return x.sev === 'stop'; }); }
+  function dueState(s) { var n = dn(s); return n === null ? 'none' : n < 0 ? 'over' : n <= 30 ? 'soon' : 'ok'; }
+  function flags(st, v) {
+    var f = [], od = openDefects(st, v.id);
+    if (od.some(function (x) { return x.sev === 'stop'; })) f.push({ k: 'off', tone: 'bad', label: 'Off the road' });
+    DUES.forEach(function (k) { if (dueState(v.due[k[0]]) === 'over') f.push({ k: 'over', tone: 'bad', label: k[1] + ' overdue' }); });
+    if (od.some(function (x) { return x.sev === 'repair'; })) f.push({ k: 'repair', tone: 'warn', label: 'Repair needed' });
+    DUES.forEach(function (k) { if (dueState(v.due[k[0]]) === 'soon') f.push({ k: 'soon', tone: 'warn', label: k[1] + ' due soon' }); });
+    if (od.length && od.every(function (x) { return x.sev === 'minor'; })) f.push({ k: 'minor', tone: 'grey', label: 'Minor defect' });
+    return f;
+  }
+  function pill(tone, label, icon) { return '<span class="pill ' + tone + '">' + (icon ? ic(icon) : '') + esc(label) + '</span>'; }
+  function flagPills(st, v, all) {
+    var f = flags(st, v);
+    if (!f.length) return pill('good', 'OK', 'check');
+    if (all) return f.map(function (x) { return pill(x.tone, x.label); }).join(' ');
+    return pill(f[0].tone, f[0].label) + (f.length > 1 ? ' <span class="more">+' + (f.length - 1) + '</span>' : '');
+  }
+  function sevPill(k) { return pill(SEV[k].tone, SEV[k].label, SEV[k].icon); }
+  function statPill(df) { return pill(df.status === 'new' && df.sev === 'stop' ? 'bad' : DSTAT[df.status].tone, DSTAT[df.status].label); }
+  function statLine(df) {
+    if (df.status === 'assigned') return 'Assigned to ' + df.assignee + (df.due ? ', booked for ' + fd(df.due) : '');
+    if (df.status === 'closed') return 'Repaired ' + fd(df.closedAt);
+    if (df.status === 'dismissed') return 'Closed: not a defect';
+    return 'Reported. Waiting for the office.';
+  }
+  function idBadge(v, lg) {
+    return v.reg ? '<span class="plate' + (lg ? ' lg' : '') + '" translate="no">' + esc(v.reg) + '</span>'
+      : '<span class="plate tag' + (lg ? ' lg' : '') + '" translate="no">' + esc(v.tag) + '</span>';
+  }
+  function vname(v) { return v.make + ' ' + v.model; }
+
+  /* ---------- changing the data ---------- */
+  /* o = { vid, by, at, mileage, secs, na: [itemId], defs: [{ item, fault, sev, note, photo }], source: 'check' | 'report' } */
+  function record(st, o) {
+    var v = veh(st, o.vid), wasOff = offRoad(st, v), out = { check: null, defects: [] };
+    if (o.source === 'check') {
+      out.check = { id: 'C' + (++st.cseq), vid: o.vid, by: o.by, at: o.at, mileage: o.mileage, secs: o.secs, na: o.na || [], defs: [] };
+      st.checks.push(out.check);
+      if (!o.seed && o.mileage) v.mileage = o.mileage;
+    }
+    (o.defs || []).forEach(function (x) {
+      var n = ++st.dseq, df = { id: 'D' + n, ref: 'DEF-' + (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n, vid: o.vid, item: x.item, fault: x.fault, title: title(x.item, x.fault, x.note),
+        sev: x.sev, driverSev: x.sev, note: x.note || '', photo: !!x.photo, by: o.by, at: o.at, source: o.source, checkId: out.check ? out.check.id : null,
+        status: 'new', assignee: '', due: '', closeNote: '', closedAt: '',
+        hist: [{ at: o.at, by: o.by, what: o.source === 'check' ? 'Reported on the daily check' : 'Reported from the road' }] };
+      st.defects.push(df); out.defects.push(df);
+      if (out.check) out.check.defs.push({ item: x.item, fault: x.fault, sev: x.sev, note: x.note || '', photo: !!x.photo, id: df.id });
+    });
+    if (!o.seed && !wasOff && offRoad(st, v)) v.log.push({ at: o.at, by: o.by, what: 'Taken off the road: ' + out.defects.filter(function (x) { return x.sev === 'stop'; })[0].title });
+    return out;
+  }
+  function defect(st, id) { for (var i = 0; i < st.defects.length; i++) if (st.defects[i].id === id) return st.defects[i]; return null; }
+  function roadCheck(st, v, wasOff, by) {
+    var off = offRoad(st, v);
+    if (wasOff && !off) v.log.push({ at: new Date().toISOString(), by: by, what: 'Back on the road' });
+    if (!wasOff && off) v.log.push({ at: new Date().toISOString(), by: by, what: 'Taken off the road' });
+  }
+  function editDefect(id, by, fn) {
+    change(function (st) {
+      var df = defect(st, id); if (!df) return;
+      var v = veh(st, df.vid), was = offRoad(st, v), what = fn(df);
+      if (what) df.hist.push({ at: new Date().toISOString(), by: by, what: what });
+      roadCheck(st, v, was, by);
+    });
+  }
+  var act = {
+    submit: function (o) { var out; change(function (st) { o.at = new Date().toISOString(); out = record(st, o); }); return out; },
+    assign: function (id, who, dueIso, by) { editDefect(id, by, function (df) { df.status = 'assigned'; df.assignee = who; df.due = dueIso || ''; return 'Assigned to ' + who + (dueIso ? ', booked for ' + fd(dueIso) : ''); }); },
+    close: function (id, note, by) { editDefect(id, by, function (df) { df.status = 'closed'; df.closeNote = note; df.closedAt = new Date().toISOString(); return 'Closed as repaired: ' + note; }); },
+    dismiss: function (id, note, by) { editDefect(id, by, function (df) { df.status = 'dismissed'; df.closeNote = note; df.closedAt = new Date().toISOString(); return 'Closed as not a defect' + (note ? ': ' + note : ''); }); },
+    reopen: function (id, by) { editDefect(id, by, function (df) { df.status = df.assignee ? 'assigned' : 'new'; df.closedAt = ''; return 'Reopened'; }); },
+    severity: function (id, sev, by) { editDefect(id, by, function (df) { if (df.sev === sev) return ''; df.sev = sev; return 'Office assessment changed to "' + SEV[sev].label + '"'; }); },
+    renew: function (vid, key, by) {
+      change(function (st) {
+        var v = veh(st, vid), old = v.due[key] ? pd(v.due[key]) : S.today(), base = old > S.today() ? old : S.today();
+        base.setFullYear(base.getFullYear() + 1); v.due[key] = S.iso(base);
+        var label = DUES.filter(function (k) { return k[0] === key; })[0][1];
+        v.log.push({ at: new Date().toISOString(), by: by, what: label + ' renewed. Next due ' + fd(v.due[key]) });
+      });
+    },
+    setDriver: function (vid, pid, by) {
+      change(function (st) {
+        var v = veh(st, vid);
+        if (pid) st.vehicles.forEach(function (o) { if (o.driver === pid && o.id !== vid) { o.driver = null; o.log.push({ at: new Date().toISOString(), by: by, what: pn(pid) + ' moved to another vehicle. Now a pool vehicle' }); } });
+        v.driver = pid || null;
+        if (pid) st.today[pid] = vid;
+        v.log.push({ at: new Date().toISOString(), by: by, what: pid ? 'Assigned to ' + pn(pid) : 'Made a pool vehicle' });
+      });
+    },
+    viewAs: function (pid) { change(function (st) { st.viewAs = pid; if (DRIVERS.indexOf(pid) !== -1) st.me = pid; }, true); },
+    setMe: function (pid) { change(function (st) { st.me = pid; }, true); },
+    pick: function (pid, vid) { change(function (st) { st.today[pid] = vid; }, true); }
+  };
+  function todayVehicle(st, pid) {
+    var v = veh(st, st.today[pid]);
+    if (v) return v;
+    return st.vehicles.filter(function (x) { return x.driver === pid; })[0] || st.vehicles[0];
+  }
+
+  /* ---------- state, and keeping the office page and the phone in step ---------- */
+  var state = null, subs = [];
+  function okShape(st) { return st && typeof st === 'object' && Array.isArray(st.vehicles) && Array.isArray(st.checks) && Array.isArray(st.defects) && st.today; }
+  function fresh() { var st = S.load(ID, VERSION); return okShape(st) ? st : null; }
+  function init() {
+    var st = fresh();
+    if (!st || (!st.dirty && st.seedDay !== S.iso(S.today()))) { st = seed(); S.save(ID, VERSION, st); }
+    state = st;
+  }
+  function emit(src) { subs.forEach(function (fn) { fn(src); }); }
+  function change(fn, soft) {
+    var st = fresh();
+    if (st && st.rev > state.rev) state = st;
+    fn(state);
+    if (!soft) state.dirty = true;
+    state.rev++; state.stamp = state.rev + ':' + Math.random().toString(36).slice(2, 9);
+    S.save(ID, VERSION, state);
+    post({ state: state });
+    emit('local');
+  }
+  function peers() {
+    var out = [];
+    try { if (window.parent && window.parent !== window) out.push(window.parent); } catch (e) { /* ignore */ }
+    var fr = document.querySelectorAll('iframe[data-fleet]');
+    for (var i = 0; i < fr.length; i++) if (fr[i].contentWindow) out.push(fr[i].contentWindow);
+    return out;
+  }
+  function post(msg) {
+    msg.fleetDemo = 1;
+    peers().forEach(function (w) { try { w.postMessage(msg, '*'); } catch (e) { /* ignore */ } });
+  }
+  function look() { return { theme: S.theme(), accent: S.accent().id, company: S.company() }; }
+  function applyLook(l) {
+    if (!l) return;
+    if (l.accent && l.accent !== S.accent().id) S.setAccent(l.accent);
+    if (l.company && l.company !== S.company()) S.setCompany(l.company);
+    if (l.theme) S.setTheme(l.theme);
+  }
+  function reload(cleared) {
+    var st = fresh();
+    if (!st) { if (!cleared) return false; init(); emit('remote'); return true; }
+    if (st.stamp === state.stamp) return false;
+    state = st; emit('remote'); return true;
+  }
+  window.addEventListener('storage', function (e) {
+    if (e.key && e.key.indexOf('dsr-demo:') !== 0) return;
+    if (!e.key || e.key === 'dsr-demo:state:' + ID) reload(true);
+    else if (/:(theme|accent|company)$/.test(e.key)) S.setTheme(S.theme());
+  });
+  window.addEventListener('message', function (e) {
+    var m = e.data;
+    if (!m || m.fleetDemo !== 1 || peers().indexOf(e.source) === -1) return;
+    if (m.hello) { post({ state: state, look: look() }); return; }
+    if (m.look) applyLook(m.look);
+    if (okShape(m.state) && m.state.stamp !== state.stamp && m.state.rev >= state.rev) {
+      state = m.state; S.save(ID, VERSION, state); emit('remote');
+    }
+  });
+
+  return {
+    DRIVERS: DRIVERS, COORD: COORD, SECTIONS: SECTIONS, ITEM: ITEM, OTHER: OTHER, SEV: SEV, DSTAT: DSTAT, DUES: DUES, REPAIRERS: REPAIRERS,
+    ic: ic, pn: pn, pd: pd, dn: dn, daysAgo: daysAgo, fd: fd, ft: ft, when: when, num: num, rel: rel, took: took, title: title, photo: photo,
+    init: init, get: function () { return state; }, on: function (fn) { subs.push(fn); }, reload: function () { return reload(false); }, post: post, look: look,
+    veh: veh, defect: defect, isOpen: isOpen, defectsOf: defectsOf, openDefects: openDefects, checksOf: checksOf, offRoad: offRoad,
+    dueState: dueState, flags: flags, pill: pill, flagPills: flagPills, sevPill: sevPill, statPill: statPill, statLine: statLine,
+    idBadge: idBadge, vname: vname, todayVehicle: todayVehicle, act: act
+  };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var F = Fleet, S = Suite, esc = S.esc, ic = F.ic;
+  function $(id) { return document.getElementById(id); }
+  F.init();
+
+  var ui = { tab: 'vehicles', vf: 'all', q: '', uf: 'all', cf: 'all', df: 'open', vid: null, drawer: null, err: '', flash: {} };
+  var known = {};
+  function st() { return F.get(); }
+  function who() { var w = st().viewAs; return S.person(w) ? w : F.COORD; }
+  function coord() { return who() === F.COORD; }
+  function byAt(a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; }
+  function mineV() { var s = st(), m = who(); return coord() ? s.vehicles : s.vehicles.filter(function (v) { return v.driver === m || s.today[m] === v.id; }); }
+  function inScope(vid) { return mineV().some(function (v) { return v.id === vid; }); }
+  function mineC() { var m = who(); return st().checks.filter(function (c) { return coord() || c.by === m || inScope(c.vid); }).sort(byAt); }
+  function mineD() { var m = who(); return st().defects.filter(function (x) { return coord() || x.by === m || inScope(x.vid); }).sort(byAt); }
+  function isToday(c) { return F.daysAgo(c.at) === 0; }
+  function markKnown() { st().checks.forEach(function (c) { known[c.id] = 1; }); st().defects.forEach(function (x) { known[x.id] = 1; }); }
+  markKnown();
+
+  function counts() {
+    var s = st(), V = mineV(), D = mineD(), C = mineC(), dates = [];
+    V.forEach(function (v) { F.DUES.forEach(function (k) { dates.push(F.dueState(v.due[k[0]])); }); });
+    var withDriver = V.filter(function (v) { return v.driver; });
+    return {
+      vehicles: V.length,
+      off: V.filter(function (v) { return F.offRoad(s, v); }).length,
+      over: dates.filter(function (k) { return k === 'over'; }).length,
+      soon: dates.filter(function (k) { return k === 'soon'; }).length,
+      open: D.filter(F.isOpen).length,
+      unassigned: D.filter(function (x) { return x.status === 'new'; }).length,
+      today: C.filter(isToday).length,
+      withDriver: withDriver.length,
+      checkedToday: withDriver.filter(function (v) { return C.some(function (c) { return c.vid === v.id && isToday(c); }); }).length
+    };
+  }
+
+  /* ---------- filters ---------- */
+  var VF = [
+    ['all', 'All vehicles', function () { return true; }],
+    ['off', 'Off the road', function (v) { return F.offRoad(st(), v); }],
+    ['due', 'Date due or overdue', function (v) { return F.DUES.some(function (k) { var x = F.dueState(v.due[k[0]]); return x === 'over' || x === 'soon'; }); }],
+    ['defects', 'Open defects', function (v) { return F.openDefects(st(), v.id).length > 0; }]
+  ];
+  var UF = [
+    ['all', 'All dates', function () { return true; }],
+    ['over', 'Overdue', function (r) { return r.k === 'over'; }],
+    ['soon', 'Due within 30 days', function (r) { return r.k === 'soon'; }]
+  ];
+  var CF = [
+    ['all', 'All checks', function () { return true; }],
+    ['today', 'Today', isToday],
+    ['defects', 'With a defect', function (c) { return c.defs.length > 0; }]
+  ];
+  var DF = [
+    ['open', 'Open', F.isOpen],
+    ['stop', 'Do not drive', function (x) { return F.isOpen(x) && x.sev === 'stop'; }],
+    ['new', 'Not yet assigned', function (x) { return x.status === 'new'; }],
+    ['assigned', 'Assigned', function (x) { return x.status === 'assigned'; }],
+    ['closed', 'Closed', function (x) { return !F.isOpen(x); }],
+    ['all', 'All', function () { return true; }]
+  ];
+  function pick(list, key) { for (var i = 0; i < list.length; i++) if (list[i][0] === key) return list[i]; return list[0]; }
+  function chips(list, key, cur, src) {
+    return '<div class="chips" role="group" aria-label="Show">' + list.map(function (f) {
+      return '<button type="button" class="chip" data-act="filter" data-k="' + key + '" data-v="' + f[0] + '" aria-pressed="' + (cur === f[0]) + '">' + esc(f[1]) + ' <span class="c">' + src.filter(f[2]).length + '</span></button>';
+    }).join('') + '</div>';
+  }
+
+  /* ---------- top of the page ---------- */
+  function renderTop() {
+    var k = counts(), p = S.person(who());
+    $('asbar').innerHTML = coord() ? '' : '<div class="asbar">' + ic('user') + '<div>You are viewing as <b>' + esc(p.name) + '</b>, a driver. A driver sees only their own vehicle, checks and defects, and cannot change the register. Use "View as" in the top bar to go back to ' + esc(F.pn(F.COORD)) + '.</div></div>';
+    var T = [
+      [k.off, 'Off the road', k.off ? 'bad' : '', 'vehicles', 'vf', 'off'],
+      [k.over, 'Dates overdue', k.over ? 'bad' : '', 'due', 'uf', 'over'],
+      [k.soon, 'Due within 30 days', k.soon ? 'warn' : '', 'due', 'uf', 'soon'],
+      [k.open, 'Open defects', k.unassigned ? 'warn' : '', 'defects', 'df', 'open'],
+      [k.checkedToday + ' <small>of ' + k.withDriver + '</small>', 'Checks today', '', 'checks', 'cf', 'today']
+    ];
+    $('tiles').innerHTML = T.map(function (t) {
+      return '<button type="button" class="tile ' + t[2] + '" data-act="tile" data-tab="' + t[3] + '" data-k="' + t[4] + '" data-v="' + t[5] + '"><span class="tn">' + t[0] + '</span><span class="l">' + t[1] + '</span></button>';
+    }).join('');
+    var tabs = [['vehicles', 'truck', coord() ? 'Vehicles' : 'My vehicle', k.vehicles], ['due', 'cal', 'Due dates', k.over + k.soon], ['checks', 'clip', 'Checks', null], ['defects', 'tool', 'Defects', k.open]];
+    $('tabs').innerHTML = tabs.map(function (t) {
+      return '<button type="button" role="tab" data-act="tab" data-v="' + t[0] + '" aria-selected="' + (ui.tab === t[0]) + '">' + ic(t[1]) + t[2] + (t[3] !== null ? ' <span class="cnt">' + t[3] + '</span>' : '') + '</button>';
+    }).join('');
+  }
+
+  /* ---------- vehicles ---------- */
+  var RANK = { off: 0, over: 1, repair: 2, soon: 3, minor: 4 };
+  function rank(v) { var f = F.flags(st(), v); return f.length ? RANK[f[0].k] : 5; }
+  function dueCell(v, k) {
+    var s = v.due[k];
+    if (!s) return '<span class="dash">Not needed</span>';
+    var n = F.dn(s), t = n < 0 ? 'bad' : n <= 30 ? 'warn' : '';
+    return '<div class="d1 ' + t + '">' + F.fd(s) + '</div><div class="d2 ' + t + '">' + F.rel(n) + '</div>';
+  }
+  function nextDue(v) {
+    var best = null;
+    F.DUES.forEach(function (k) { var s = v.due[k[0]]; if (s && (!best || s < best.s)) best = { s: s, label: k[1] }; });
+    if (!best) return '';
+    var n = F.dn(best.s), t = n < 0 ? 'bad' : n <= 30 ? 'warn' : '';
+    return '<div class="d1 ' + t + '">' + best.label + ' ' + F.fd(best.s) + '</div><div class="d2 ' + t + '">' + F.rel(n) + '</div>';
+  }
+  function driverName(v) { return v.driver ? esc(F.pn(v.driver)) : '<span class="dash">' + (v.type === 'Trailer' ? 'Towed as needed' : 'Pool vehicle') + '</span>'; }
+  function vehRows() {
+    var q = ui.q.trim().toLowerCase(), f = pick(VF, ui.vf)[2];
+    var rows = mineV().filter(f).filter(function (v) {
+      return !q || (v.reg + ' ' + v.tag + ' ' + v.make + ' ' + v.model + ' ' + v.type + ' ' + (v.driver ? F.pn(v.driver) : 'pool')).toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) { return rank(a) - rank(b) || (a.id < b.id ? -1 : 1); });
+    if (!rows.length) return '<tr><td colspan="10" class="empty">No vehicles match.</td></tr>';
+    return rows.map(function (v) {
+      return '<tr data-act="veh" data-id="' + v.id + '" tabindex="0"><td>' + F.idBadge(v) + '<div class="d2" style="margin-top:3px">' + esc(F.vname(v)) + '</div></td>' +
+        '<td class="cw">' + esc(v.type) + '</td><td>' + driverName(v) + '</td>' +
+        '<td class="cw num">' + (v.mileage === null ? '<span class="dash">-</span>' : F.num(v.mileage)) + '</td>' +
+        '<td class="cw">' + dueCell(v, 'mot') + '</td><td class="cw">' + dueCell(v, 'tax') + '</td><td class="cw">' + dueCell(v, 'service') + '</td><td class="cw">' + dueCell(v, 'ins') + '</td>' +
+        '<td class="cn">' + nextDue(v) + '</td><td>' + F.flagPills(st(), v) + '</td></tr>';
+    }).join('');
+  }
+  function paneVehicles() {
+    if (ui.vid && F.veh(st(), ui.vid) && inScope(ui.vid)) return paneVehicle(F.veh(st(), ui.vid));
+    ui.vid = null;
+    return '<div class="tools">' + chips(VF, 'vf', ui.vf, mineV()) +
+      '<label class="search">' + ic('search') + '<input type="search" id="q" placeholder="Search registration, make or driver" aria-label="Search vehicles" value="' + esc(ui.q) + '"></label></div>' +
+      '<div class="tbl"><table><thead><tr><th>Vehicle</th><th class="cw">Type</th><th>Driver</th><th class="cw num">Mileage</th><th class="cw">MOT</th><th class="cw">Road tax</th><th class="cw">Service</th><th class="cw">Insurance</th><th class="cn">Next due</th><th>Status</th></tr></thead>' +
+      '<tbody id="vbody">' + vehRows() + '</tbody></table></div>' +
+      '<p class="foot">Click a vehicle to see its dates, checks and defects. A date turns amber 30 days before it is due and red once it has passed.</p>';
+  }
+  function defRow(x, showV) {
+    var v = F.veh(st(), x.vid);
+    return '<button type="button" class="row" data-act="defect" data-id="' + x.id + '"><span class="grow"><span class="t">' + esc(x.title) + '</span><br><span class="d2">' + esc(x.ref) + ' · ' + (showV ? esc(v.reg || v.tag) + ' · ' : '') + esc(F.statLine(x)) + '</span></span>' + F.sevPill(x.sev) + ' ' + F.statPill(x) + '</button>';
+  }
+  function checkResult(c) { return c.defs.length ? F.pill('warn', c.defs.length + (c.defs.length === 1 ? ' defect' : ' defects'), 'alert') : F.pill('good', 'All OK', 'check'); }
+  function paneVehicle(v) {
+    var s = st(), od = F.openDefects(s, v.id), all = F.defectsOf(s, v.id), ch = F.checksOf(s, v.id), last = ch[0];
+    var stop = od.filter(function (x) { return x.sev === 'stop'; });
+    var drv = coord() && v.type !== 'Trailer'
+      ? '<select data-change="driver" data-id="' + v.id + '" aria-label="Assigned driver"><option value="">Pool vehicle</option>' + F.DRIVERS.map(function (id) { return '<option value="' + id + '"' + (v.driver === id ? ' selected' : '') + '>' + esc(F.pn(id)) + '</option>'; }).join('') + '</select>'
+      : '<div class="v">' + driverName(v) + '</div>';
+    return '<button type="button" class="btn link" data-act="back">' + ic('left') + (coord() ? 'All vehicles' : 'Back') + '</button>' +
+      '<div class="vhead">' + F.idBadge(v, true) + '<div class="grow"><h2>' + esc(F.vname(v)) + '</h2><div class="muted">' + esc([v.type, v.fuel, 'first registered ' + v.year].filter(Boolean).join(' · ')) + '</div></div><div>' + F.flagPills(s, v, true) + '</div></div>' +
+      (stop.length ? '<div class="offbox">' + ic('stop') + '<div>Off the road until this is repaired and closed: ' + stop.map(function (x) { return '<b>' + esc(x.title) + '</b>'; }).join(', ') + '.</div></div>' : '') +
+      '<div class="facts"><div class="fact"><div class="k">Assigned driver</div>' + drv + '</div>' +
+      '<div class="fact"><div class="k">Mileage</div><div class="v">' + (v.mileage === null ? 'Not recorded for a trailer' : F.num(v.mileage) + ' miles') + '</div></div>' +
+      '<div class="fact"><div class="k">Last daily check</div><div class="v">' + (last ? esc(F.when(last.at)) + '</div><div class="d2">by ' + esc(F.pn(last.by)) : 'None yet') + '</div></div></div>' +
+      '<h3 class="sec">' + ic('cal') + 'Due dates</h3><div class="duegrid">' + F.DUES.map(function (k) {
+        var d = v.due[k[0]], state = F.dueState(d);
+        if (!d) return '<div class="duecard"><div class="k">' + k[1] + '</div><div class="muted">Not needed for a light trailer</div></div>';
+        return '<div class="duecard ' + state + '"><div class="k">' + k[1] + ' ' + (state === 'over' ? F.pill('bad', 'Overdue') : state === 'soon' ? F.pill('warn', 'Due soon') : F.pill('good', 'In date')) + '</div><div class="v">' + F.fd(d) + '</div><div class="d2">' + F.rel(F.dn(d)) + '</div>' +
+          (coord() ? '<button type="button" class="btn" data-act="renew" data-id="' + v.id + '" data-k="' + k[0] + '">Record renewal</button>' : '') + '</div>';
+      }).join('') + '</div>' +
+      '<h3 class="sec">' + ic('tool') + 'Defects</h3>' + (all.length ? '<div class="rows">' + all.map(function (x) { return defRow(x); }).join('') + '</div>' : '<p class="muted">No defects reported on this vehicle.</p>') +
+      '<h3 class="sec">' + ic('clip') + 'Recent checks</h3>' + (ch.length ? '<div class="rows">' + ch.slice(0, 6).map(function (c) {
+        return '<button type="button" class="row" data-act="check" data-id="' + c.id + '"><span class="grow"><span class="t">' + esc(F.when(c.at)) + '</span><br><span class="d2">' + esc(F.pn(c.by)) + ' · ' + F.num(c.mileage) + ' miles · took ' + F.took(c.secs) + '</span></span>' + checkResult(c) + '</button>';
+      }).join('') + '</div>' + (ch.length > 6 ? '<p class="foot">Showing the latest 6 of ' + ch.length + '. The rest are under "Checks".</p>' : '') : '<p class="muted">' + (v.type === 'Trailer' ? 'Trailers are checked with the vehicle towing them.' : 'No checks received yet.') + '</p>') +
+      '<h3 class="sec">' + ic('info') + 'History</h3>' + (v.log.length ? '<ul class="log">' + v.log.slice().sort(byAt).map(function (l) { return '<li><span class="at">' + esc(F.when(l.at)) + '</span><span>' + esc(l.what) + ' <span class="muted">(' + esc(F.pn(l.by)) + ')</span></span></li>'; }).join('') + '</ul>' : '<p class="muted">Nothing recorded yet.</p>');
+  }
+
+  /* ---------- due dates ---------- */
+  function paneDue() {
+    var rows = [];
+    mineV().forEach(function (v) { F.DUES.forEach(function (k) { if (v.due[k[0]]) rows.push({ v: v, key: k[0], label: k[1], s: v.due[k[0]], k: F.dueState(v.due[k[0]]) }); }); });
+    rows.sort(function (a, b) { return a.s < b.s ? -1 : a.s > b.s ? 1 : 0; });
+    var show = rows.filter(pick(UF, ui.uf)[2]);
+    return '<div class="tools">' + chips(UF, 'uf', ui.uf, rows) + '</div><div class="tbl"><table><thead><tr><th>Due</th><th>What</th><th>Vehicle</th><th class="cw">Driver</th><th>Status</th>' + (coord() ? '<th></th>' : '') + '</tr></thead><tbody>' +
+      (show.length ? show.map(function (r) {
+        var n = F.dn(r.s), t = r.k === 'over' ? 'bad' : r.k === 'soon' ? 'warn' : '';
+        return '<tr data-act="veh" data-id="' + r.v.id + '" tabindex="0"><td><div class="d1 ' + t + '">' + F.fd(r.s) + '</div><div class="d2 ' + t + '">' + F.rel(n) + '</div></td><td>' + r.label + '</td><td>' + F.idBadge(r.v) + '<div class="d2" style="margin-top:3px">' + esc(F.vname(r.v)) + '</div></td><td class="cw">' + driverName(r.v) + '</td><td>' +
+          (r.k === 'over' ? F.pill('bad', 'Overdue') : r.k === 'soon' ? F.pill('warn', 'Due soon') : F.pill('good', 'In date')) + '</td>' +
+          (coord() ? '<td><button type="button" class="btn" style="padding:3px 9px;font-size:13px" data-act="renew" data-id="' + r.v.id + '" data-k="' + r.key + '">Record renewal</button></td>' : '') + '</tr>';
+      }).join('') : '<tr><td colspan="6" class="empty">Nothing in this list.</td></tr>') + '</tbody></table></div>' +
+      '<p class="foot">Soonest first. "Record renewal" moves the date on by a year and notes it in the vehicle\'s history.</p>';
+  }
+
+  /* ---------- checks ---------- */
+  function paneChecks() {
+    var C = mineC(), show = C.filter(pick(CF, ui.cf)[2]);
+    return '<div class="tools">' + chips(CF, 'cf', ui.cf, C) + '</div><div class="tbl"><table><thead><tr><th>Received</th><th>Vehicle</th><th>Driver</th><th class="cw num">Mileage</th><th class="cw">Time taken</th><th>Result</th></tr></thead><tbody>' +
+      (show.length ? show.map(function (c) {
+        var v = F.veh(st(), c.vid);
+        return '<tr data-act="check" data-id="' + c.id + '" tabindex="0" class="' + (ui.flash[c.id] ? 'flash' : '') + '"><td><div class="d1">' + esc(F.when(c.at)) + '</div></td><td>' + F.idBadge(v) + '</td><td>' + esc(F.pn(c.by)) + '</td><td class="cw num">' + F.num(c.mileage) + '</td><td class="cw">' + F.took(c.secs) + '</td><td>' + checkResult(c) + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" class="empty">No checks in this list.</td></tr>') + '</tbody></table></div>' +
+      '<p class="foot">' + show.length + ' of ' + C.length + ' checks, newest first. Click one to see every answer.</p>';
+  }
+
+  /* ---------- defects ---------- */
+  function paneDefects() {
+    var D = mineD(), show = D.filter(pick(DF, ui.df)[2]);
+    return '<div class="tools">' + chips(DF, 'df', ui.df, D) + '</div><div class="tbl"><table><thead><tr><th>Defect</th><th>Vehicle</th><th>How serious</th><th class="cw">Reported</th><th class="cw">With</th><th>Status</th></tr></thead><tbody>' +
+      (show.length ? show.map(function (x) {
+        var v = F.veh(st(), x.vid);
+        return '<tr data-act="defect" data-id="' + x.id + '" tabindex="0" class="' + (ui.flash[x.id] ? 'flash' : '') + '"><td><div class="d1" style="white-space:normal">' + esc(x.title) + '</div><div class="d2">' + esc(x.ref) + '</div></td><td>' + F.idBadge(v) + '</td><td>' + F.sevPill(x.sev) + '</td>' +
+          '<td class="cw"><div class="d1">' + esc(F.when(x.at)) + '</div><div class="d2">' + esc(F.pn(x.by)) + '</div></td><td class="cw">' + (x.assignee ? esc(x.assignee) + (x.due && F.isOpen(x) ? '<div class="d2">booked ' + F.fd(x.due) + '</div>' : '') : '<span class="dash">Nobody yet</span>') + '</td><td>' + F.statPill(x) + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" class="empty">No defects in this list.</td></tr>') + '</tbody></table></div>' +
+      '<p class="foot">A "Do not drive" defect takes the vehicle off the road until it is closed.</p>';
+  }
+
+  /* ---------- side panel: one defect, or one check ---------- */
+  function drawerDefect(x) {
+    var s = st(), v = F.veh(s, x.vid), open = F.isOpen(x), people = [F.pn(F.COORD) + ' (in the yard)'].concat(F.REPAIRERS);
+    var h = '<div class="dhead"><div class="grow"><div class="ref">' + esc(x.ref) + '</div><h2>' + esc(x.title) + '</h2><div class="btnrow" style="margin-top:6px">' + F.sevPill(x.sev) + F.statPill(x) + '</div></div><button type="button" class="btn" data-act="closeDrawer" aria-label="Close panel">' + ic('x') + '</button></div><div class="dbody">';
+    h += '<dl class="kv"><dt>Vehicle</dt><dd><button type="button" class="btn link" data-act="veh" data-id="' + v.id + '">' + F.idBadge(v) + ' ' + esc(F.vname(v)) + '</button></dd>' +
+      '<dt>Reported</dt><dd>' + esc(F.when(x.at)) + ' by ' + esc(F.pn(x.by)) + '<div class="d2">' + (x.source === 'check' ? 'On the daily check' : 'From the road, outside a check') + '</div></dd>' +
+      '<dt>Driver said</dt><dd>' + F.sevPill(x.driverSev) + '</dd>' +
+      '<dt>Now</dt><dd>' + esc(F.statLine(x)) + '</dd></dl>';
+    if (x.note) h += '<div class="quote">"' + esc(x.note) + '"</div>';
+    if (x.photo) h += '<div>' + F.photo() + '<div class="d2" style="margin-top:4px">Photo from the driver\'s phone (an example picture in this demo).</div></div>';
+    if (x.sev === 'stop' && open) h += '<div class="offbox" style="margin:0">' + ic('stop') + '<div>' + esc(v.reg || v.tag) + ' is off the road until this defect is closed.</div></div>';
+    if (!coord()) {
+      h += '<p class="muted">Only the fleet coordinator can assign or close a defect.</p>';
+    } else if (open) {
+      h += '<div class="box"><h3>Review</h3><label class="field"><span>How serious is it? (office assessment)</span><select data-change="sev" data-id="' + x.id + '">' + Object.keys(F.SEV).map(function (k) { return '<option value="' + k + '"' + (x.sev === k ? ' selected' : '') + '>' + F.SEV[k].label + '</option>'; }).join('') + '</select></label></div>' +
+        '<div class="box"><h3>Assign</h3><div class="two"><label class="field"><span>Who will fix it?</span><select id="asWho" data-keep>' + people.map(function (p) { return '<option' + (x.assignee === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="field"><span>Booked for</span><input type="date" id="asDate" data-keep value="' + esc(x.due || S.iso(S.daysFromNow(2))) + '"></label></div><div class="btnrow"><button type="button" class="btn' + (x.status === 'new' ? ' primary' : '') + '" data-act="assign" data-id="' + x.id + '">' + (x.status === 'new' ? 'Assign' : 'Change') + '</button></div></div>' +
+        '<div class="box"><h3>Close</h3>' + (ui.err ? '<div class="err">' + esc(ui.err) + '</div>' : '') + '<label class="field"><span>What was done?</span><textarea id="clNote" data-keep placeholder="For example: new tyre fitted to the nearside front"></textarea></label>' +
+        '<div class="btnrow"><button type="button" class="btn' + (x.status === 'assigned' ? ' primary' : '') + '" data-act="close" data-id="' + x.id + '">' + ic('check') + 'Close as repaired</button><button type="button" class="btn" data-act="dismiss" data-id="' + x.id + '">Not a defect</button></div></div>';
+    } else {
+      h += '<div class="box"><h3>' + (x.status === 'closed' ? 'Repaired' : 'Closed: not a defect') + '</h3><div>' + esc(x.closeNote || 'No note left.') + '</div><div class="d2">' + esc(F.when(x.closedAt)) + (x.assignee ? ' · ' + esc(x.assignee) : '') + '</div><div class="btnrow"><button type="button" class="btn" data-act="reopen" data-id="' + x.id + '">Reopen</button></div></div>';
+    }
+    h += '<div><h3 class="sec" style="margin-top:0">History</h3><ul class="log">' + x.hist.slice().sort(byAt).map(function (l) { return '<li><span class="at">' + esc(F.when(l.at)) + '</span><span>' + esc(l.what) + ' <span class="muted">(' + esc(F.pn(l.by)) + ')</span></span></li>'; }).join('') + '</ul></div>';
+    return h + '</div>';
+  }
+  function drawerCheck(c) {
+    var v = F.veh(st(), c.vid);
+    var h = '<div class="dhead"><div class="grow"><div class="ref">Daily check</div><h2>' + F.idBadge(v) + ' ' + esc(F.vname(v)) + '</h2><div class="btnrow" style="margin-top:6px">' + checkResult(c) + '</div></div><button type="button" class="btn" data-act="closeDrawer" aria-label="Close panel">' + ic('x') + '</button></div><div class="dbody">';
+    h += '<dl class="kv"><dt>Driver</dt><dd>' + esc(F.pn(c.by)) + '</dd><dt>Received</dt><dd>' + esc(F.when(c.at)) + '</dd><dt>Mileage</dt><dd>' + F.num(c.mileage) + ' miles</dd><dt>Time taken</dt><dd>' + F.took(c.secs) + '</dd><dt>Declaration</dt><dd>"I did this check myself and this is a true record."</dd></dl><div>';
+    F.SECTIONS.forEach(function (sec) {
+      h += '<div class="csec">' + esc(sec.name) + '</div>';
+      sec.items.forEach(function (it) {
+        var df = c.defs.filter(function (x) { return x.item === it.id; })[0];
+        if (df) h += '<div class="crow"><div class="grow"><b>' + esc(it.name) + '</b><div>' + esc(df.fault === F.OTHER ? df.note : df.fault) + '</div>' + (df.note && df.fault !== F.OTHER ? '<div class="d2">"' + esc(df.note) + '"</div>' : '') + (df.id ? '<button type="button" class="btn link" data-act="defect" data-id="' + df.id + '">Open the defect</button>' : '') + '</div>' + F.sevPill(df.sev) + '</div>';
+        else if (c.na.indexOf(it.id) !== -1) h += '<div class="crow"><div class="grow">' + esc(it.name) + '</div><span class="na">' + esc(it.na || 'Not applicable') + '</span></div>';
+        else h += '<div class="crow"><div class="grow">' + esc(it.name) + '<div class="d2">' + esc(it.ok) + '</div></div><span class="okk">' + ic('check') + ' OK</span></div>';
+      });
+    });
+    return h + '</div></div>';
+  }
+  function renderDrawer() {
+    var el = $('drawer'), d = ui.drawer, html = '', was = $('dwrap').classList.contains('open'), y = el.scrollTop;
+    if (d) {
+      var obj = d.kind === 'defect' ? F.defect(st(), d.id) : st().checks.filter(function (c) { return c.id === d.id; })[0];
+      if (obj) html = d.kind === 'defect' ? drawerDefect(obj) : drawerCheck(obj);
+      else ui.drawer = null;
+    }
+    el.innerHTML = html;
+    el.scrollTop = y;
+    $('dwrap').classList.toggle('open', !!html);
+    if (html && !was) el.scrollTop = 0;
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var keep = {}, i, els = document.querySelectorAll('[data-keep]'), focus = document.activeElement && document.activeElement.id;
+    for (i = 0; i < els.length; i++) if (els[i].id) keep[els[i].id] = els[i].value;
+    renderTop();
+    $('pane').innerHTML = ui.tab === 'due' ? paneDue() : ui.tab === 'checks' ? paneChecks() : ui.tab === 'defects' ? paneDefects() : paneVehicles();
+    renderDrawer();
+    Object.keys(keep).forEach(function (id) { var el = $(id); if (el && keep[id] !== '' && ui.keepFor === (ui.drawer && ui.drawer.id)) el.value = keep[id]; });
+    ui.keepFor = ui.drawer && ui.drawer.id;
+    if (focus && $(focus) && focus !== 'viewAs') { try { $(focus).focus(); } catch (e) { /* ignore */ } }
+    var sel = $('viewAs');
+    if (sel && sel.value !== who()) sel.value = who();
+    S.fill();
+  }
+  var toastTimer = null;
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3600); }
+
+  function arrivals() {
+    var s = st(), msg = [];
+    s.checks.forEach(function (c) { if (!known[c.id]) { ui.flash[c.id] = 1; var v = F.veh(s, c.vid); msg.push('Check received from ' + F.pn(c.by) + ' for ' + (v.reg || v.tag)); } });
+    s.defects.forEach(function (x) { if (!known[x.id]) { ui.flash[x.id] = 1; if (x.source !== 'check') msg.push('Defect reported by ' + F.pn(x.by) + ': ' + x.title); else msg.push('Defect on the check: ' + x.title); } });
+    markKnown();
+    if (msg.length) { toast(msg[msg.length - 1]); setTimeout(function () { ui.flash = {}; }, 2600); }
+  }
+  F.on(function () { arrivals(); render(); });
+  S.onChange(function () { render(); F.post({ look: F.look() }); });
+
+  /* ---------- actions ---------- */
+  function go(tab) { ui.tab = tab; ui.vid = null; ui.drawer = null; ui.err = ''; }
+  var ACT = {
+    tab: function (d) { go(d.v); },
+    tile: function (d) { go(d.tab); ui[d.k] = d.v; },
+    filter: function (d) { ui[d.k] = d.v; },
+    veh: function (d) { go('vehicles'); ui.vid = d.id; window.scrollTo(0, 0); },
+    back: function () { ui.vid = null; },
+    defect: function (d) { ui.drawer = { kind: 'defect', id: d.id }; ui.err = ''; },
+    check: function (d) { ui.drawer = { kind: 'check', id: d.id }; },
+    closeDrawer: function () { ui.drawer = null; ui.err = ''; },
+    refresh: function () { var got = F.reload(); toast(got ? 'Updated from the driver app.' : 'Already up to date.'); },
+    renew: function (d) { if (!coord()) return; F.act.renew(d.id, d.k, who()); toast('Renewal recorded. Next due ' + F.fd(F.veh(st(), d.id).due[d.k]) + '.'); return true; },
+    assign: function (d) { var w = $('asWho').value, on = $('asDate').value; F.act.assign(d.id, w, on, who()); toast('Assigned to ' + w + '.'); return true; },
+    close: function (d) {
+      var note = $('clNote').value.trim();
+      if (!note) { ui.err = 'Say what was done before closing.'; return; }
+      var x = F.defect(st(), d.id), v = F.veh(st(), x.vid), was = F.offRoad(st(), v);
+      ui.err = ''; F.act.close(d.id, note, who());
+      toast(was && !F.offRoad(st(), v) ? 'Closed. ' + (v.reg || v.tag) + ' is back on the road.' : 'Defect closed as repaired.'); return true;
+    },
+    dismiss: function (d) { ui.err = ''; F.act.dismiss(d.id, $('clNote').value.trim(), who()); toast('Closed as not a defect.'); return true; },
+    reopen: function (d) { F.act.reopen(d.id, who()); toast('Defect reopened.'); return true; }
+  };
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!el || !ACT[el.dataset.act]) return;
+    if (el.tagName === 'TR' && e.target.closest('button')) return;
+    if (!ACT[el.dataset.act](el.dataset)) render();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && ui.drawer) { ui.drawer = null; ui.err = ''; render(); return; }
+    if (e.key === 'Enter' && e.target.tagName === 'TR' && e.target.dataset.act) { ACT[e.target.dataset.act](e.target.dataset); render(); }
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target, k = el.dataset ? el.dataset.change : null;
+    if (el.id === 'viewAs') { ui.vid = null; ui.drawer = null; ui.q = ''; ui.vf = 'all'; ui.tab = 'vehicles'; F.act.viewAs(el.value); toast('Now viewing as ' + F.pn(el.value) + '.'); return; }
+    if (!coord()) return;
+    if (k === 'sev') { F.act.severity(el.dataset.id, el.value, who()); toast('Assessment changed to "' + F.SEV[el.value].label + '".'); }
+    if (k === 'driver') { F.act.setDriver(el.dataset.id, el.value, who()); toast(el.value ? 'Assigned to ' + F.pn(el.value) + '.' : 'Made a pool vehicle.'); }
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'q') { ui.q = e.target.value; $('vbody').innerHTML = vehRows(); }
+  });
+
+  /* ---------- static bits ---------- */
+  $('refreshBtn').innerHTML = ic('refresh') + 'Refresh';
+  $('jumpBtn').innerHTML = ic('phone') + 'Driver app';
+  $('phoneHead').innerHTML = ic('phone') + 'The driver\'s phone';
+  $('openOwn').innerHTML = 'Open the driver app on its own ' + ic('out');
+  var slot = $('suite-slot');
+  if (slot) {
+    slot.innerHTML = '<label><span>View as</span> <select id="viewAs" aria-label="View as">' +
+      [F.COORD].concat(F.DRIVERS).map(function (id) { var p = S.person(id); return '<option value="' + id + '">' + esc(p.name) + ' (' + (id === F.COORD ? esc(p.role) : 'driver') + ')</option>'; }).join('') + '</select></label>';
+  }
+  var tp = $('suite-try');
+  if (tp && window.MutationObserver) {
+    var syncTry = function () { document.documentElement.classList.toggle('try-open', !tp.hidden); };
+    new MutationObserver(syncTry).observe(tp, { attributes: true, attributeFilter: ['hidden'] });
+    syncTry();
+  }
+  var frame = document.querySelector('iframe[data-fleet]');
+  if (frame) frame.addEventListener('load', function () { F.post({ state: st(), look: F.look() }); });
+  render();
+})();
+</script>
+</body>
+</html>

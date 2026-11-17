@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Document control · demo</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/suite.css">
+<style>
+:root{
+  --f-text:var(--suite-font);
+  --page:var(--suite-page); --surface:var(--suite-surface); --band:#FAFBFC; --sunk:var(--suite-sunk); --line:var(--suite-line); --line2:var(--suite-line-2);
+  --ink:var(--suite-ink); --body:var(--suite-body); --label:var(--suite-label); --faint:#A0A7B3;
+  --brand:var(--suite-accent); --btn:var(--suite-accent); --btn-h:var(--suite-accent-strong); --link:var(--suite-accent-ink); --tint:var(--suite-accent-tint);
+  --grey-t:#4B5563; --grey-b:var(--suite-sunk); --grey-l:var(--suite-line-2);
+  --blue-t:#1D4ED8; --blue-b:#EFF4FF; --blue-l:#C7D7FE;
+  --amber-t:#8A5D0C; --amber-b:#FDF3D7; --amber-l:#EBCB7A; --amber-edge:#D99A1E;
+  --green-t:#1F6B4C; --green-b:#E6F4EC; --green-l:#B5DCC7;
+  --red-t:#B23A2E; --red-b:#FCEBE8; --red-l:#F2C1BA;
+  --shadow:0 12px 32px rgba(15,18,24,.14),0 2px 6px rgba(15,18,24,.06);
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --band:#202227; --faint:#6E7683;
+  --grey-t:#C5CBD4;
+  --blue-t:#A9C1FF; --blue-b:#1B2540; --blue-l:#2F3F6B;
+  --amber-t:#F0C76A; --amber-b:#3A2E12; --amber-l:#5C4A1E; --amber-edge:#E0A93A;
+  --green-t:#86D6AE; --green-b:#15301F; --green-l:#27523A;
+  --red-t:#F3A198; --red-b:#3D1B17; --red-l:#66302A;
+  --shadow:0 12px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--body);font:14px/1.45 var(--f-text);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+h1,h2,h3{margin:0;color:var(--ink);font-family:var(--f-text)}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em} h2{font-size:16px;font-weight:600}
+.num{color:var(--ink);font-weight:500}
+.muted{color:var(--label)} .small{font-size:12px} .ink{color:var(--ink)}
+#app :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+
+main{padding:16px 24px 80px;max-width:1500px}
+.fl.viewas2{display:none}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tabs button{border:0;background:none;padding:8px 14px 10px;cursor:pointer;color:var(--label);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;gap:8px;align-items:center}
+.tabs button:hover{color:var(--ink)} .tabs button.on{color:var(--ink);border-bottom-color:var(--brand);font-weight:600}
+.tabs .cnt{background:var(--brand);color:var(--suite-on-accent,#fff);font-size:11px;font-weight:700;border-radius:9px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:clip}
+.band{background:var(--band);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.crumb{font-size:13px;margin-bottom:4px}
+.pill{display:inline-block;border:1px solid var(--line2);border-radius:20px;padding:1px 10px;font-size:12px;color:var(--body);margin-left:8px;vertical-align:middle;font-weight:400;letter-spacing:0}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--sunk);text-decoration:none} .btn.pri{background:var(--btn);border-color:var(--btn);color:var(--suite-on-accent,#fff);font-weight:600} .btn.pri:hover{background:var(--btn-h)}
+.btn.sm{padding:4px 10px;font-size:13px} .btn[disabled]{opacity:.45;cursor:not-allowed}
+.lnk{background:none;border:0;padding:0;color:var(--link);cursor:pointer;font-weight:500} .lnk:hover{text-decoration:underline}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* filters */
+.filters{padding:12px 20px;display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line)}
+.tools{margin-left:auto;display:flex;gap:16px;align-items:center}
+.fl{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--label)} .fl select{width:auto;font-size:14px;color:var(--ink)}
+td+td+td,th+th+th{border-left:1px solid var(--line)}
+.search{flex:0 1 300px;border:1px solid var(--line2);border-radius:8px;padding:6px 10px;width:240px;background:var(--surface)}
+select.f,input.f,textarea.f{border:1px solid var(--line2);border-radius:8px;padding:7px 10px;background:var(--surface);width:100%}
+textarea.f{min-height:76px;resize:vertical}
+
+/* stage label */
+.st{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:6px;padding:2px 8px 2px 6px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.st svg{flex:none}
+.st.grey{color:var(--grey-t);background:var(--grey-b);border-color:var(--grey-l)}
+.st.blue{color:var(--blue-t);background:var(--blue-b);border-color:var(--blue-l)}
+.st.amber{color:var(--amber-t);background:var(--amber-b);border-color:var(--amber-l)}
+.st.green{color:var(--green-t);background:var(--green-b);border-color:var(--green-l)}
+.st.red{color:var(--red-t);background:var(--red-b);border-color:var(--red-l)}
+.st.plain{color:var(--ink);background:var(--surface);border-color:var(--line2)} .st.plain svg{color:var(--green-t)} .st.wait{color:var(--grey-t)} .st.wait svg{color:var(--grey-t)}
+.st.gone{color:var(--label);background:var(--sunk);border-color:var(--line)}
+.resp{font-weight:500} .resp.red{color:var(--red-t)} .resp.amber{color:var(--amber-t)} .resp.green{color:var(--green-t)} .resp.wait{color:var(--label);font-weight:400}
+
+/* table */
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line2);background:var(--sunk);color:var(--body);position:sticky;top:var(--suite-bar-h);z-index:5;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer} tbody tr:hover{background:var(--band)} tbody tr.sel{background:var(--tint)}
+tbody tr.mine td:first-child{box-shadow:inset 3px 0 0 var(--amber-edge)}
+tr.dim .num,tr.dim .ttl{color:var(--label);text-decoration:line-through}
+td.c0{width:36px;padding-right:0} td.c1{width:52px;color:var(--label)} td.ct{width:170px;white-space:nowrap} td.c3{width:70px;white-space:nowrap} td.c4{width:250px} td.c5{width:220px}
+.ttl{color:var(--body);font-size:13px;margin-top:1px}
+.sq{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:8px;vertical-align:1px}
+.foot{padding:10px 20px;font-size:12px;color:var(--label);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bulk{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 20px;background:var(--tint);border-bottom:1px solid var(--line);font-size:13px}
+
+/* side panel and document page blocks */
+.aside{position:fixed;top:var(--suite-bar-h);right:0;bottom:0;width:460px;max-width:calc(100vw - var(--suite-rail-w));background:var(--page);border-left:1px solid var(--line);box-shadow:var(--shadow);z-index:60;overflow:auto}
+.blk{padding:16px 20px;border-bottom:1px solid var(--line)}
+.blk>h3{font:600 13px var(--f-text);color:var(--ink);margin-bottom:12px}
+.stack{display:grid;gap:12px;align-content:start} .stack.pad{padding:12px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px} .sec>.blk:last-child{border-bottom:0;border-radius:0 0 12px 12px} .sec>.blk:first-child{border-radius:12px 12px 0 0} .sec>.blk:only-child{border-radius:12px}
+.hd .num{font-size:15px;font-weight:600;word-break:break-word} .hd .t{color:var(--body);margin:2px 0 10px}
+.hdfull{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.hd .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rev{border:1px solid var(--line2);border-radius:6px;padding:2px 8px;font-size:12.5px;color:var(--ink);font-weight:500;white-space:nowrap}
+.turn{background:var(--band)} .turn p{margin:0;color:var(--ink);font-weight:600;font-size:16px} .turn .dt{color:var(--body);font-size:13px;margin-top:2px} .turn .acts,.turn .form{margin-top:12px}
+.turn.mine{background:var(--amber-b)} [data-theme="dark"] .turn.mine p{color:var(--amber-t)}
+.file{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.file .n{color:var(--ink);font-weight:500;word-break:break-all} .pdf{flex:none;width:34px;height:40px;border:1px solid var(--line2);border-radius:4px;display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--red-t);background:var(--surface)}
+.note{border-left:3px solid var(--amber-edge);background:var(--amber-b);padding:10px 12px;border-radius:0 8px 8px 0;margin-top:12px;color:var(--ink)}
+.note.red{border-color:var(--red-t);background:var(--red-b)} .note .who{font-size:12px;color:var(--label);margin-bottom:4px}
+.facts>div{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-top:1px solid var(--line)} .facts>div:first-child{border-top:0;padding-top:0} .facts>div:last-child{padding-bottom:0} .facts .k{font-size:13px;color:var(--label);flex:none} .facts .v{color:var(--ink);text-align:right;font-weight:500}
+.rv>div:first-child{flex:1;min-width:0}
+.rv{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:8px 0;border-top:1px solid var(--line)} .rv:first-of-type{border-top:0;padding-top:0}
+.hist{list-style:none;margin:0;padding:0} .hist li{display:flex;gap:12px;padding:6px 0;font-size:13px} .hist .at{flex:none;width:118px;color:var(--label);font-size:12px;padding-top:1px} .hist .c{color:var(--label)}
+.form{margin-top:4px;display:grid;gap:12px} .form label,.form .lab{display:grid;gap:4px;font-size:12px;color:var(--label)} .form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.err{color:var(--red-t);font-size:13px;font-weight:500}
+.menu{position:relative} .menu .pop{position:absolute;right:0;top:36px;background:var(--surface);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);min-width:210px;padding:6px;z-index:10}
+.menu .pop button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:6px;cursor:pointer;color:var(--ink)} .menu .pop button:hover{background:var(--sunk)}
+.full{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start} @media(max-width:1000px){.full{grid-template-columns:1fr}}
+
+/* my checks */
+.grp{overflow:hidden}
+.grp>header{display:flex;gap:10px;align-items:center;padding:12px 20px;background:var(--sunk)} .grp>header h2{font:600 15px var(--f-text)} .grp>header .n{background:var(--surface);border:1px solid var(--line2);border-radius:10px;padding:0 8px;font-size:12px;font-weight:600;color:var(--ink)}
+.grp.fold>header{cursor:pointer}
+.mch{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:0 4px} .mch h2{font-size:18px}
+.it{display:grid;grid-template-columns:minmax(0,1fr) 170px 110px 100px;gap:16px;align-items:center;padding:12px 20px;min-height:68px;cursor:pointer;border-top:1px solid var(--line)} .it:hover{background:var(--band)}
+.it.hd2{min-height:0;padding:7px 20px;font-size:12px;font-weight:600;color:var(--label);cursor:default;background:var(--surface)} .it.hd2:hover{background:var(--surface)}
+.it .num{font-weight:600}
+.it .p{font-size:12px;color:var(--label)} .age.late{color:var(--amber-t);font-weight:600}
+.empty{padding:28px 20px;text-align:center;color:var(--label)}
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start;margin-top:20px} @media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+.late{color:var(--amber-t);font-weight:600}
+.av{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sunk);border:1px solid var(--line2);font-size:10px;font-weight:600;color:var(--body);margin-right:6px;vertical-align:middle}
+.thb{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center} .thb:hover{color:var(--ink)} .thb i{font-style:normal;font-size:9px;opacity:.25} th[aria-sort] .thb{color:var(--ink)} th[aria-sort] .thb i{opacity:1}
+table.dense td{padding:6px 12px} table.dense .ttl,table.dense .l2{display:inline;margin-left:10px} table.dense td.cdoc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0} table.dense td.c4{width:390px;white-space:nowrap} table.dense td.c5{width:340px;white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden} .seg button{border:0;background:var(--surface);padding:6px 10px;font-size:13px;cursor:pointer;color:var(--body)} .seg button.on{background:var(--ink);color:var(--surface)}
+.stp{display:grid;grid-template-columns:repeat(4,1fr)}
+.stp>div{position:relative;padding:28px 6px 0 0;min-width:0}
+.stp>div::before{content:"";position:absolute;top:10px;left:22px;right:2px;height:2px;background:var(--line2);border-radius:2px} .stp>div:last-child::before{display:none} .stp>div:has(+ .done)::before,.stp>div:has(+ .rej)::before{background:var(--green-t)} .stp>div:has(+ .now)::before{background:linear-gradient(90deg,var(--green-t) 50%,var(--line2) 50%)} .stp>div.now:has(+ .todo)::before,.stp>div.now:has(+ .back)::before{background:var(--line2)}
+.stp .dot{position:absolute;top:0;left:0;width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);background:var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--surface);line-height:1}
+.stp .done .dot{background:var(--green-t);border-color:var(--green-t)}
+.stp .now .dot{border-color:var(--label);box-shadow:inset 0 0 0 4px var(--surface);background:var(--label)}
+.stp .back .dot{border-color:var(--amber-edge);background:var(--amber-b);color:var(--amber-t)} .stp .skip .dot{border-color:var(--amber-edge);background:var(--amber-b);color:var(--amber-t)}
+.stp .k{font-size:12px;color:var(--label)} .stp .v{color:var(--ink);font-weight:500;font-size:12.5px;overflow-wrap:break-word} .stp .d{font-size:12px;color:var(--label)}
+.stp .rej .dot{border-color:var(--red-t);background:var(--red-b);color:var(--red-t)} .stp .rej .k,.stp .rej .v{color:var(--red-t)}
+.stp .now .k{color:var(--ink);font-weight:600} .stp .back .k{color:var(--amber-t);font-weight:600} .stp .todo .v{color:var(--label);font-weight:400}
+.ex{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.sums{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px} .sum{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;min-width:120px} .sum b{display:block;font-size:20px;color:var(--ink);font-weight:600} .sum span{font-size:12px;color:var(--label)} .sum.zero b{color:var(--faint)}
+
+/* modal + toast: above the shell's menu and top bar */
+.scrim{position:fixed;inset:0;background:rgba(15,18,24,.5);z-index:950;display:grid;place-items:center;padding:20px}
+.modal{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);width:560px;max-width:100%;max-height:90vh;overflow:auto}
+.modal header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal .bd{padding:16px 20px} .modal footer{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.mail{border:1px solid var(--line);border-radius:10px;overflow:hidden} .mail dl{margin:0;padding:12px 14px;background:var(--band);display:grid;grid-template-columns:64px 1fr;gap:4px 8px;font-size:13px} .mail dt{color:var(--label)} .mail dd{margin:0;color:var(--ink);overflow-wrap:anywhere} .mail .b{padding:14px;color:var(--ink)} .mail .b p{margin:0 0 10px}
+.toast{position:fixed;bottom:20px;left:calc(50% + var(--suite-rail-w) / 2);transform:translateX(-50%);background:#14171C;color:#fff;border:1px solid #434851;border-radius:10px;padding:10px 16px;z-index:960;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);max-width:calc(100vw - 24px)} .toast .lnk{color:#fff;text-decoration:underline;white-space:nowrap}
+@media(prefers-reduced-motion:no-preference){.aside.new{animation:in .18s ease-out} @keyframes in{from{transform:translateX(24px);opacity:0}}}
+
+/* keep the page usable beside the shell's "What to try" panel */
+@media(min-width:1100px){
+  body:has(#suite-try:not([hidden])) main{margin-right:360px}
+  body:has(#suite-try:not([hidden])) .aside{right:360px}
+}
+@media(max-width:900px){
+  .tw{overflow-x:auto} .tw table{min-width:1000px} th{position:static}
+  .tools{margin-left:0}
+}
+@media(max-width:760px){
+  .suite-slot{display:none}
+  .fl.viewas2{display:flex;margin-bottom:10px} .viewas2 select{flex:1;min-width:0}
+  .stp .v{font-size:11.5px}
+  main{padding:12px 12px 40px}
+  h1{font-size:20px}
+  .aside{bottom:58px;width:100vw;max-width:100vw}
+  .toast{bottom:70px;left:50%;flex-wrap:wrap}
+  .it{grid-template-columns:minmax(0,1fr) auto auto;gap:6px 12px;padding:12px 14px}
+  .it>div:first-child{grid-column:1/-1}
+  .it.hd2{display:none}
+  .band,.filters,.blk{padding-left:14px;padding-right:14px}
+  .search{flex:1 1 100%;width:100%}
+  .form .two{grid-template-columns:1fr}
+  .rv{flex-wrap:wrap}
+  .sum{min-width:0;flex:1 1 40%}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+window.SUITE_MODULE = {
+  id: 'documents', title: 'Document control',
+  intro: 'A register of every drawing, report, method statement and procedure, with a check and approval step before anything is issued.',
+  tryIt: [
+    { title: 'Check a document and pass it on', steps: [
+      'Set "View as" in the top bar to Elena Kowalczyk.',
+      'On "My checks", open the first document under "To check".',
+      'Press "Mark as checked", then "Mark as checked" again to confirm.',
+      'Press "View notice email" at the bottom to see what the approver receives.',
+      'Change "View as" to Daniel Mercer, open the same document and press "Approve".'
+    ] },
+    { title: 'Return a document with comments', steps: [
+      'As Elena Kowalczyk, open a document under "To check" and press "Return with comments".',
+      'Write a comment, press "Upload PDF", then "Return with comments".',
+      'Change "View as" to Tom Ashdown. The document is now under "Returned with comments".',
+      'Open it, press "Send again", then "Upload PDF" and "Send again".'
+    ] },
+    { title: 'Issue a document and record the client\'s reply', steps: [
+      'Change "View as" to Priya Raman and open the "Register" tab.',
+      'Set "Stage" to "Ready to issue" and click the document in the list.',
+      'In the side panel press "Record issue", then "Record issue" again.',
+      'Press "Record client response", pick "Approved with comments" and press "Save response".',
+      'Press "Open full page" to see the sign-off trail, revisions and history.'
+    ] }
+  ],
+  themes: 'both'
+};
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+"use strict";
+/* ---------- people, jobs and document types ---------- */
+const E=Suite.esc;
+const STAFF=["ta","mo","ek","ak","dm","hw","pr"];           /* who takes part in checking */
+const DC="pr";                                               /* the document controller records issues */
+const P={};STAFF.forEach(k=>{const p=Suite.person(k);P[k]={n:p.name,role:p.role,admin:k===DC||p.access==="Admin",p}});
+const EVERYONE=STAFF.map(k=>[k,P[k].n]);
+const TYPES={DRG:["Drawing","#2F6FB3"],RPT:["Report","#7A5AA6"],MST:["Method statement","#2E8B7A"],PRC:["Procedure","#B0527A"],SCH:["Schedule","#7A8794"]};
+const JOB={};Suite.jobs.forEach(j=>JOB[j.id]=j);
+const jobName=id=>JOB[id]?JOB[id].name:"", jobNo=id=>id.replace(/\D/g,"");
+const PURP={"For information":0,"For comment":1,"For approval":1,"For tender":0,"For construction":0,"As built":0};
+const RESP={ok:["Approved","green"],awc:["Approved with comments","amber"],rej:["Rejected","red"]};
+const pad=n=>String(n).padStart(2,"0"), pad3=n=>String(n).padStart(3,"0"), revL=n=>"Rev "+n;
+const at=(n,t)=>Suite.fmtDate(Suite.daysFromNow(n))+(t?" "+t:"");
+const TODAY=at(0), stamp=()=>{const n=new Date();return TODAY+" "+pad(n.getHours())+":"+pad(n.getMinutes())};
+const pd=s=>{const [d,t]=String(s).split(" "),[a,b,c]=d.split("/"),[h,m]=(t||"09:00").split(":");return new Date(+c,b-1,+a,+h,+m)};
+const okDate=s=>/^\d{2}\/\d{2}\/\d{4}$/.test(s||"")&&!isNaN(pd(s));
+const days=s=>{const d=pd(s);d.setHours(0,0,0,0);return Math.round((Suite.today()-d)/864e5)};
+const ago=s=>{const n=days(s);return n<=0?"today":n===1?"yesterday":n+" days ago"};
+const nm=k=>P[k]?P[k].n:"-", ini=k=>nm(k).split(" ").map(w=>w[0]).join("").slice(0,2), av=k=>`<span class="av" aria-hidden="true">${ini(k)}</span>`;
+const numOf=(proj,type,no)=>`${jobNo(proj)}-${type}-${pad3(no)}`;
+const fileName=(d,r,x)=>`${d.num}_Rev${r.rev}${x||""}.pdf`;
+
+/* ---------- sample data: every date is counted back from today ---------- */
+function seed(){
+  const A="J-2415",B="J-2412",C="J-2401";
+  const D=(id,proj,no,type,title,revs,hist)=>{const d={id,proj,no,type,title,num:numOf(proj,type,no),revs,hist:hist||[]};
+    revs.forEach(r=>{if(r.file===1)r.file={name:fileName(d,r),by:r.by,at:(r.sig&&r.sig.p)||TODAY}});return d};
+  const h=(n,t,by,text,c)=>({at:at(n,t),by,t:text,c});
+  return [
+   D(1,A,1,"SCH","Document issue schedule",[{rev:0,st:"issued",by:"pr",old:1,issue:{date:at(-46),purpose:"For information",by:"pr"}}],[h(-46,"09:10","pr","Issued, For information")]),
+   D(2,A,2,"DRG","Site location plan",[{rev:0,st:"issued",by:"ta",old:1,issue:{date:at(-45),purpose:"For information",by:"pr"}}],[h(-45,"14:20","pr","Issued, For information")]),
+   D(3,A,3,"DRG","Existing site layout and buried services",[{rev:0,st:"issued",by:"ta",old:1,issue:{date:at(-41),purpose:"For approval",by:"pr"},resp:{k:"ok",date:at(-33),c:""}}],[h(-33,"11:00","pr","Client response recorded: Approved"),h(-41,"16:05","pr","Issued, For approval")]),
+   D(4,A,4,"RPT","Structural design report, wet well and valve chamber",[{rev:0,st:"issued",by:"ta",chk:"ek",app:"dm",sig:{p:at(-32),c:at(-28),a:at(-27)},file:1,purpose:"For approval",issue:{date:at(-27),purpose:"For approval",by:"pr"},resp:{k:"rej",date:at(-11),c:"Design loads for the valve chamber roof slab do not match the latest pump loading schedule. Update section 4 and resubmit."}}],
+     [h(-11,"15:40","pr","Client response recorded: Rejected"),h(-27,"16:30","pr","Issued, For approval"),h(-27,"11:12","dm","Approved by Daniel Mercer"),h(-28,"17:02","ek","Checked by Elena Kowalczyk"),h(-32,"10:45","ta","Sent for check to Elena Kowalczyk")]),
+   D(5,A,5,"RPT","Temporary works design, excavation support",[{rev:0,st:"issued",by:"ta",chk:"ek",app:"dm",sig:{p:at(-39),c:at(-38),a:at(-38)},file:1,purpose:"For approval",issue:{date:at(-35),purpose:"For approval",by:"pr"},resp:{k:"awc",date:at(-19),c:"Accepted. Add the ground investigation summary as an appendix."}},
+     {rev:1,st:"chk",by:"ta",chk:"ek",app:"dm",sig:{p:at(-2)},file:1,purpose:"For approval",what:"Appendix C added: ground investigation summary.",clientNote:"Accepted. Add the ground investigation summary as an appendix."}],
+     [h(-2,"09:20","ta","Sent for check to Elena Kowalczyk"),h(-3,"16:00","ta","Rev 1 started"),h(-19,"10:15","pr","Client response recorded: Approved with comments"),h(-35,"12:00","pr","Issued, For approval")]),
+   D(6,A,6,"DRG","Wet well general arrangement",[{rev:0,st:"chk",by:"ta",chk:"ek",app:"dm",sig:{p:at(-3)},file:1,purpose:"For approval"}],[h(-3,"09:05","ta","Sent for check to Elena Kowalczyk","Slab levels are taken from the latest site survey.")]),
+   D(7,A,7,"DRG","Valve chamber general arrangement",[{rev:0,st:"ret",by:"ta",chk:"ek",app:"dm",sig:{p:at(-4)},file:1,purpose:"For approval",ret:{by:"ek",from:"chk",at:at(-1,"14:10"),c:"Cover level on section B-B reads 31.250, the schedule says 31.520. The grid line 4 dimension is missing on plan. See mark-up.",markup:"2415-DRG-007_Rev0_markup.pdf"}}],
+     [h(-1,"14:10","ek","Returned with comments by Elena Kowalczyk"),h(-4,"11:30","ta","Sent for check to Elena Kowalczyk")]),
+   D(8,A,8,"DRG","Pump plinth and holding-down bolt details",[{rev:0,st:"app",by:"ta",chk:"ek",app:"dm",sig:{p:at(-5),c:at(-3)},file:1,purpose:"For approval"}],[h(-3,"15:45","ek","Checked by Elena Kowalczyk"),h(-5,"10:00","ta","Sent for check to Elena Kowalczyk")]),
+   D(9,A,9,"MST","Method statement, deep excavation and shoring",[{rev:0,st:"app",by:"mo",chk:"ak",app:"ek",sig:{p:at(-4),c:at(0)},file:1,purpose:"For approval"}],[h(0,"08:50","ak","Checked by Aisha Karim","No comments."),h(-4,"11:35","mo","Sent for check to Aisha Karim")]),
+   D(10,A,10,"DRG","Kiosk base and ducting layout",[{rev:0,st:"ready",by:"ta",chk:"ek",app:"dm",sig:{p:at(-6),c:at(-5),a:at(-3)},file:1,purpose:"For approval"}],[h(-3,"16:20","dm","Approved by Daniel Mercer"),h(-5,"12:10","ek","Checked by Elena Kowalczyk"),h(-6,"09:30","ta","Sent for check to Elena Kowalczyk")]),
+   D(11,A,11,"DRG","Access road and hardstanding layout",[{rev:0,st:"draft",by:"ta"}],[h(-4,"15:00","ta","Registered")]),
+   D(12,A,12,"MST","Method statement, pump installation and lifting",[{rev:0,st:"draft",by:"mo"}],[h(-7,"10:20","mo","Registered")]),
+   D(13,A,13,"SCH","Reinforcement schedule, wet well base slab",[{rev:0,st:"draft",by:"ta"}],[h(-3,"13:40","ta","Registered")]),
+   D(14,A,14,"DRG","Site set-up and traffic management plan",[{rev:0,st:"issued",by:"mo",nochk:"The client needed it for the site meeting that morning. No checker was free.",sig:{p:at(-4)},file:1,purpose:"For comment",issue:{date:at(-4),purpose:"For comment",by:"pr"}}],[h(-4,"08:15","pr","Issued without check by Priya Raman","The client needed it for the site meeting that morning.")]),
+   D(15,A,15,"DRG","Rising main connection details",[{rev:0,st:"issued",by:"ta",chk:"ek",app:"dm",sig:{p:at(-14),c:at(-12),a:at(-11)},file:1,purpose:"For construction",issue:{date:at(-10),purpose:"For construction",by:"pr"}}],[h(-10,"09:00","pr","Issued, For construction"),h(-11,"14:00","dm","Approved by Daniel Mercer"),h(-12,"16:40","ek","Checked by Elena Kowalczyk"),h(-14,"11:00","ta","Sent for check to Elena Kowalczyk")]),
+   D(16,A,16,"PRC","Permit to dig procedure",[{rev:0,st:"issued",by:"mo",chk:"ak",app:"hw",sig:{p:at(-9),c:at(-8),a:at(-7)},file:1,purpose:"For approval",issue:{date:at(-6),purpose:"For approval",by:"pr"}}],[h(-6,"10:30","pr","Issued, For approval"),h(-7,"15:10","hw","Approved by Hannah Whitlock"),h(-8,"12:00","ak","Checked by Aisha Karim"),h(-9,"09:45","mo","Sent for check to Aisha Karim")]),
+   Object.assign(D(17,A,17,"DRG","Setting out plan, wet well",[{rev:0,st:"draft",by:"ta"}],[h(-13,"10:00","pr","Discarded: registered in error")]),{gone:1}),
+   D(21,B,1,"PRC","Construction phase plan",[{rev:0,st:"app",by:"mo",chk:"ak",app:"dm",sig:{p:at(-7),c:at(-4)},file:1,purpose:"For approval"}],[h(-4,"10:30","ak","Checked by Aisha Karim"),h(-7,"14:00","mo","Sent for check to Aisha Karim")]),
+   D(22,B,2,"DRG","Foundation layout, hall extension",[{rev:0,st:"chk",by:"ta",chk:"ek",app:"dm",sig:{p:at(-1)},file:1,purpose:"For construction"}],[h(-1,"16:30","ta","Sent for check to Elena Kowalczyk")]),
+   D(23,B,3,"MST","Method statement, working beside occupied school buildings",[{rev:0,st:"issued",by:"mo",chk:"ak",app:"hw",sig:{p:at(-20),c:at(-19),a:at(-18)},file:1,purpose:"For approval",issue:{date:at(-18),purpose:"For approval",by:"pr"},resp:{k:"ok",date:at(-12),c:""}}],[h(-12,"09:30","pr","Client response recorded: Approved"),h(-18,"15:00","pr","Issued, For approval"),h(-18,"11:20","hw","Approved by Hannah Whitlock"),h(-19,"13:15","ak","Checked by Aisha Karim"),h(-20,"10:05","mo","Sent for check to Aisha Karim")]),
+   D(31,C,1,"PRC","Site waste management procedure",[{rev:0,st:"ready",by:"mo",chk:"ak",app:"hw",sig:{p:at(-5),c:at(-4),a:at(-1)},file:1,purpose:"For information"}],[h(-1,"11:40","hw","Approved by Hannah Whitlock"),h(-4,"09:15","ak","Checked by Aisha Karim"),h(-5,"14:30","mo","Sent for check to Aisha Karim")]),
+   D(32,C,2,"DRG","Roof steelwork strengthening details",[{rev:0,st:"ret",by:"ta",chk:"ek",app:"dm",sig:{p:at(-6)},file:1,purpose:"For construction",ret:{by:"dm",from:"app",at:at(-2,"12:25"),c:"Connection detail 3 does not show the existing purlin cleats. Confirm whether they stay before I approve.",markup:"2401-DRG-002_Rev0_markup.pdf"}}],
+     [h(-2,"12:25","dm","Returned with comments by Daniel Mercer"),h(-4,"15:20","ek","Checked by Elena Kowalczyk"),h(-6,"10:10","ta","Sent for check to Elena Kowalczyk")]),
+  ];
+}
+function loadDocs(){const v=Suite.load("documents",1);return v&&v.day===Suite.iso(Suite.today())&&Array.isArray(v.docs)?v.docs:seed()}
+const S={me:"ek",job:"J-2415",sort:["no",1],dense:Suite.get("documents-dense",false)===true,page:"home",open:null,full:null,form:null,filter:"all",type:"all",q:"",sel:new Set(),menu:false,modal:null,toast:null,fold:true,docs:loadDocs()};
+let SEQ=S.docs.reduce((m,d)=>d.hist.reduce((a,x)=>Math.max(a,x.seq||0),m),0);
+const doc=id=>S.docs.find(d=>d.id===+id), cur=d=>d.revs[d.revs.length-1];
+const lastIssued=d=>[...d.revs].reverse().find(r=>r.st==="issued");
+const lastAt=d=>(d.hist[0]&&d.hist[0].at)||TODAY;
+const jobsWithDocs=()=>Suite.jobs.filter(j=>S.docs.some(d=>d.proj===j.id));
+
+/* ---------- stage: worked out from the current revision ---------- */
+function stage(d){
+  if(d.gone) return {k:"disc",l:"Discarded",c:"gone"};
+  const r=cur(d);
+  return {draft:{k:"draft",l:"In draft",c:"grey"},chk:{k:"chk",l:`With checker · ${nm(r.chk)}`,c:"blue"},ret:{k:"ret",l:`Returned · ${nm(r.by)}`,c:"amber"},
+    app:{k:"app",l:`With approver · ${nm(r.app)}`,c:"blue"},ready:{k:"ready",l:"Ready to issue",c:"green"},
+    issued:r.resp&&r.resp.k==="rej"?{k:"crej",l:"Rejected by client",c:"red"}:r.resp&&r.resp.k==="awc"?{k:"cawc",l:"Approved with comments",c:"amber"}
+      :r.nochk?{k:"nochk",l:"Issued without check",c:"amber"}:r.resp?{k:"cok",l:"Approved by client",c:"plain"}
+      :PURP[r.issue&&r.issue.purpose]?{k:"await",l:"Awaiting response",c:"plain wait"}:{k:"issued",l:"Issued",c:"plain"}}[r.st];
+}
+/* whose turn it is, and which "My checks" group it belongs to */
+function turn(d){
+  if(d.gone) return null; const r=cur(d);
+  if(r.st==="draft") return {who:r.by,g:null};
+  if(r.st==="chk") return {who:r.chk,g:"chk"};
+  if(r.st==="ret") return {who:r.by,g:"fix"};
+  if(r.st==="app") return {who:r.app,g:"app"};
+  if(r.st==="ready") return {who:DC,g:"iss"};
+  if(r.st==="issued"&&r.resp&&r.resp.k!=="ok") return {who:r.by,g:"cli"};
+  return null;
+}
+const mine=d=>{const t=turn(d);return !!t&&t.who===S.me};
+const respOf=r=>r.resp?RESP[r.resp.k]:(PURP[r.issue&&r.issue.purpose]?["Awaiting response","wait"]:null);
+
+/* ---------- small pieces ---------- */
+const SI={draft:'<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.6 2"/>',
+ chk:'<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"/>',
+ ret:'<path d="M6.5 3.5L3 7l3.5 3.5M3 7h6.2a3.3 3.3 0 0 1 0 6.6H7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+ ready:'<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.3 8.2l1.9 1.9 3.5-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+ issued:'<circle cx="8" cy="8" r="6.3" fill="currentColor"/><path d="M5.2 8.2l1.9 1.9 3.6-4.1" fill="none" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+ nochk:'<path d="M8 2.6l6 10.4H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6.8v3M8 11.3v.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+ disc:'<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'};
+SI.app=SI.chk;SI.cok=SI.issued;SI.cawc=SI.ready;
+SI.await='<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 5v3.2l2.1 1.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+SI.crej='<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
+const stl=d=>{const s=stage(d);return `<span class="st ${s.c}"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">${SI[s.k]}</svg>${E(s.l)}</span>`};
+/* second line of the Stage cell: how long it has been where it is */
+function sub(d){const r=cur(d);if(d.gone)return"";
+  if(r.st==="issued"){const k=stage(d).k,l=t=>`<div class="l2 small muted">${t}</div>`;
+    if(k==="await")return l(`Issued ${ago(r.issue.date)}`);
+    if(k==="crej"||k==="cawc")return l(`Client replied ${ago(r.resp.date)}`);
+    if(k==="nochk"&&PURP[r.issue.purpose]&&!r.resp)return l("Awaiting response");
+    if(k==="cok")return l(`Client replied ${E(r.resp.date)}`);
+    return ""}
+  const m={chk:["Sent",lastAt(d)],ret:["Returned",r.ret&&r.ret.at],app:["Checked",lastAt(d)],ready:["Approved",lastAt(d)]}[r.st];if(!m||!m[1])return"";
+  return `<div class="l2 small ${days(m[1])>=2?"late":"muted"}">${m[0]} ${ago(m[1])}</div>`}
+const typ=d=>TYPES[d.type]||["Document","#7A8794"];
+const sq=d=>`<span class="sq" style="background:${typ(d)[1]}" aria-hidden="true"></span>`;
+const sel=(f,opts,v)=>`<select class="f" data-f="${f}">${opts.map(([k,l])=>`<option value="${E(k)}"${k===v?" selected":""}>${E(l)}</option>`).join("")}</select>`;
+function hist(d,t,c){d.hist.unshift({at:stamp(),by:S.me,t,c,seq:++SEQ})}
+function notice(d,to,subj,line,c){const ids=[...new Set([].concat(to))];S.toast={msg:`Notice sent to ${ids.map(nm).join(" and ")}.`,mail:{to:ids,subj:`${subj}: ${d.num} ${revL(cur(d).rev)}`,line,c,id:d.id}}}
+const plural=n=>`${n} ${n===1?"document":"documents"}`;
+const pick1=(pref,not)=>pref.concat(STAFF).find(k=>!not.includes(k));
+
+/* ---------- page ---------- */
+let LASTOPEN=null;
+function render(){
+  const n=S.docs.filter(d=>mine(d)&&turn(d).g).length;
+  const body=S.page==="home"?home():S.page==="doc"&&doc(S.full)?fullPage(doc(S.full)):register();
+  const reg=S.page==="register"||S.page==="doc";
+  document.getElementById("app").innerHTML=`
+  <label class="fl viewas2">View as<select class="f" data-set="me" aria-label="View as">${STAFF.map(k=>`<option value="${k}"${k===S.me?" selected":""}>${E(P[k].n)} · ${E(P[k].role)}</option>`).join("")}</select></label>
+  <div class="tabs" role="navigation" aria-label="Documents">
+    <button data-act="nav" data-v="home" class="${reg?"":"on"}"${reg?"":' aria-current="page"'}>My checks${n?`<span class="cnt">${n}</span>`:""}</button>
+    <button data-act="nav" data-v="register" class="${reg?"on":""}"${reg?' aria-current="page"':""}>Register</button>
+  </div>
+  ${body}
+  ${S.page==="register"&&S.open&&doc(S.open)?`<aside class="aside${S.open!==LASTOPEN?" new":""}" aria-label="Document">${panel(doc(S.open))}</aside>`:""}
+  ${S.modal?modal():""}
+  ${S.toast?`<div class="toast" role="status"><span>${E(S.toast.msg)}</span>${S.toast.mail?`<button class="lnk" data-act="mail">View notice email</button>`:""}${S.toast.draft?`<button class="lnk" data-act="draft" data-id="${S.toast.draft}">Draft email</button>`:""}<button class="lnk" data-act="untoast" aria-label="Dismiss" style="text-decoration:none">✕</button></div>`:""}`;
+  LASTOPEN=S.page==="register"?S.open:null;
+  const va=document.getElementById("viewas");if(va)va.value=S.me;
+  Suite.save("documents",1,{day:Suite.iso(Suite.today()),docs:S.docs});
+}
+
+/* ---------- My checks ---------- */
+function home(){
+  const G=[["chk","To check","Check"],["app","To approve","Approve"],["fix","Returned with comments","Fix"],["iss","To issue","Issue"],["cli","Client comments to address","Start"]];
+  const my=S.docs.filter(d=>mine(d)&&turn(d).g);
+  const others=S.docs.filter(d=>{const t=turn(d),r=cur(d);return t&&!mine(d)&&["chk","app","ready"].includes(r.st)&&r.by===S.me});
+  const from=d=>{const r=cur(d);return {chk:r.by,app:r.chk,fix:r.ret&&r.ret.by,iss:r.app,cli:null}[turn(d).g]};
+  const item=(d,btn)=>{const late=days(lastAt(d))>=2,t=turn(d),r=cur(d),f=btn?from(d):t.who,ex=t.g==="fix"?r.ret.c:t.g==="cli"?r.resp.c:"";
+    return `<div class="it" data-act="full" data-id="${d.id}" tabindex="0" role="link">
+      <div style="min-width:0"><span class="num">${E(d.num)}</span> <span class="rev">${revL(r.rev)}</span><div class="p ink" style="font-size:13px">${E(d.title)}</div><div class="p">${E(typ(d)[0])} · ${E(d.proj)} ${E(jobName(d.proj))}</div>${ex?`<div class="p ex">"${E(ex)}"</div>`:""}</div>
+      <div class="small">${btn&&t.g==="cli"?`<span class="resp ${RESP[r.resp.k][1]}">${RESP[r.resp.k][0]}</span>`:`${av(f)}${nm(f)}`}</div>
+      <div class="small age ${late?"late":""}">${ago(lastAt(d))}</div>
+      <div style="text-align:right">${btn?`<span class="btn sm">${btn}</span>`:stl(d)}</div></div>`};
+  const lists=G.map(([k,l,b])=>[k,l,b,my.filter(d=>turn(d).g===k).sort((a,b2)=>pd(lastAt(a))-pd(lastAt(b2)))]);
+  const head=`<div class="it hd2"><div>Document</div><div>From</div><div>Waiting</div><div></div></div>`;
+  const groups=lists.map(([k,l,b,list])=>list.length?`<section class="sec grp" id="g-${k}"><header><h2>${l}</h2><span class="n">${list.length}</span></header>${head.replace("From",k==="cli"?"Client said":"From")}${list.map(d=>item(d,b)).join("")}</section>`:"").join("");
+  const act=S.docs.flatMap(d=>d.hist.map(h=>({d,h}))).sort((a,b)=>(b.h.seq||0)-(a.h.seq||0)||pd(b.h.at)-pd(a.h.at)).slice(0,9);
+  const hr=new Date().getHours(),hello=hr<12?"Good morning":hr<18?"Good afternoon":"Good evening";
+  return `<h1>${hello}, ${E(nm(S.me).split(" ")[0])}.</h1><p class="muted" style="margin:4px 0 0">${my.length?`${my.length} ${my.length===1?"document is":"documents are"} waiting on you`:"Nothing is waiting on you"} at ${E(Suite.company())}. <span class="small">You are viewing as ${E(nm(S.me))}, ${E(P[S.me].role)}.</span></p>
+  <div class="sums">${lists.map(([k,l,,list])=>`<div class="sum ${list.length?"":"zero"}"><b>${list.length}</b><span>${l}</span></div>`).join("")}</div>
+  <div class="two-col">
+    <div class="stack">
+      <div class="mch"><h2>My checks</h2><span class="small muted">Oldest first. Amber means two days or more.</span></div>
+      ${groups||`<section class="sec"><div class="empty"><div class="ink" style="font-weight:600;margin-bottom:4px">All caught up</div>Nothing is waiting on you. Use "View as" in the top bar to see someone else's list.</div></section>`}
+      ${others.length?`<section class="sec grp fold"><header data-act="fold" tabindex="0" role="button" aria-expanded="${!S.fold}"><h2>${S.fold?"▸":"▾"} My documents waiting on someone else</h2><span class="n">${others.length}</span></header>${S.fold?"":head.replace("From","With")+others.map(d=>item(d,null)).join("")}</section>`:""}
+    </div>
+    <div class="stack"><div class="mch"><h2>Recent activity</h2></div><section class="sec"><div class="blk"><ul class="hist">${act.map(({d,h})=>`<li><span class="at">${E(h.at)}</span><span><button class="lnk" data-act="full" data-id="${d.id}">${E(d.num)}</button> ${E(h.t)}</span></li>`).join("")}</ul></div></section></div>
+  </div>`;
+}
+
+/* ---------- Register ---------- */
+const CH=[["all","All"],["draft","In draft"],["chk","With checker"],["ret","Returned"],["app","With approver"],["ready","Ready to issue"],["issued","Issued"],["await","Awaiting response"],["cok","Approved by client"],["cawc","Approved with comments"],["crej","Rejected by client"],["nochk","Issued without check"],["disc","Discarded"]];
+const ORDER=["draft","ret","chk","app","ready","crej","cawc","nochk","await","issued","cok","disc"];
+const SORT={no:d=>d.no,doc:d=>d.num.toLowerCase(),type:d=>typ(d)[0],rev:d=>cur(d).rev,stage:d=>ORDER.indexOf(stage(d).k),issue:d=>{const li=lastIssued(d);return li?+pd(li.issue.date):0}};
+const inJob=()=>S.docs.filter(d=>d.proj===S.job);
+function rows(){
+  const [k,dir]=S.sort;
+  return inJob().filter(d=>{const s=stage(d).k;
+    if(S.filter==="all"){if(s==="disc")return false} else if(S.filter==="me"){if(!mine(d))return false} else if(s!==S.filter)return false;
+    if(S.type!=="all"&&d.type!==S.type)return false;
+    if(S.q&&!(d.num+" "+d.title+" "+typ(d)[0]).toLowerCase().includes(S.q.toLowerCase()))return false;
+    return true}).sort((a,b)=>{const x=SORT[k](a),y=SORT[k](b);return (x<y?-1:x>y?1:a.no-b.no)*dir});
+}
+function register(){
+  const all=inJob(), list=rows(), job=JOB[S.job];
+  const cnt=k=>k==="all"?all.filter(d=>!d.gone).length:all.filter(d=>stage(d).k===k).length, nMe=all.filter(mine).length;
+  const act=S.filter!=="all"||S.type!=="all"||S.q;
+  const stageOpts=[["all",`All stages (${cnt("all")})`],["me",`Waiting on me (${nMe})`]].concat(CH.slice(1).filter(([k])=>cnt(k)||S.filter===k).map(([k,l])=>[k,`${l} (${cnt(k)})`]));
+  const selD=[...S.sel].map(doc).filter(Boolean), dc=S.me===DC, canSend=selD.length&&selD.every(d=>cur(d).st==="draft"&&cur(d).by===S.me&&!d.gone), canIss=dc&&selD.length&&selD.every(d=>cur(d).st==="ready");
+  const th=(k,l)=>{const on=S.sort[0]===k;return `<th${on?` aria-sort="${S.sort[1]>0?"ascending":"descending"}"`:""}><button class="thb" data-act="sort" data-v="${k}">${l}<i>${on&&S.sort[1]<0?"▼":"▲"}</i></button></th>`};
+  const row=d=>{const r=cur(d),li=lastIssued(d),rp=li&&respOf(li);
+    return `<tr class="${mine(d)?"mine":""} ${S.open===d.id?"sel":""} ${d.gone?"dim":""}" data-act="open" data-id="${d.id}">
+    <td class="c0"><input type="checkbox" data-sel="${d.id}" ${S.sel.has(d.id)?"checked":""} aria-label="Select ${E(d.num)}"></td>
+    <td class="c1">${pad3(d.no)}</td>
+    <td class="cdoc"><span class="num">${E(d.num)}</span><div class="ttl">${E(d.title)}</div></td>
+    <td class="ct">${sq(d)}${E(typ(d)[0])}</td>
+    <td class="c3"><span class="ink">${revL(r.rev)}</span></td>
+    <td class="c4">${stl(d)}${sub(d)}</td>
+    <td class="c5">${li?`<span class="ink">${E(li.issue.purpose)}</span><div class="l2 small muted">${revL(li.rev)} · ${E(li.issue.date)}</div>${rp&&li!==r?`<div class="l2 small"><span class="resp ${rp[1]}">${rp[0]}</span></div>`:""}`:`<span class="muted">Not issued yet</span>`}</td></tr>`};
+  return `<div class="card">
+    <div class="band"><div><div class="crumb muted">Document register</div><h1>${E(job.id)} · ${E(job.name)}<span class="pill">Client: ${E(job.client)}</span></h1></div>
+      <div class="acts"><label class="fl">Job<select class="f" data-set="job">${jobsWithDocs().map(j=>`<option value="${E(j.id)}"${j.id===S.job?" selected":""}>${E(j.id)} · ${E(j.name)}</option>`).join("")}</select></label><button class="btn" data-act="log">Change log</button><button class="btn" data-act="export">Export</button><button class="btn pri" data-act="reg">Register a document</button></div></div>
+    <div class="filters">
+      <input class="search" id="q" placeholder="Search number, title or type…" value="${E(S.q)}" aria-label="Search this register">
+      <label class="fl">Stage<select class="f" data-set="filter">${stageOpts.map(([k,l])=>`<option value="${k}"${S.filter===k?" selected":""}>${l}</option>`).join("")}</select></label>
+      <label class="fl">Type<select class="f" data-set="type"><option value="all">All types</option>${Object.entries(TYPES).map(([k,[l]])=>`<option value="${k}"${S.type===k?" selected":""}>${l}</option>`).join("")}</select></label>
+      ${act?`<button class="lnk" data-act="clearf">Clear filters</button>`:""}
+      <span class="tools"><span class="seg" role="group" aria-label="Row height"><button class="${S.dense?"":"on"}" data-act="dense" data-v="0" aria-pressed="${!S.dense}">Comfortable</button><button class="${S.dense?"on":""}" data-act="dense" data-v="1" aria-pressed="${S.dense}">Compact</button></span></span></div>
+    ${S.sel.size?`<div class="bulk"><b class="ink">${S.sel.size} selected</b><button class="btn sm" data-act="bulk" data-v="send" ${canSend?"":"disabled"}>Send for check</button><button class="btn sm" data-act="bulk" data-v="issue" ${canIss?"":"disabled"}>Record issue</button><button class="lnk" data-act="clearsel">Clear</button>${!canSend&&!canIss?`<span class="muted">Pick your own drafts to send for check. ${E(nm(DC))} can pick documents that are ready to issue.</span>`:""}</div>`:""}
+    <div class="tw"><table class="${S.dense?"dense":""}"><thead><tr><th></th>${th("no","No.")}${th("doc","Document")}${th("type","Type")}${th("rev","Rev")}${th("stage","Stage")}${th("issue","Last issue")}</tr></thead>
+      <tbody>${list.map(row).join("")||`<tr><td colspan="7" class="empty">No documents match these filters. <button class="lnk" data-act="clearf">Clear filters</button></td></tr>`}</tbody></table></div>
+    <div class="foot"><span>Showing ${list.length} of ${all.length} documents</span><span>The amber edge marks rows waiting on you</span></div>
+  </div>`;
+}
+
+/* ---------- document blocks ---------- */
+function bHead(d,full){const r=cur(d);
+  return `<div class="blk hd"><div class="${full?"hdfull":""}">
+    ${full?"":`<div class="acts" style="justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-act="full" data-id="${d.id}">Open full page</button>${moreMenu(d)}<button class="btn sm" data-act="close" aria-label="Close panel">✕</button></div>`}
+    <div><div class="num">${E(d.num)}</div><div class="t">${E(d.title)}</div><div class="row"><span class="rev">${revL(r.rev)}</span>${stl(d)}<span class="small muted">${sq(d)}${E(typ(d)[0])}</span></div></div>
+    ${full?`<div class="acts" style="flex:none">${moreMenu(d)}</div>`:""}</div></div>`}
+function moreMenu(d){const r=cur(d),a=P[S.me].admin,it=[];
+  if(d.gone) return "";
+  if(r.st==="chk"&&S.me!==r.by&&S.me!==r.chk&&S.me!==r.app) it.push(["take","Take over check"]);
+  if(["chk","app"].includes(r.st)&&S.me===r.by) it.push(["replace","Replace PDF"]);
+  if(r.st==="issued"&&PURP[r.issue.purpose]) it.push(["resp",r.resp?"Change client response":"Record client response"]);
+  if(a&&r.st!=="issued") it.push(["nochk","Issue without check"]);
+  if(r.st!=="issued"&&d.revs.length===1&&(a||S.me===r.by)) it.push(["discard","Discard"]);
+  if(!it.length) return "";
+  return `<div class="menu"><button class="btn sm" data-act="menu" aria-label="More actions" aria-expanded="${S.menu}">⋯</button>${S.menu?`<div class="pop">${it.map(([k,l])=>`<button data-act="form" data-v="${k}" data-id="${d.id}">${l}</button>`).join("")}</div>`:""}</div>`}
+function bTurn(d){
+  const r=cur(d),my=mine(d),f=S.form&&S.form.id===d.id?S.form:null;
+  if(d.gone) return `<div class="blk turn"><p>Discarded</p><div class="dt">Its number is never used again.</div></div>`;
+  let hl="",dt="",btn="";const b=(k,l,p)=>`<button class="btn ${p?"pri":""}" data-act="form" data-v="${k}" data-id="${d.id}">${l}</button>`,when=ago(lastAt(d));
+  if(r.st==="draft"){hl="In draft";dt=my?"Send it for check when the PDF is ready.":`With ${nm(r.by)}. Not sent for check yet.`;if(my)btn=b("send","Send for check",1)}
+  if(r.st==="chk"){hl=my?"Waiting for your check":`Waiting for ${nm(r.chk)} to check`;dt=`Sent by ${nm(r.by)} ${when}.`;if(my)btn=b("checked","Mark as checked",1)+b("return","Return with comments")}
+  if(r.st==="ret"){hl=my?"Returned to you with comments":`Returned to ${nm(r.by)} with comments`;dt=`Returned by ${nm(r.ret.by)} ${ago(r.ret.at)}.${my?" Fix it and send it again.":""}`;if(my)btn=b("again","Send again",1)}
+  if(r.st==="app"){hl=my?"Waiting for your approval":`Waiting for ${nm(r.app)} to approve`;dt=`Checked by ${nm(r.chk)} ${when}.`;if(my)btn=b("approve","Approve",1)+b("return","Return with comments")}
+  if(r.st==="ready"){hl=my?"Ready for you to issue":`Waiting for ${nm(DC)} to issue`;dt=`Approved by ${nm(r.app)} ${when}.${my?" Send it to the client, then record the issue here.":""}`;if(my)btn=b("issue","Record issue",1)}
+  if(r.st==="issued"){const rp=respOf(r);
+    if(r.resp&&r.resp.k!=="ok"){hl=`Client ${r.resp.k==="rej"?"rejected":"approved with comments"}`;dt=`Client replied on ${E(r.resp.date)}. ${my?"Start the next revision to answer the comments.":`Waiting for ${nm(r.by)} to start the next revision.`}`;if(my)btn=b("next","Start next revision",1)}
+    else if(rp&&!r.resp){hl="Awaiting the client's response";dt=`Issued on ${E(r.issue.date)} by ${nm(r.issue.by)}.`;btn=b("resp","Record client response")}
+    else{hl=r.resp?"Approved by the client":"Issued";dt=`Issued on ${E(r.issue.date)} by ${nm(r.issue.by)}. ${r.resp?`Client replied on ${E(r.resp.date)}.`:"No response is expected for this purpose."}`}
+    if(r.nochk) dt+=` Issued without check: ${E(r.nochk)}`}
+  return `<div class="blk turn ${my&&!f?"mine":""}"><p>${hl}</p><div class="dt">${dt}</div>${f?form(d,f):btn?`<div class="acts">${btn}</div>`:""}</div>`;
+}
+function bSign(d){const r=cur(d),s=r.sig||{};
+  if(r.old) return `<div class="blk"><h3>Sign-off</h3><span class="muted">Issued before checking was introduced.</span></div>`;
+  const rf=r.st==="ret"&&r.ret?r.ret.from:null;
+  const c=(k,who,date,state,word)=>`<div class="${state}"><span class="dot" aria-hidden="true">${{done:"✓",back:"↩",skip:"!"}[state]||""}</span><div class="k">${k}</div><div class="v">${who?nm(who):"-"}</div><div class="d">${E(date||word||"")}</div></div>`;
+  const steps=[
+   c("Prepared",r.by,s.p,(r.st==="draft"||r.st==="ret")?"now":"done",r.st==="ret"?"fixing comments":r.st==="draft"?"in draft":""),
+   r.nochk?c("Checked",null,"","skip","not checked"):c("Checked",r.chk,s.c,s.c?"done":r.st==="chk"?"now":rf==="chk"?"back":"todo",r.st==="chk"?"checking now":rf==="chk"?"returned":r.chk?"not yet":""),
+   r.nochk?c("Approved",null,"","skip","not approved"):c("Approved",r.app,s.a,s.a?"done":r.st==="app"?"now":rf==="app"?"back":"todo",r.st==="app"?"approving now":rf==="app"?"returned":r.app?"not yet":""),
+   c("Issued",r.issue?r.issue.by:null,r.issue&&r.issue.date,r.st==="issued"?"done":r.st==="ready"?"now":"todo",r.st==="ready"?"ready to issue":"")];
+  if(PURP[(r.issue&&r.issue.purpose)||r.purpose]){const x=r.resp,cls=x?{ok:"done",awc:"back",rej:"rej"}[x.k]:r.st==="issued"?"now":"todo";
+    steps.push(`<div class="${cls}"><span class="dot" aria-hidden="true">${{done:"✓",back:"!",rej:"✕"}[cls]||""}</span><div class="k">Client</div><div class="v">${x?RESP[x.k][0]:"-"}</div><div class="d">${x?E(x.date):r.st==="issued"?"awaiting response":""}</div></div>`)}
+  return `<div class="blk"><h3>Sign-off</h3><div class="stp" style="grid-template-columns:repeat(${steps.length},1fr)">${steps.join("")}</div>${r.nochk?`<div class="note"><div class="who">Issued without check by ${nm(r.issue.by)}</div>${E(r.nochk)}</div>`:""}</div>`}
+function bFile(d){const r=cur(d),folder=r.st==="issued"?"Issued folder":"Working folder";
+  let h=`<div class="blk"><h3>File and comments</h3>`;
+  h+=r.file?`<div class="file"><div style="display:flex;gap:12px;align-items:center"><span class="pdf">PDF</span><div><div class="n">${E(r.file.name)}</div><div class="small muted">Uploaded by ${nm(r.file.by)}, ${E(r.file.at.slice(0,10))} · ${folder}</div></div></div><button class="btn sm" data-act="nofile">Download PDF</button></div>`:`<span class="muted">${r.old?"No PDF. This revision was issued before files were kept here.":"No PDF yet. It is uploaded when the document is sent for check."}</span>`;
+  if(r.clientNote) h+=`<div class="note"><div class="who">Client's comments on ${revL(r.rev-1)}</div>${E(r.clientNote)}</div>`;
+  if(r.what) h+=`<div class="small" style="margin-top:10px"><span class="muted">What changed: </span><span class="ink">${E(r.what)}</span></div>`;
+  if(r.st==="ret"&&r.ret) h+=`<div class="note"><div class="who">${nm(r.ret.by)}, ${E(r.ret.at)}</div>${E(r.ret.c)}${r.ret.markup?`<div style="margin-top:8px"><button class="lnk" data-act="nofile">Download marked-up PDF</button></div>`:""}</div>`;
+  if(r.st==="issued"&&r.resp&&r.resp.c) h+=`<div class="note ${r.resp.k==="rej"?"red":""}"><div class="who">Client response, ${E(r.resp.date)}: ${RESP[r.resp.k][0]}</div>${E(r.resp.c)}</div>`;
+  return h+`</div>`}
+function bDetails(d){const r=cur(d),li=lastIssued(d),rp=li&&respOf(li),k=(a,b)=>`<div><div class="k">${a}</div><div class="v">${b}</div></div>`;
+  return `<div class="blk"><h3>Details</h3><div class="facts">${k("Type",`${E(d.type)} · ${E(typ(d)[0])}`)}${k("Author",nm(r.by))}${k("Checker",r.chk?nm(r.chk):"-")}${k("Approver",r.app?nm(r.app):"-")}${k("Purpose",E(r.purpose||(li&&li.issue.purpose)||"-"))}${k("Last issue",li?`${revL(li.rev)} · ${E(li.issue.date)}`:"Not issued yet")}${k("Client response",rp?`<span class="resp ${rp[1]}">${rp[0]}</span>`:"-")}${k("Job",`${E(d.proj)} · ${E(jobName(d.proj))}`)}${k("Client",E(JOB[d.proj]?JOB[d.proj].client:"-"))}</div></div>`}
+function bRevs(d){return `<div class="blk"><h3>Revisions</h3>${[...d.revs].reverse().map(r=>{const rp=r.st==="issued"&&respOf(r);return `<div class="rv"><div><span class="ink" style="font-weight:500">${revL(r.rev)}</span> <span class="small muted">${r.what?E(r.what):r.rev===0?"First revision":""}</span><div class="small muted">${r.old?"Issued before checking was introduced":r.nochk?"Issued without check":`Prepared ${nm(r.by)}${r.sig&&r.sig.c?` · Checked ${nm(r.chk)}`:""}${r.sig&&r.sig.a?` · Approved ${nm(r.app)}`:""}`}</div></div><div class="small" style="text-align:right;flex:none">${r.st==="issued"?`<span class="ink">${E(r.issue.purpose)}</span><div class="muted">${E(r.issue.date)}${rp?` · <span class="resp ${rp[1]}">${rp[0]}</span>`:""}</div>`:`<span class="muted">Not issued yet</span>`}</div>
+      <div style="flex:none;width:124px;text-align:right">${r.file?`<button class="btn sm" data-act="nofile">Download PDF</button><div class="small muted" style="margin-top:2px">${r.st!=="issued"?"Working file":r===lastIssued(d)?"Issued file":"Superseded file"}</div>`:`<span class="small muted">${r.old?"No file kept":"No file yet"}</span>`}</div></div>`}).join("")}</div>`}
+const histList=list=>`<ul class="hist">${list.map(h=>`<li><span class="at">${E(h.at)}</span><span>${h.num?`<span class="num">${E(h.num)}</span> `:""}${E(h.t)}${h.c?`<div class="c">${E(h.c)}</div>`:""}</span></li>`).join("")}</ul>`;
+function bHist(d){return `<div class="blk" style="border:0"><h3>History</h3>${histList(d.hist)}</div>`}
+const sec=h=>`<section class="sec">${h}</section>`;
+function panel(d){return `<div class="stack pad">${sec(bHead(d,false)+bTurn(d))}${sec(bFile(d))}${sec(bSign(d))}</div>`}
+function fullPage(d){
+  return `<div class="crumb"><button class="lnk" data-act="nav" data-v="home">‹ My checks</button> / <button class="lnk" data-act="toreg" data-v="${E(d.proj)}">Register · ${E(d.proj)} ${E(jobName(d.proj))}</button></div>
+  <div class="full" style="margin-top:8px"><div class="stack">${sec(bHead(d,true)+bTurn(d))}${sec(bFile(d))}${sec(bSign(d))}${sec(bRevs(d))}${sec(bHist(d))}</div><div class="stack">${sec(bDetails(d))}</div></div>`}
+
+/* ---------- forms, opened in place under "whose turn" ---------- */
+const purpSel=v=>`<label>Purpose of issue${sel("purpose",Object.keys(PURP).map(k=>[k,k]),v)}</label>`;
+function form(d,f){
+  const r=cur(d),v=f.v||{};
+  const pick=(l,mark)=>`<div class="lab">${l}<span style="display:flex;gap:10px;align-items:center"><button type="button" class="btn sm" data-act="pick" data-v="${mark?"m":"f"}">${f[mark?"markup":"file"]?"Replace PDF":"Upload PDF"}</button><span class="ink" style="font-size:13px;word-break:break-all">${E(f[mark?"markup":"file"]||"No file chosen")}</span></span></div>`;
+  const purp=purpSel(v.purpose||r.purpose||"For approval");
+  const foot=l=>`${f.err?`<div class="err" role="alert">${E(f.err)}</div>`:""}<div class="acts"><button class="btn pri" data-act="submit">${l}</button><button class="btn" data-act="cancel">Cancel</button></div>`;
+  const dchk=v.chk||r.chk||pick1(["ek","ak"],[r.by]), dapp=v.app||r.app||pick1(["dm","hw"],[dchk]);
+  const F={
+   send:()=>`<div class="two"><label>Checker${sel("chk",EVERYONE.filter(([k])=>k!==r.by),dchk)}</label><label>Approver${sel("app",EVERYONE,dapp)}</label></div>${purp}${pick("PDF")}<label>Note (optional)<textarea class="f" data-f="note" placeholder="Anything the checker should know">${E(v.note||"")}</textarea></label>${foot("Send for check")}`,
+   checked:()=>`<label>Note (optional)<textarea class="f" data-f="note" placeholder="For example: no comments">${E(v.note||"")}</textarea></label>${foot("Mark as checked")}`,
+   approve:()=>`<label>Note (optional)<textarea class="f" data-f="note">${E(v.note||"")}</textarea></label>${foot("Approve")}`,
+   return:()=>`<label>Comments<textarea class="f" data-f="note" placeholder="What needs fixing">${E(v.note||"")}</textarea></label>${pick("Marked-up PDF",1)}${foot("Return with comments")}`,
+   again:()=>`${pick("Corrected PDF")}<label>Note (optional)<textarea class="f" data-f="note" placeholder="What you changed">${E(v.note||"")}</textarea></label>${foot("Send again")}`,
+   replace:()=>`<p class="small muted" style="margin:0">A new PDF cancels the check and approval. ${nm(r.chk)} will be asked to check it again.</p>${pick("New PDF")}${foot("Replace PDF")}`,
+   issue:()=>`<div class="two">${purp}<label>Issue date<input class="f" data-f="date" value="${E(v.date||TODAY)}" placeholder="DD/MM/YYYY"></label></div><p class="small muted" style="margin:0">The PDF moves from the working folder to the issued folder.</p>${foot("Record issue")}`,
+   nochk:()=>`<label>Reason<textarea class="f" data-f="note" placeholder="Why this is being issued without a check">${E(v.note||"")}</textarea></label><div class="two">${purp}<label>Issue date<input class="f" data-f="date" value="${E(v.date||TODAY)}" placeholder="DD/MM/YYYY"></label></div>${pick("PDF")}${foot("Issue without check")}`,
+   resp:()=>`<div class="two"><label>Client response${sel("k",Object.entries(RESP).map(([k,[l]])=>[k,l]),v.k||(r.resp&&r.resp.k)||"ok")}</label><label>Date<input class="f" data-f="date" value="${E(v.date||TODAY)}" placeholder="DD/MM/YYYY"></label></div><label>Client's comments<textarea class="f" data-f="note">${E(v.note!==undefined?v.note:(r.resp&&r.resp.c)||"")}</textarea></label>${foot("Save response")}`,
+   next:()=>`<label>What changed<textarea class="f" data-f="note" placeholder="For example: section 4 updated to the latest loading schedule">${E(v.note||"")}</textarea></label>${foot("Start "+revL(r.rev+1))}`,
+   take:()=>`<p class="small muted" style="margin:0">You will become the checker in place of ${nm(r.chk)}. This is logged.</p>${foot("Take over check")}`,
+   discard:()=>`<p class="small muted" style="margin:0">A discarded document stays on the register, struck through, and its number is never used again.</p><label>Reason<textarea class="f" data-f="note" placeholder="Why this document is no longer needed">${E(v.note||"")}</textarea></label>${foot("Discard")}`,
+  };
+  return `<div class="form" data-form>${F[f.kind]()}</div>`;
+}
+function grab(){const f=S.form||S.modal;if(!f)return{};f.v=f.v||{};document.querySelectorAll("#app [data-f]").forEach(e=>f.v[e.dataset.f]=e.value);return f.v}
+const fail=m=>{S.form.err=m;render()};
+function submit(){
+  const f=S.form,d=doc(f.id),r=cur(d),v=grab(),note=(v.note||"").trim(),me=S.me;
+  const K={
+   send(){if(v.chk===v.app)return fail("The checker can't also approve. Pick a different approver.");if(!f.file)return fail("Upload the PDF first.");
+     Object.assign(r,{chk:v.chk,app:v.app,purpose:v.purpose,file:{name:f.file,by:me,at:stamp()},sig:{p:TODAY},st:"chk",ret:null});hist(d,`Sent for check to ${nm(v.chk)}`,note);
+     notice(d,v.chk,"To check",`${nm(me)} sent this for you to check.`,note);S.toast.draft=d.id},
+   checked(){r.sig.c=TODAY;r.st="app";hist(d,`Checked by ${nm(me)}`,note);notice(d,r.app,"To approve",`${nm(me)} checked this. It needs your approval.`,note)},
+   approve(){r.sig.a=TODAY;r.st="ready";hist(d,`Approved by ${nm(me)}`,note);notice(d,DC,"Ready to issue",`${nm(me)} approved this. It can be issued.`,note)},
+   return(){if(!note)return fail(`Write your comments so ${nm(r.by)} knows what to fix.`);if(!f.markup)return fail("Upload the marked-up PDF.");r.ret={by:me,from:r.st,at:stamp(),c:note,markup:f.markup||null};r.sig={p:r.sig.p};r.st="ret";hist(d,`Returned with comments by ${nm(me)}`,note);notice(d,r.by,"Returned with comments",`${nm(me)} returned this with comments.`,note)},
+   again(){if(!f.file)return fail("Upload the corrected PDF first.");r.file={name:f.file,by:me,at:stamp()};r.sig={p:TODAY};r.st="chk";r.ret=null;hist(d,`Sent again to ${nm(r.chk)}`,note);notice(d,r.chk,"To check",`${nm(me)} fixed the comments and sent this again.`,note)},
+   replace(){if(!f.file)return fail("Upload the new PDF first.");r.file={name:f.file,by:me,at:stamp()};r.sig={p:TODAY};r.st="chk";hist(d,`${nm(me)} replaced the PDF. The check and approval were cancelled.`);notice(d,r.chk,"To check",`${nm(me)} uploaded a new PDF. Please check it again.`)},
+   issue(){if(!okDate(v.date))return fail("Write the issue date as DD/MM/YYYY.");r.st="issued";r.issue={date:v.date,purpose:v.purpose,by:me};hist(d,`Issued, ${v.purpose}`);S.toast={msg:"Issue recorded. The PDF is now in the issued folder."}},
+   nochk(){if(!note)return fail("Write the reason.");if(!okDate(v.date))return fail("Write the issue date as DD/MM/YYYY.");if(!f.file&&!r.file)return fail("Upload the PDF first.");if(f.file)r.file={name:f.file,by:me,at:stamp()};r.by=r.by||me;r.nochk=note;r.purpose=v.purpose;r.sig={p:(r.sig&&r.sig.p)||TODAY};r.st="issued";r.issue={date:v.date,purpose:v.purpose,by:me};hist(d,`Issued without check by ${nm(me)}`,note);S.toast={msg:"Issued without check. It stays marked."}},
+   resp(){if(!okDate(v.date))return fail("Write the date as DD/MM/YYYY.");r.resp={k:v.k,date:v.date,c:note};hist(d,`Client response recorded: ${RESP[v.k][0]}`);S.toast={msg:"Response saved."}},
+   next(){if(!note)return fail("Say what changed in this revision.");d.revs.push({rev:r.rev+1,st:"draft",by:me,chk:r.chk,app:r.app,purpose:r.issue.purpose,what:note,clientNote:(r.resp&&r.resp.c)||""});hist(d,`${revL(r.rev+1)} started`,note);S.toast={msg:`${revL(r.rev+1)} started, in draft.`}},
+   take(){const was=r.chk;r.chk=me;hist(d,`${nm(me)} took over the check`,`Was with ${nm(was)}.`);S.toast={msg:"You are now the checker."}},
+   discard(){if(!note)return fail("Write the reason.");d.gone=1;hist(d,`Discarded: ${note}`);S.sel.delete(d.id);S.toast={msg:`${d.num} discarded.`}},
+  };
+  f.err="";K[f.kind]();
+  if(!f.err){S.form=null;render()}
+}
+
+/* ---------- pop-ups: notice email, draft email, batch forms, new document, change log ---------- */
+function modal(){
+  const m=S.modal;let t="",b="",ft=`<button class="btn" data-act="closemodal">Close</button>`;
+  const who=k=>`${E(nm(k))} &lt;${E(Suite.emailFor(P[k].p))}&gt;`;
+  if(m.kind==="mail"){const d=doc(m.id);t="Notice email";
+    b=`<div class="mail"><dl><dt>From</dt><dd>${E(Suite.company())} Documents &lt;documents@${E(Suite.slug())}.example&gt;</dd><dt>To</dt><dd>${m.to.map(who).join(", ")}</dd><dt>Subject</dt><dd>${E(m.subj)}</dd></dl><div class="b"><p>${E(m.line)}</p><p><span class="num">${E(d.num)}</span> ${revL(cur(d).rev)}<br>${E(d.title)}<br><span class="muted">${E(d.proj)} · ${E(jobName(d.proj))}</span></p>${m.c?`<p class="muted">"${E(m.c)}"</p>`:""}<p><span class="btn pri">Open document</span></p><p class="small muted">This is an automatic notice. It goes only to the person who has to act next.</p></div></div>`}
+  if(m.kind==="draft"){const d=doc(m.id),r=cur(d),subj=`${d.num} ${revL(r.rev)}, for check`,body=`Hi ${nm(r.chk).split(" ")[0]},\n\n${d.num} ${revL(r.rev)} (${d.title}) is ready for your check.\n\nFile: ${r.file.name}\nJob: ${d.proj} ${jobName(d.proj)}\n\nThanks,\n${nm(r.by).split(" ")[0]}`;t="Draft email";
+    b=`<p class="small muted" style="margin-top:0">For when you want to say more than the automatic notice. This opens a new email in your own email app, so you can copy in anyone you like before you send it.</p><div class="mail"><dl><dt>To</dt><dd>${who(r.chk)}</dd><dt>Subject</dt><dd>${E(subj)}</dd></dl><div class="b" style="white-space:pre-wrap">${E(body)}</div></div>`;
+    ft=`<a class="btn pri" href="mailto:${encodeURIComponent(Suite.emailFor(P[r.chk].p))}?subject=${encodeURIComponent(subj)}&amp;body=${encodeURIComponent(body)}">Open in email app</a>`+ft}
+  if(m.kind==="bsend"||m.kind==="bissue"){const ds=[...S.sel].map(doc).filter(Boolean),v=m.v||{},send=m.kind==="bsend";t=send?`Send ${plural(ds.length)} for check`:`Record issue for ${plural(ds.length)}`;
+    const dchk=v.chk||pick1(["ek","ak"],[S.me]),dapp=v.app||pick1(["dm","hw"],[dchk]);
+    b=`<ul class="hist" style="margin-bottom:12px">${ds.map(d=>`<li><span class="num">${E(d.num)}</span> <span class="rev">${revL(cur(d).rev)}</span> <span class="muted">${E(d.title)}</span></li>`).join("")}</ul><div class="form">${send?`<div class="two"><label>Checker${sel("chk",EVERYONE.filter(([k])=>k!==S.me),dchk)}</label><label>Approver${sel("app",EVERYONE,dapp)}</label></div>`:""}<div class="two">${purpSel(v.purpose||"For approval")}${send?`<div class="lab">PDFs<span class="ink" style="font-size:13px;padding-top:6px">${ds.length} ${ds.length===1?"file":"files"}, matched to each document by its number</span></div>`:`<label>Issue date<input class="f" data-f="date" value="${E(v.date||TODAY)}" placeholder="DD/MM/YYYY"></label>`}</div>${m.err?`<div class="err" role="alert">${E(m.err)}</div>`:""}</div>`;
+    ft=`<button class="btn pri" data-act="bulkdo">${send?"Send for check":"Record issue"}</button><button class="btn" data-act="closemodal">Cancel</button>`}
+  if(m.kind==="reg"){const v=m.v||{},ty=v.type||"DRG";t="Register a document";
+    b=`<div class="form" style="margin:0"><p class="small muted" style="margin:0">The number is given automatically: job number, type code, then the next number in the sequence for ${E(S.job)} ${E(jobName(S.job))}.</p><div class="two"><label>Type${sel("type",Object.entries(TYPES).map(([k,[l]])=>[k,`${k} · ${l}`]),ty)}</label><div class="lab">Author<span class="ink" style="font-size:14px;padding-top:7px">${E(nm(S.me))}</span></div></div><label>Title<input class="f" data-f="title" value="${E(v.title||"")}" placeholder="For example: Pump control kiosk layout"></label>${m.err?`<div class="err" role="alert">${E(m.err)}</div>`:""}</div>`;
+    ft=`<button class="btn pri" data-act="regdo">Register</button><button class="btn" data-act="closemodal">Cancel</button>`}
+  if(m.kind==="log"){t=`Change log · ${S.job}`;
+    const all=inJob().flatMap(d=>d.hist.map(h=>Object.assign({num:d.num},h))).sort((a,b2)=>(b2.seq||0)-(a.seq||0)||pd(b2.at)-pd(a.at));
+    b=`<p class="small muted" style="margin-top:0">Every action on this job's documents, newest first. ${all.length} entries.</p>${histList(all)}`}
+  return `<div class="scrim" data-act="closemodal"><div class="modal" role="dialog" aria-modal="true" aria-label="${E(t)}" data-stop><header><h2>${E(t)}</h2><button class="btn sm" data-act="closemodal" aria-label="Close">✕</button></header><div class="bd">${b}</div><footer>${ft}</footer></div></div>`;
+}
+function exportCsv(){
+  const q=s=>`"${String(s).replace(/"/g,'""')}"`;
+  const lines=[["Number","Title","Type","Revision","Stage","Author","Last issue purpose","Last issue date"].map(q).join(",")]
+    .concat(rows().map(d=>{const li=lastIssued(d);return [d.num,d.title,typ(d)[0],revL(cur(d).rev),stage(d).l,nm(cur(d).by),li?li.issue.purpose:"",li?li.issue.date:""].map(q).join(",")}));
+  const a=document.createElement("a"),url=URL.createObjectURL(new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv"}));
+  a.href=url;a.download=`Document-register_${S.job}_${Suite.iso(Suite.today())}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  return lines.length-1;
+}
+
+/* ---------- events ---------- */
+const A={
+  nav(o){S.page=o.v;S.open=null;S.form=null;S.full=null;S.menu=false;scrollTo(0,0)},
+  toreg(o){S.job=o.v;S.sel.clear();A.nav({v:"register"})},
+  open(o){S.open=+o.id;S.form=null;S.menu=false},
+  close(){S.open=null;S.form=null;S.menu=false},
+  full(o){S.full=+o.id;S.page="doc";S.open=null;S.form=null;S.menu=false;scrollTo(0,0)},
+  fold(){S.fold=!S.fold},
+  sort(o){S.sort=S.sort[0]===o.v?[o.v,-S.sort[1]]:[o.v,1]},
+  dense(o){S.dense=o.v==="1";Suite.set("documents-dense",S.dense)},
+  clearf(){S.filter="all";S.type="all";S.q=""},
+  menu(){S.menu=!S.menu},
+  form(o){S.form={kind:o.v,id:+o.id};S.menu=false},
+  cancel(){S.form=null},
+  pick(o){grab();const d=doc(S.form.id),r=cur(d);if(o.v==="m")S.form.markup=fileName(d,r,"_markup");else S.form.file=fileName(d,r);S.form.err=""},
+  submit(){submit();return false},
+  nofile(){S.toast={msg:"There are no real files in this demo, so there is nothing to download."}},
+  mail(){S.form=null;S.modal={kind:"mail",...S.toast.mail}},
+  draft(o){S.form=null;S.modal={kind:"draft",id:+o.id}},
+  untoast(){S.toast=null},
+  closemodal(){S.modal=null},
+  clearsel(){S.sel.clear()},
+  bulk(o){S.form=null;S.modal={kind:o.v==="send"?"bsend":"bissue"}},
+  bulkdo(){const v=grab(),ds=[...S.sel].map(doc).filter(Boolean),m=S.modal;
+    if(m.kind==="bsend"){if(v.chk===v.app){m.err="The checker can't also approve. Pick a different approver.";return}
+      ds.forEach(d=>{const r=cur(d);Object.assign(r,{chk:v.chk,app:v.app,purpose:v.purpose,file:{name:fileName(d,r),by:S.me,at:stamp()},sig:{p:TODAY},st:"chk"});hist(d,`Sent for check to ${nm(v.chk)}`)});S.toast={msg:`${plural(ds.length)} sent to ${nm(v.chk)}, in one notice.`}}
+    else{if(!okDate(v.date)){m.err="Write the issue date as DD/MM/YYYY.";return}
+      ds.forEach(d=>{const r=cur(d);r.st="issued";r.issue={date:v.date,purpose:v.purpose,by:S.me};hist(d,`Issued, ${v.purpose}`)});S.toast={msg:`Issue recorded for ${plural(ds.length)}.`}}
+    S.sel.clear();S.modal=null},
+  reg(){S.form=null;S.open=null;S.modal={kind:"reg"}},
+  regdo(){const v=grab(),m=S.modal,title=(v.title||"").trim();if(!title){m.err="Give the document a title.";return}
+    const no=inJob().reduce((a,d)=>Math.max(a,d.no),0)+1,id=S.docs.reduce((a,d)=>Math.max(a,d.id),0)+1;
+    const d={id,proj:S.job,no,type:v.type,title,num:numOf(S.job,v.type,no),revs:[{rev:0,st:"draft",by:S.me}],hist:[]};
+    S.docs.push(d);hist(d,"Registered");S.modal=null;S.filter="all";S.type="all";S.q="";S.open=id;S.toast={msg:`${d.num} registered, in draft.`}},
+  log(){S.form=null;S.modal={kind:"log"}},
+  export(){const n=exportCsv();S.toast={msg:`${plural(n)} exported as a spreadsheet file (CSV).`}},
+};
+document.addEventListener("click",e=>{
+  if(!e.target.closest||!e.target.closest("#app"))return;
+  if(e.target.closest("[data-sel]")){const id=+e.target.closest("[data-sel]").dataset.sel;S.sel.has(id)?S.sel.delete(id):S.sel.add(id);render();return}
+  if(e.target.closest("[data-stop]")&&!e.target.closest("[data-stop] [data-act]"))return;
+  const el=e.target.closest("[data-act]");
+  if(!el){if(S.menu){S.menu=false;render()}return}
+  if(!A[el.dataset.act])return;
+  if(el.dataset.act!=="mail")S.toast=null;
+  if((S.form||S.modal)&&!["submit","pick","cancel","bulkdo","regdo"].includes(el.dataset.act))grab();
+  if(A[el.dataset.act](el.dataset)!==false)render();
+});
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.set;if(!k)return;
+  if(S.form||S.modal)grab();
+  S[k]=e.target.value;
+  if(k==="me"){S.form=null;S.modal=null;S.menu=false;S.sel.clear();S.toast=null}
+  if(k==="job"){S.open=null;S.form=null;S.sel.clear();S.filter="all";S.type="all";S.q=""}
+  if(k==="filter"||k==="type")S.open=null;
+  render()});
+document.addEventListener("input",e=>{if(e.target.id!=="q")return;S.q=e.target.value;const p=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(p,p)});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){if(S.modal)S.modal=null;else if(S.form)S.form=null;else if(S.menu)S.menu=false;else if(S.open)S.open=null;else return;render();return}
+  if(!e.target.closest||!e.target.closest("#app")){if(!(S.page==="register"&&S.open&&e.target===document.body))return}
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches(".it,[role=button]")){e.preventDefault();e.target.click();return}
+  if(S.page==="register"&&S.open&&!S.form&&!S.modal&&!e.target.matches("input,textarea,select")&&(e.key==="ArrowDown"||e.key==="ArrowUp")){const l=rows(),i=l.findIndex(d=>d.id===S.open),n=l[i+(e.key==="ArrowDown"?1:-1)];if(n){e.preventDefault();S.open=n.id;render()}}
+});
+
+/* "View as" lives in the shell's top bar */
+(function(){const slot=document.getElementById("suite-slot");if(!slot)return;
+  slot.innerHTML=`<label>View as <select data-set="me" id="viewas" aria-label="View as">${STAFF.map(k=>`<option value="${k}"${k===S.me?" selected":""}>${E(P[k].n)} · ${E(P[k].role)}</option>`).join("")}</select></label>`})();
+Suite.onChange(()=>{if(S.form||S.modal)grab();render()});
+render();
+</script>
+</body>
+</html>

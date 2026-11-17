@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Driver app · Vehicle checks demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/suite.css">
+<style>
+/* ----- shared by the office page and the driver app ----- */
+:root {
+  --page: var(--suite-page); --surface: var(--suite-surface); --sunk: var(--suite-sunk); --line: var(--suite-line); --line2: var(--suite-line-2);
+  --ink: var(--suite-ink); --body: var(--suite-body); --label: var(--suite-label);
+  --accent: var(--suite-accent); --accent-strong: var(--suite-accent-strong); --accent-ink: var(--suite-accent-ink);
+  --accent-tint: var(--suite-accent-tint); --accent-line: var(--suite-accent-line); --on-accent: var(--suite-on-accent);
+  --good: #1F7A4D; --good-tint: #E6F4EC; --good-line: #BFE0CD;
+  --bad: #B3261E; --bad-tint: #FBE9E7; --bad-line: #F1C4BF; --bad-fill: #B3261E;
+  --warn: #8A5A00; --warn-tint: #FCF1D9; --warn-line: #EBD49C;
+  --info: #1D4F91; --info-tint: #E5EEFA; --info-line: #BCD2F0;
+  --plate: #F7D33A; --plate-ink: #1A1A1A; --scrim: rgba(15, 18, 24, .42);
+}
+[data-theme="dark"] {
+  --good: #6CC59A; --good-tint: #173126; --good-line: #2A5440;
+  --bad: #F08A7E; --bad-tint: #3A1B18; --bad-line: #5E2C27; --bad-fill: #9E2A22;
+  --warn: #E9B65C; --warn-tint: #33270F; --warn-line: #5A4519;
+  --info: #86B4EE; --info-tint: #17263A; --info-line: #2B4366;
+  --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--suite-font); }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.plate { display: inline-block; background: var(--plate); color: var(--plate-ink); font: 700 13px/1.55 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; padding: 0 7px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, .28); white-space: nowrap; }
+.plate.tag { background: var(--sunk); color: var(--ink); border-color: var(--line2); }
+.plate.lg { font-size: 19px; padding: 1px 10px; border-radius: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; line-height: 1.5; padding: 1px 8px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+.pill.good { color: var(--good); background: var(--good-tint); border-color: var(--good-line); }
+.pill.bad { color: var(--bad); background: var(--bad-tint); border-color: var(--bad-line); }
+.pill.warn { color: var(--warn); background: var(--warn-tint); border-color: var(--warn-line); }
+.pill.info { color: var(--info); background: var(--info-tint); border-color: var(--info-line); }
+.pill.grey { color: var(--body); background: var(--sunk); border-color: var(--line2); }
+.more { font-size: 12px; color: var(--label); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 12px; cursor: pointer; text-decoration: none; }
+.btn:hover { background: var(--sunk); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn.link { border: 0; background: none; color: var(--accent-ink); padding: 0; font-weight: 600; }
+.btn.link:hover { text-decoration: underline; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.field { display: grid; gap: 4px; }
+.field > span, .lbl { font-size: 12.5px; font-weight: 600; color: var(--label); }
+input[type="text"], input[type="date"], input[type="search"], select, textarea { background: var(--surface); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 9px; width: 100%; }
+textarea { resize: vertical; min-height: 64px; }
+.exphoto { display: block; width: 160px; max-width: 100%; border-radius: 8px; border: 1px solid var(--line2); }
+.muted { color: var(--label); }
+.err { color: var(--bad); background: var(--bad-tint); border: 1px solid var(--bad-line); border-radius: 8px; padding: 8px 10px; font-weight: 500; }
+/* ----- driver app ----- */
+body { font-size: 15.5px; }
+.app { max-width: 430px; min-height: 100vh; min-height: 100dvh; margin: 0 auto; background: var(--page); display: flex; flex-direction: column; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+body.embed .app { border: 0; max-width: none; }
+.top { position: sticky; top: 0; z-index: 5; background: var(--accent); color: var(--on-accent); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.top .grow { flex: 1; min-width: 0; }
+.top .co { font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .tt { font-weight: 700; font-size: 16.5px; line-height: 1.25; }
+.top .back { background: rgba(255, 255, 255, .16); border: 0; color: inherit; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; cursor: pointer; font-size: 18px; }
+.prog { height: 4px; background: rgba(255, 255, 255, .28); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: #fff; border-radius: 4px; }
+.screen { flex: 1; padding: 14px; display: grid; gap: 12px; align-content: start; }
+.pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.pcard h3, .h3 { font-size: 14px; font-weight: 700; }
+.vline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.vname { font-weight: 700; }
+.small { font-size: 13px; color: var(--label); }
+.btn.big { width: 100%; padding: 13px 14px; font-size: 16.5px; border-radius: 12px; }
+.stopbox { background: var(--bad-tint); border: 1px solid var(--bad-line); color: var(--bad); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; font-weight: 500; }
+.okbox { background: var(--good-tint); border: 1px solid var(--good-line); color: var(--good); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; font-weight: 600; align-items: center; }
+.hint { display: flex; gap: 8px; color: var(--body); font-size: 14px; }
+.drow { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--line); }
+.drow:first-of-type { border-top: 0; padding-top: 0; }
+.drow .grow { flex: 1; min-width: 0; }
+.drow .t { font-weight: 600; }
+.pick { display: flex; gap: 10px; align-items: center; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; cursor: pointer; width: 100%; }
+.pick[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.pick .grow { flex: 1; min-width: 0; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 9px; }
+.item.miss { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+.item .nm { font-weight: 700; }
+.item .okline { font-size: 13.5px; color: var(--label); }
+.ans { display: flex; gap: 8px; }
+.ans button { flex: 1; border: 1px solid var(--line2); background: var(--surface); border-radius: 10px; padding: 9px 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.ans button[data-a="na"] { flex: 0 1 auto; padding: 9px 10px; font-weight: 500; font-size: 14px; }
+.ans button[aria-pressed="true"][data-a="ok"] { background: var(--good-tint); border-color: var(--good); color: var(--good); }
+.ans button[aria-pressed="true"][data-a="defect"] { background: var(--bad-tint); border-color: var(--bad); color: var(--bad); }
+.ans button[aria-pressed="true"][data-a="na"] { background: var(--sunk); border-color: var(--label); }
+.dbox { border-top: 1px dashed var(--line2); padding-top: 10px; display: grid; gap: 10px; }
+.faults { display: flex; flex-wrap: wrap; gap: 6px; }
+.faults button { border: 1px solid var(--line2); background: var(--surface); border-radius: 20px; padding: 6px 11px; cursor: pointer; font-size: 14px; text-align: left; }
+.faults button[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.sev { display: grid; gap: 6px; }
+.sev button { display: flex; gap: 8px; align-items: flex-start; text-align: left; border: 1px solid var(--line2); background: var(--surface); border-radius: 10px; padding: 8px 10px; cursor: pointer; }
+.sev button b { display: block; } .sev button small { font-size: 12.5px; color: var(--label); }
+.sev button[aria-pressed="true"].stop { background: var(--bad-tint); border-color: var(--bad); color: var(--bad); }
+.sev button[aria-pressed="true"].repair { background: var(--warn-tint); border-color: var(--warn); color: var(--warn); }
+.sev button[aria-pressed="true"].minor { background: var(--sunk); border-color: var(--label); }
+.sev button[aria-pressed="true"] small { color: inherit; }
+.photorow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.photorow .exphoto { width: 92px; }
+.foot { position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; }
+.sum { display: flex; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+.sum:first-child { border-top: 0; } .sum .grow { flex: 1; }
+.decl { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; cursor: pointer; }
+.decl input { width: 22px; height: 22px; flex: none; margin: 0; accent-color: var(--accent); }
+#mi { font-size: 20px; font-weight: 700; padding: 9px 12px; }
+.center { text-align: center; display: grid; gap: 12px; justify-items: center; padding: 36px 8px 8px; }
+.tick { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: var(--good-tint); color: var(--good); border: 2px solid var(--good-line); font-size: 44px; }
+.center h2 { font-size: 22px; font-weight: 700; }
+.stopfull { background: var(--bad-fill); color: #fff; border-radius: 16px; padding: 22px 16px; display: grid; gap: 12px; }
+.stopfull h2 { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.stopfull ul { margin: 0; padding-left: 20px; font-weight: 600; }
+.stopfull .btn { background: #fff; color: #7A1A14; border-color: #fff; }
+.stopfull .bigic { font-size: 44px; line-height: 1; }
+@media (max-width: 560px) { body:not(.embed) .foot { padding-bottom: 52px; } body:not(.embed) .screen { padding-bottom: 56px; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top" id="top"></header>
+  <div class="screen" id="screen"></div>
+  <div class="foot" id="foot" hidden></div>
+</div>
+<script>
+  window.SUITE_MODULE = { id: 'fleet', title: 'Fleet driver app', shell: false, themes: 'both' };
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+/* ===== Fleet demo: shared data and rules. The same block is in fleet.html and fleet-driver.html. ===== */
+var Fleet = (function () {
+  'use strict';
+  var S = window.Suite, esc = S.esc, ID = 'fleet', VERSION = 1;
+  var DRIVERS = ['cb', 'jh', 'op'], COORD = 'rf';
+
+  var ICONS = {
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    alert: '<path d="M12 3.5l9.5 16.5h-19zM12 10v4.5M12 17.6v.1"/>',
+    stop: '<path d="M8.2 3h7.6L21 8.2v7.6L15.8 21H8.2L3 15.8V8.2zM12 8v5M12 16.3v.1"/>',
+    truck: '<path d="M2 7h11v9H2zM13 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>',
+    tool: '<path d="M15 4a4.5 4.5 0 0 0-4.3 6L4 16.7V20h3.3L14 13.3A4.5 4.5 0 0 0 20 9l-3 1.5L14.5 8 16 5a4.5 4.5 0 0 0-1-1z"/>',
+    clip: '<path d="M9 4h6v3H9zM7 5.5H5.5V21h13V5.5H17M9 14l2.2 2.2L15.5 12"/>',
+    cal: '<path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/>',
+    camera: '<path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13.5" r="3"/>',
+    left: '<path d="M14.5 5.5L8 12l6.5 6.5"/>',
+    right: '<path d="M9.5 5.5L16 12l-6.5 6.5"/>',
+    refresh: '<path d="M20 11a8 8 0 0 0-14.5-4M4 4v3.5h3.5M4 13a8 8 0 0 0 14.5 4M20 20v-3.5h-3.5"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1-4 4-5.5 7.5-5.5s6.5 1.5 7.5 5.5"/>',
+    gauge: '<path d="M4 18a9 9 0 1 1 16 0zM12 14l4-5"/>',
+    out: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
+    phone: '<path d="M7.5 2.5h9v19h-9zM11 18.5h2"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/>'
+  };
+  function ic(n, cls) {
+    return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (ICONS[n] || '') + '</svg>';
+  }
+
+  /* ---------- the walk-round checklist: a general daily check for a van or light commercial vehicle ---------- */
+  var SECTIONS = [
+    { id: 'cab', name: 'In the driver\'s seat', hint: 'Engine running, handbrake on.', items: [
+      { id: 'warn', name: 'Dashboard warning lights', ok: 'All go out once the engine is running', faults: [['Engine warning light stays on', 'repair'], ['Brake or ABS warning light stays on', 'stop'], ['Another warning light stays on', 'repair']] },
+      { id: 'steer', name: 'Steering', ok: 'Turns smoothly, with no knocking or slack', faults: [['Heavy or stiff', 'stop'], ['Too much free play', 'stop'], ['Knocking noise', 'repair']] },
+      { id: 'brakes', name: 'Brakes', ok: 'Pedal feels firm and the handbrake holds', faults: [['Handbrake does not hold', 'stop'], ['Pedal soft or sinks', 'stop'], ['Squeal or grinding', 'repair']] },
+      { id: 'horn', name: 'Horn', ok: 'Works when pressed', faults: [['Not working', 'repair']] },
+      { id: 'belt', name: 'Seat and seat belt', ok: 'Seat locked in place; belt clips in and pulls back', faults: [['Belt will not clip in', 'stop'], ['Belt frayed or cut', 'stop'], ['Seat moves about', 'stop'], ['Belt slow to pull back', 'repair']] },
+      { id: 'glass', name: 'Windscreen and mirrors', ok: 'Clear view; mirrors in place and not cracked', faults: [['Crack or chip in front of the driver', 'stop'], ['Chip away from the driver\'s view', 'minor'], ['Mirror cracked or missing', 'stop'], ['Mirror loose', 'repair']] },
+      { id: 'wipers', name: 'Wipers and washers', ok: 'Clear the screen; washer bottle has fluid', faults: [['Wipers not working', 'stop'], ['Blades smearing or split', 'repair'], ['Washers empty or blocked', 'repair']] }] },
+    { id: 'lights', name: 'Lights and plates', hint: 'Lights and hazards on, then walk right round.', items: [
+      { id: 'lights', name: 'Lights and indicators', ok: 'Every light works and no lens is broken', faults: [['Brake light out', 'stop'], ['Indicator out', 'stop'], ['Headlight out', 'repair'], ['Side, tail or number plate light out', 'repair'], ['Lens cracked', 'repair']] },
+      { id: 'plates', name: 'Number plates', ok: 'Fitted front and back, clean and easy to read', faults: [['Dirty, now cleaned', 'minor'], ['Cracked or loose', 'repair'], ['Missing', 'stop']] }] },
+    { id: 'wheels', name: 'Wheels and tyres', hint: 'Look at every wheel, including the inside edge.', items: [
+      { id: 'tyres', name: 'Tyres', ok: 'Properly inflated, good tread, no cuts or bulges', faults: [['Flat or very soft', 'stop'], ['Cut, bulge or cord showing', 'stop'], ['Tread looks low', 'repair'], ['Wearing unevenly', 'repair']] },
+      { id: 'nuts', name: 'Wheel nuts', ok: 'All there and none looks loose', faults: [['Nut missing', 'stop'], ['Nut looks loose', 'stop']] }] },
+    { id: 'body', name: 'Body and load', hint: 'Walk round the outside and glance underneath.', items: [
+      { id: 'bodywork', name: 'Bodywork and doors', ok: 'Doors shut and lock; nothing sharp or hanging off', faults: [['New dent or scratch', 'minor'], ['Door will not shut or lock', 'stop'], ['Loose trim or sharp edge', 'repair']] },
+      { id: 'leaks', name: 'Fluid leaks', ok: 'Nothing dripping underneath; fuel cap on', faults: [['Fuel leak', 'stop'], ['Oil or coolant drip', 'repair'], ['Fuel cap missing', 'repair']] },
+      { id: 'load', name: 'Load and racking', ok: 'Everything tied down or stowed; not overloaded', faults: [['Load not secured', 'stop'], ['Looks overloaded', 'stop'], ['Racking or tie-down point damaged', 'repair']] },
+      { id: 'tow', name: 'Tow bar and trailer plug', ok: 'Secure, and the trailer lights work', na: 'No tow bar', faults: [['Tow bar loose', 'stop'], ['Trailer lights not working', 'repair']] }] },
+    { id: 'kit', name: 'Safety kit', hint: 'Check what the vehicle should carry.', items: [
+      { id: 'firstaid', name: 'First aid kit', ok: 'In the vehicle and stocked', faults: [['Missing', 'repair'], ['Items used or out of date', 'minor']] },
+      { id: 'ext', name: 'Fire extinguisher', ok: 'In its bracket with the gauge in the green', faults: [['Missing', 'repair'], ['Gauge not in the green', 'repair']] }] }
+  ];
+  var ITEM = {};
+  SECTIONS.forEach(function (s) { s.items.forEach(function (i) { ITEM[i.id] = i; i.section = s.id; }); });
+  var OTHER = 'Something else';
+
+  var SEV = {
+    stop: { label: 'Do not drive', sub: 'Unsafe or not legal. The vehicle stays parked until it is fixed.', tone: 'bad', icon: 'stop' },
+    repair: { label: 'Needs repair', sub: 'Safe to drive today. Needs fixing soon.', tone: 'warn', icon: 'alert' },
+    minor: { label: 'Minor', sub: 'For the record. No repair needed yet.', tone: 'grey', icon: 'info' }
+  };
+  var DSTAT = {
+    'new': { label: 'Reported', tone: 'warn' },
+    assigned: { label: 'Assigned', tone: 'info' },
+    closed: { label: 'Repaired', tone: 'good' },
+    dismissed: { label: 'Not a defect', tone: 'grey' }
+  };
+  var DUES = [['mot', 'MOT'], ['tax', 'Road tax'], ['service', 'Service'], ['ins', 'Insurance']];
+  /* made-up repairers */
+  var REPAIRERS = ['Brookvale Motor Services', 'Quillfield Tyres', 'Pennymoor Auto Electrics'];
+
+  /* ---------- small helpers ---------- */
+  function p2(n) { return n < 10 ? '0' + n : '' + n; }
+  function pn(id) { var p = S.person(id); return p ? p.name : 'Unknown'; }
+  function pd(s) { var p = String(s).slice(0, 10).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dn(s) { return s ? S.daysUntil(pd(s)) : null; }
+  function daysAgo(dt) { var d = new Date(dt); d.setHours(0, 0, 0, 0); return Math.round((S.today().getTime() - d.getTime()) / 864e5); }
+  function fd(s) { return s ? S.fmtDate(String(s).length > 10 ? new Date(s) : pd(s)) : ''; }
+  function ft(dt) { var d = new Date(dt); return p2(d.getHours()) + ':' + p2(d.getMinutes()); }
+  function when(dt) { var n = daysAgo(dt); return (n === 0 ? 'Today' : n === 1 ? 'Yesterday' : fd(dt)) + ' ' + ft(dt); }
+  function num(n) { return Number(n).toLocaleString('en-GB'); }
+  function rel(n) {
+    if (n === null) return '';
+    if (n < 0) return (-n) + (n === -1 ? ' day' : ' days') + ' overdue';
+    return n === 0 ? 'due today' : n === 1 ? 'due tomorrow' : 'in ' + n + ' days';
+  }
+  function took(secs) { return secs < 60 ? Math.round(secs) + ' sec' : Math.floor(secs / 60) + ' min ' + p2(Math.round(secs % 60)) + ' sec'; }
+  function lcf(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+  function title(itemId, fault, note) {
+    var name = ITEM[itemId] ? ITEM[itemId].name : 'Other';
+    if (!fault || fault === OTHER) return name + ': ' + (String(note || '').trim().slice(0, 60) || 'other defect');
+    return name + ': ' + lcf(fault);
+  }
+  function photo() {
+    return '<svg class="exphoto" viewBox="0 0 160 110" role="img" aria-label="Example photo"><rect width="160" height="110" fill="#59626d"/><rect y="72" width="160" height="38" fill="#3a4047"/><rect x="28" y="46" width="78" height="34" rx="4" fill="#e9ecef"/><path d="M106 56h18l10 12v12h-28z" fill="#cfd5db"/><circle cx="50" cy="82" r="9" fill="#16181b"/><circle cx="116" cy="82" r="9" fill="#16181b"/><rect x="6" y="6" width="84" height="16" rx="3" fill="#000" fill-opacity=".55"/><text x="11" y="18" font-size="10" fill="#fff" font-family="sans-serif">Example photo</text></svg>';
+  }
+
+  /* ---------- sample data: every date is worked out from today ---------- */
+  function d(n) { return S.iso(S.daysFromNow(n)); }
+  function at(ago, h, m) {
+    var x = S.daysFromNow(-ago); x.setHours(h, m, 0, 0);
+    var now = new Date();
+    if (x > now) x = new Date(Math.max(S.today().getTime(), now.getTime() - 600000));
+    return x.toISOString();
+  }
+  function seed() {
+    var st = { seedDay: S.iso(S.today()), dirty: false, rev: 0, stamp: 'seed', cseq: 0, dseq: 10, viewAs: COORD, me: 'cb', today: {}, vehicles: [], checks: [], defects: [] };
+    function V(id, reg, make, model, type, fuel, year, driver, mileage, mot, tax, service) {
+      st.vehicles.push({ id: id, reg: reg, tag: '', make: make, model: model, type: type, fuel: fuel, year: year, driver: driver, mileage: mileage,
+        due: { mot: mot === null ? null : d(mot), tax: tax === null ? null : d(tax), service: d(service), ins: d(96) }, log: [] });
+    }
+    V('V1', 'CF72 HIL', 'Ford', 'Transit Custom', 'Van', 'Diesel', 2022, 'cb', 41820, 141, 212, 58);
+    V('V2', 'CA21 BIK', 'Vauxhall', 'Vivaro', 'Van', 'Diesel', 2021, 'jh', 67310, 12, 95, 74);
+    V('V3', 'CF23 TIR', 'Toyota', 'Hilux', 'Pickup', 'Diesel', 2023, 'op', 23988, 203, 150, 120);
+    V('V4', 'CA70 WIN', 'Ford', 'Transit 350 tipper', 'Tipper', 'Diesel', 2020, null, 88104, 66, 131, 39);
+    V('V5', 'CF19 KIT', 'Mercedes-Benz', 'Sprinter', 'Van', 'Diesel', 2019, null, 121560, 180, 44, -6);
+    V('V6', 'CA22 RIV', 'Renault', 'Trafic', 'Van', 'Diesel', 2022, null, 35402, 260, 21, 88);
+    V('V7', 'CF24 EIL', 'Peugeot', 'e-Partner', 'Van', 'Electric', 2024, null, 9120, 340, 170, 150);
+    V('V8', '', 'Plant trailer', '2.7 tonne twin axle', 'Trailer', '', 2021, null, null, null, null, 112);
+    st.vehicles[7].tag = 'TRL-01';
+    DRIVERS.forEach(function (id) { st.today[id] = st.vehicles.filter(function (v) { return v.driver === id; })[0].id; });
+
+    function C(vid, by, ago, h, m, back, secs, defs) {
+      var v = veh(st, vid);
+      return record(st, { vid: vid, by: by, at: at(ago, h, m), mileage: v.mileage - back, secs: secs, na: vid === 'V3' || vid === 'V4' ? [] : ['tow'], defs: defs || [], source: 'check', seed: true });
+    }
+    /* oldest first, so reference numbers run in date order */
+    var r4 = C('V3', 'op', 12, 7, 9, 520, 268, [{ item: 'lights', fault: 'Headlight out', sev: 'repair', note: 'Offside dipped beam not working', photo: false }]);
+    C('V5', 'op', 7, 7, 31, 64, 251);
+    [6, 5, 4, 3, 2, 1].forEach(function (n) {
+      C('V1', 'cb', n, 7, 4 + n * 3, n * 38, 230 + n * 9, n === 5 ? [{ item: 'bodywork', fault: 'New dent or scratch', sev: 'minor', note: 'Small dent low on the nearside rear door, about 5 cm across', photo: true }] : null);
+      C('V2', 'jh', n, 7, 12 + n * 2, n * 52, 205 + n * 7, n === 2 ? [{ item: 'wipers', fault: 'Blades smearing or split', sev: 'repair', note: 'Driver\'s side blade smears badly in rain', photo: false }] : null);
+      C('V3', 'op', n, 6, 48 + n, n * 44, 244 + n * 5);
+      if (n === 5) C('V7', 'jh', 5, 13, 20, 0, 221);
+      if (n === 4) C('V4', 'cb', 4, 12, 40, 35, 263);
+      if (n === 3) C('V6', 'cb', 3, 10, 15, 0, 239);
+      if (n === 2) C('V5', 'jh', 2, 11, 5, 0, 214);
+    });
+    var r1 = C('V4', 'op', 1, 13, 25, 0, 302, [{ item: 'brakes', fault: 'Handbrake does not hold', sev: 'stop', note: 'Rolled back on the yard ramp with the handbrake fully on', photo: true }]);
+    C('V2', 'jh', 0, 7, 14, 0, 226);
+    C('V3', 'op', 0, 6, 52, 0, 248);
+
+    var d4 = r4.defects[0], d2 = st.defects.filter(function (x) { return x.vid === 'V2'; })[0];
+    d4.status = 'closed'; d4.assignee = pn(COORD) + ' (in the yard)'; d4.closedAt = at(10, 15, 40); d4.closeNote = 'New bulb fitted in the yard and checked working.';
+    d4.hist.push({ at: at(11, 9, 5), by: COORD, what: 'Assigned to ' + d4.assignee });
+    d4.hist.push({ at: d4.closedAt, by: COORD, what: 'Closed as repaired: ' + d4.closeNote });
+    d2.status = 'assigned'; d2.assignee = REPAIRERS[0]; d2.due = d(3);
+    d2.hist.push({ at: at(2, 9, 30), by: COORD, what: 'Assigned to ' + d2.assignee + ', booked for ' + fd(d2.due) });
+    veh(st, 'V4').log.push({ at: r1.check.at, by: 'op', what: 'Taken off the road: ' + r1.defects[0].title });
+    veh(st, 'V1').log.push({ at: at(38, 14, 0), by: COORD, what: 'Service recorded. Next due ' + fd(veh(st, 'V1').due.service) });
+    veh(st, 'V7').log.push({ at: at(25, 10, 30), by: COORD, what: 'Road tax renewed. Next due ' + fd(veh(st, 'V7').due.tax) });
+    return st;
+  }
+
+  /* ---------- reading the data ---------- */
+  function veh(st, id) { for (var i = 0; i < st.vehicles.length; i++) if (st.vehicles[i].id === id) return st.vehicles[i]; return null; }
+  function isOpen(df) { return df.status === 'new' || df.status === 'assigned'; }
+  function defectsOf(st, vid) { return st.defects.filter(function (x) { return x.vid === vid; }).sort(function (a, b) { return a.at < b.at ? 1 : -1; }); }
+  function openDefects(st, vid) { return defectsOf(st, vid).filter(isOpen); }
+  function checksOf(st, vid) { return st.checks.filter(function (c) { return c.vid === vid; }).sort(function (a, b) { return a.at < b.at ? 1 : -1; }); }
+  function offRoad(st, v) { return openDefects(st, v.id).some(function (x) { return x.sev === 'stop'; }); }
+  function dueState(s) { var n = dn(s); return n === null ? 'none' : n < 0 ? 'over' : n <= 30 ? 'soon' : 'ok'; }
+  function flags(st, v) {
+    var f = [], od = openDefects(st, v.id);
+    if (od.some(function (x) { return x.sev === 'stop'; })) f.push({ k: 'off', tone: 'bad', label: 'Off the road' });
+    DUES.forEach(function (k) { if (dueState(v.due[k[0]]) === 'over') f.push({ k: 'over', tone: 'bad', label: k[1] + ' overdue' }); });
+    if (od.some(function (x) { return x.sev === 'repair'; })) f.push({ k: 'repair', tone: 'warn', label: 'Repair needed' });
+    DUES.forEach(function (k) { if (dueState(v.due[k[0]]) === 'soon') f.push({ k: 'soon', tone: 'warn', label: k[1] + ' due soon' }); });
+    if (od.length && od.every(function (x) { return x.sev === 'minor'; })) f.push({ k: 'minor', tone: 'grey', label: 'Minor defect' });
+    return f;
+  }
+  function pill(tone, label, icon) { return '<span class="pill ' + tone + '">' + (icon ? ic(icon) : '') + esc(label) + '</span>'; }
+  function flagPills(st, v, all) {
+    var f = flags(st, v);
+    if (!f.length) return pill('good', 'OK', 'check');
+    if (all) return f.map(function (x) { return pill(x.tone, x.label); }).join(' ');
+    return pill(f[0].tone, f[0].label) + (f.length > 1 ? ' <span class="more">+' + (f.length - 1) + '</span>' : '');
+  }
+  function sevPill(k) { return pill(SEV[k].tone, SEV[k].label, SEV[k].icon); }
+  function statPill(df) { return pill(df.status === 'new' && df.sev === 'stop' ? 'bad' : DSTAT[df.status].tone, DSTAT[df.status].label); }
+  function statLine(df) {
+    if (df.status === 'assigned') return 'Assigned to ' + df.assignee + (df.due ? ', booked for ' + fd(df.due) : '');
+    if (df.status === 'closed') return 'Repaired ' + fd(df.closedAt);
+    if (df.status === 'dismissed') return 'Closed: not a defect';
+    return 'Reported. Waiting for the office.';
+  }
+  function idBadge(v, lg) {
+    return v.reg ? '<span class="plate' + (lg ? ' lg' : '') + '" translate="no">' + esc(v.reg) + '</span>'
+      : '<span class="plate tag' + (lg ? ' lg' : '') + '" translate="no">' + esc(v.tag) + '</span>';
+  }
+  function vname(v) { return v.make + ' ' + v.model; }
+
+  /* ---------- changing the data ---------- */
+  /* o = { vid, by, at, mileage, secs, na: [itemId], defs: [{ item, fault, sev, note, photo }], source: 'check' | 'report' } */
+  function record(st, o) {
+    var v = veh(st, o.vid), wasOff = offRoad(st, v), out = { check: null, defects: [] };
+    if (o.source === 'check') {
+      out.check = { id: 'C' + (++st.cseq), vid: o.vid, by: o.by, at: o.at, mileage: o.mileage, secs: o.secs, na: o.na || [], defs: [] };
+      st.checks.push(out.check);
+      if (!o.seed && o.mileage) v.mileage = o.mileage;
+    }
+    (o.defs || []).forEach(function (x) {
+      var n = ++st.dseq, df = { id: 'D' + n, ref: 'DEF-' + (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n, vid: o.vid, item: x.item, fault: x.fault, title: title(x.item, x.fault, x.note),
+        sev: x.sev, driverSev: x.sev, note: x.note || '', photo: !!x.photo, by: o.by, at: o.at, source: o.source, checkId: out.check ? out.check.id : null,
+        status: 'new', assignee: '', due: '', closeNote: '', closedAt: '',
+        hist: [{ at: o.at, by: o.by, what: o.source === 'check' ? 'Reported on the daily check' : 'Reported from the road' }] };
+      st.defects.push(df); out.defects.push(df);
+      if (out.check) out.check.defs.push({ item: x.item, fault: x.fault, sev: x.sev, note: x.note || '', photo: !!x.photo, id: df.id });
+    });
+    if (!o.seed && !wasOff && offRoad(st, v)) v.log.push({ at: o.at, by: o.by, what: 'Taken off the road: ' + out.defects.filter(function (x) { return x.sev === 'stop'; })[0].title });
+    return out;
+  }
+  function defect(st, id) { for (var i = 0; i < st.defects.length; i++) if (st.defects[i].id === id) return st.defects[i]; return null; }
+  function roadCheck(st, v, wasOff, by) {
+    var off = offRoad(st, v);
+    if (wasOff && !off) v.log.push({ at: new Date().toISOString(), by: by, what: 'Back on the road' });
+    if (!wasOff && off) v.log.push({ at: new Date().toISOString(), by: by, what: 'Taken off the road' });
+  }
+  function editDefect(id, by, fn) {
+    change(function (st) {
+      var df = defect(st, id); if (!df) return;
+      var v = veh(st, df.vid), was = offRoad(st, v), what = fn(df);
+      if (what) df.hist.push({ at: new Date().toISOString(), by: by, what: what });
+      roadCheck(st, v, was, by);
+    });
+  }
+  var act = {
+    submit: function (o) { var out; change(function (st) { o.at = new Date().toISOString(); out = record(st, o); }); return out; },
+    assign: function (id, who, dueIso, by) { editDefect(id, by, function (df) { df.status = 'assigned'; df.assignee = who; df.due = dueIso || ''; return 'Assigned to ' + who + (dueIso ? ', booked for ' + fd(dueIso) : ''); }); },
+    close: function (id, note, by) { editDefect(id, by, function (df) { df.status = 'closed'; df.closeNote = note; df.closedAt = new Date().toISOString(); return 'Closed as repaired: ' + note; }); },
+    dismiss: function (id, note, by) { editDefect(id, by, function (df) { df.status = 'dismissed'; df.closeNote = note; df.closedAt = new Date().toISOString(); return 'Closed as not a defect' + (note ? ': ' + note : ''); }); },
+    reopen: function (id, by) { editDefect(id, by, function (df) { df.status = df.assignee ? 'assigned' : 'new'; df.closedAt = ''; return 'Reopened'; }); },
+    severity: function (id, sev, by) { editDefect(id, by, function (df) { if (df.sev === sev) return ''; df.sev = sev; return 'Office assessment changed to "' + SEV[sev].label + '"'; }); },
+    renew: function (vid, key, by) {
+      change(function (st) {
+        var v = veh(st, vid), old = v.due[key] ? pd(v.due[key]) : S.today(), base = old > S.today() ? old : S.today();
+        base.setFullYear(base.getFullYear() + 1); v.due[key] = S.iso(base);
+        var label = DUES.filter(function (k) { return k[0] === key; })[0][1];
+        v.log.push({ at: new Date().toISOString(), by: by, what: label + ' renewed. Next due ' + fd(v.due[key]) });
+      });
+    },
+    setDriver: function (vid, pid, by) {
+      change(function (st) {
+        var v = veh(st, vid);
+        if (pid) st.vehicles.forEach(function (o) { if (o.driver === pid && o.id !== vid) { o.driver = null; o.log.push({ at: new Date().toISOString(), by: by, what: pn(pid) + ' moved to another vehicle. Now a pool vehicle' }); } });
+        v.driver = pid || null;
+        if (pid) st.today[pid] = vid;
+        v.log.push({ at: new Date().toISOString(), by: by, what: pid ? 'Assigned to ' + pn(pid) : 'Made a pool vehicle' });
+      });
+    },
+    viewAs: function (pid) { change(function (st) { st.viewAs = pid; if (DRIVERS.indexOf(pid) !== -1) st.me = pid; }, true); },
+    setMe: function (pid) { change(function (st) { st.me = pid; }, true); },
+    pick: function (pid, vid) { change(function (st) { st.today[pid] = vid; }, true); }
+  };
+  function todayVehicle(st, pid) {
+    var v = veh(st, st.today[pid]);
+    if (v) return v;
+    return st.vehicles.filter(function (x) { return x.driver === pid; })[0] || st.vehicles[0];
+  }
+
+  /* ---------- state, and keeping the office page and the phone in step ---------- */
+  var state = null, subs = [];
+  function okShape(st) { return st && typeof st === 'object' && Array.isArray(st.vehicles) && Array.isArray(st.checks) && Array.isArray(st.defects) && st.today; }
+  function fresh() { var st = S.load(ID, VERSION); return okShape(st) ? st : null; }
+  function init() {
+    var st = fresh();
+    if (!st || (!st.dirty && st.seedDay !== S.iso(S.today()))) { st = seed(); S.save(ID, VERSION, st); }
+    state = st;
+  }
+  function emit(src) { subs.forEach(function (fn) { fn(src); }); }
+  function change(fn, soft) {
+    var st = fresh();
+    if (st && st.rev > state.rev) state = st;
+    fn(state);
+    if (!soft) state.dirty = true;
+    state.rev++; state.stamp = state.rev + ':' + Math.random().toString(36).slice(2, 9);
+    S.save(ID, VERSION, state);
+    post({ state: state });
+    emit('local');
+  }
+  function peers() {
+    var out = [];
+    try { if (window.parent && window.parent !== window) out.push(window.parent); } catch (e) { /* ignore */ }
+    var fr = document.querySelectorAll('iframe[data-fleet]');
+    for (var i = 0; i < fr.length; i++) if (fr[i].contentWindow) out.push(fr[i].contentWindow);
+    return out;
+  }
+  function post(msg) {
+    msg.fleetDemo = 1;
+    peers().forEach(function (w) { try { w.postMessage(msg, '*'); } catch (e) { /* ignore */ } });
+  }
+  function look() { return { theme: S.theme(), accent: S.accent().id, company: S.company() }; }
+  function applyLook(l) {
+    if (!l) return;
+    if (l.accent && l.accent !== S.accent().id) S.setAccent(l.accent);
+    if (l.company && l.company !== S.company()) S.setCompany(l.company);
+    if (l.theme) S.setTheme(l.theme);
+  }
+  function reload(cleared) {
+    var st = fresh();
+    if (!st) { if (!cleared) return false; init(); emit('remote'); return true; }
+    if (st.stamp === state.stamp) return false;
+    state = st; emit('remote'); return true;
+  }
+  window.addEventListener('storage', function (e) {
+    if (e.key && e.key.indexOf('dsr-demo:') !== 0) return;
+    if (!e.key || e.key === 'dsr-demo:state:' + ID) reload(true);
+    else if (/:(theme|accent|company)$/.test(e.key)) S.setTheme(S.theme());
+  });
+  window.addEventListener('message', function (e) {
+    var m = e.data;
+    if (!m || m.fleetDemo !== 1 || peers().indexOf(e.source) === -1) return;
+    if (m.hello) { post({ state: state, look: look() }); return; }
+    if (m.look) applyLook(m.look);
+    if (okShape(m.state) && m.state.stamp !== state.stamp && m.state.rev >= state.rev) {
+      state = m.state; S.save(ID, VERSION, state); emit('remote');
+    }
+  });
+
+  return {
+    DRIVERS: DRIVERS, COORD: COORD, SECTIONS: SECTIONS, ITEM: ITEM, OTHER: OTHER, SEV: SEV, DSTAT: DSTAT, DUES: DUES, REPAIRERS: REPAIRERS,
+    ic: ic, pn: pn, pd: pd, dn: dn, daysAgo: daysAgo, fd: fd, ft: ft, when: when, num: num, rel: rel, took: took, title: title, photo: photo,
+    init: init, get: function () { return state; }, on: function (fn) { subs.push(fn); }, reload: function () { return reload(false); }, post: post, look: look,
+    veh: veh, defect: defect, isOpen: isOpen, defectsOf: defectsOf, openDefects: openDefects, checksOf: checksOf, offRoad: offRoad,
+    dueState: dueState, flags: flags, pill: pill, flagPills: flagPills, sevPill: sevPill, statPill: statPill, statLine: statLine,
+    idBadge: idBadge, vname: vname, todayVehicle: todayVehicle, act: act
+  };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var F = Fleet, S = Suite, esc = S.esc, ic = F.ic;
+  function $(id) { return document.getElementById(id); }
+  var embed = /[?&]embed=1/.test(window.location.search);
+  if (embed) document.body.classList.add('embed');
+  F.init();
+
+  var scr = 'home', draft = null, rep = null, last = null, errs = [], miss = {};
+  var owner = null;
+  function st() { return F.get(); }
+  function meId() { var m = st().me; return F.DRIVERS.indexOf(m) !== -1 ? m : F.DRIVERS[0]; }
+  function myV() { return F.todayVehicle(st(), meId()); }
+  function blank() { return { r: '', fault: '', sev: '', sevSet: false, note: '', photo: false }; }
+  function complete(a) {
+    if (!a || !a.r) return false;
+    if (a.r !== 'defect') return true;
+    return !!a.fault && !!a.sev && (a.fault !== F.OTHER || !!a.note.trim()) && (a.sev !== 'stop' || a.photo);
+  }
+  function todaysCheck(v) { return F.checksOf(st(), v.id).filter(function (c) { return c.by === meId() && F.daysAgo(c.at) === 0; })[0]; }
+
+  /* ---------- pieces ---------- */
+  function top(title, back, pct) {
+    $('top').innerHTML = (back ? '<button type="button" class="back" data-go="' + back + '" aria-label="Back">' + ic('left') + '</button>' : '') +
+      '<div class="grow"><div class="co"><span data-suite="company"></span> · driver app</div><div class="tt">' + esc(title) + '</div>' + (pct !== undefined ? '<div class="prog"><i style="width:' + pct + '%"></i></div>' : '') + '</div>';
+  }
+  function foot(html) { $('foot').hidden = !html; $('foot').innerHTML = html || ''; }
+  function errBox() { return errs.length ? '<div class="err" role="alert">' + errs.map(esc).join('<br>') + '</div>' : ''; }
+  function defBox(item, a) {
+    var faults = item ? item.faults.map(function (f) { return f[0]; }) : [];
+    var other = !item || a.fault === F.OTHER;
+    return '<div class="dbox">' +
+      (item ? '<div><div class="lbl">What is wrong?</div><div class="faults">' + faults.concat([F.OTHER]).map(function (f) { return '<button type="button" data-fault="' + esc(f) + '" aria-pressed="' + (a.fault === f) + '">' + esc(f) + '</button>'; }).join('') + '</div></div>' : '') +
+      '<div><div class="lbl">How serious is it?</div><div class="sev">' + Object.keys(F.SEV).map(function (k) { return '<button type="button" class="' + k + '" data-sev="' + k + '" aria-pressed="' + (a.sev === k) + '">' + ic(F.SEV[k].icon) + '<span><b>' + F.SEV[k].label + '</b><small>' + F.SEV[k].sub + '</small></span></button>'; }).join('') + '</div></div>' +
+      '<label class="field"><span>' + (other ? 'Describe it (needed)' : 'Anything to add? (optional)') + '</span><textarea data-note rows="2" placeholder="Say what you can see, and where">' + esc(a.note) + '</textarea></label>' +
+      '<div class="photorow">' + (a.photo ? F.photo() + '<span class="small">Example photo added. The real app opens the camera.</span>' : '<button type="button" class="btn" data-photo>' + ic('camera') + 'Add a photo</button><span class="small">' + (a.sev === 'stop' ? 'Needed for "Do not drive".' : 'Optional.') + '</span>') + '</div></div>';
+  }
+  function defectList(v) {
+    var list = F.defectsOf(st(), v.id).filter(function (x) { return F.isOpen(x) || F.daysAgo(x.closedAt || x.at) <= 7; });
+    if (!list.length) return '<div class="small">Nothing reported on this vehicle.</div>';
+    return list.map(function (x) { return '<div class="drow"><div class="grow"><div class="t">' + esc(x.title) + '</div><div class="small">' + esc(F.statLine(x)) + '</div></div>' + F.statPill(x) + '</div>'; }).join('');
+  }
+
+  /* ---------- screens ---------- */
+  var SCREENS = {
+    home: function () {
+      var v = myV(), s = st(), off = F.offRoad(s, v), done = todaysCheck(v), cont = draft && draft.vid === v.id;
+      top('Daily vehicle check');
+      foot('');
+      return '<label class="field"><span>Driver</span><select id="who" aria-label="Driver">' + F.DRIVERS.map(function (id) { return '<option value="' + id + '"' + (id === meId() ? ' selected' : '') + '>' + esc(F.pn(id)) + '</option>'; }).join('') + '</select></label>' +
+        '<div class="pcard"><div class="lbl">Today\'s vehicle</div><div class="vline">' + F.idBadge(v, true) + '<div><div class="vname">' + esc(F.vname(v)) + '</div><div class="small">' + esc(v.type) + ' · ' + F.num(v.mileage) + ' miles</div></div></div>' +
+        '<div class="vline">' + F.flagPills(s, v, true) + '</div><div><button type="button" class="btn link" data-go="pick">Change vehicle</button></div></div>' +
+        (off ? '<div class="stopbox">' + ic('stop') + '<div>This vehicle is off the road. Do not drive it. Choose another vehicle, or speak to ' + esc(F.pn(F.COORD)) + '.</div></div>' : '') +
+        (done && !cont ? '<div class="okbox">' + ic('check') + '<div>Checked today at ' + F.ft(done.at) + '</div></div>' : '') +
+        '<button type="button" class="btn primary big" data-go="start"' + (off ? ' disabled' : '') + '>' + ic('clip') + (cont ? 'Continue today\'s check' : done ? 'Check again' : 'Start today\'s check') + '</button>' +
+        '<button type="button" class="btn big" data-go="report">' + ic('alert') + 'Report a defect</button>' +
+        '<div class="pcard"><h3>Defects on this vehicle</h3>' + defectList(v) + '</div>' +
+        '<div class="pcard"><h3>Dates for this vehicle</h3>' + F.DUES.filter(function (k) { return v.due[k[0]]; }).map(function (k) {
+          var d = v.due[k[0]], state = F.dueState(d);
+          return '<div class="sum"><div class="grow">' + k[1] + '</div><span class="small">' + F.fd(d) + '</span>' + (state === 'over' ? F.pill('bad', 'Overdue') : state === 'soon' ? F.pill('warn', 'Due soon') : '') + '</div>';
+        }).join('') + '</div>';
+    },
+    pick: function () {
+      var s = st(), cur = myV();
+      top('Choose today\'s vehicle', 'home');
+      foot('');
+      return '<div class="hint">' + ic('info') + '<span>Tap the vehicle you are driving today.</span></div>' + s.vehicles.filter(function (v) { return v.type !== 'Trailer'; }).map(function (v) {
+        return '<button type="button" class="pick" data-pickv="' + v.id + '" aria-current="' + (v.id === cur.id) + '">' + F.idBadge(v) + '<span class="grow"><span class="vname">' + esc(F.vname(v)) + '</span><br><span class="small">' + esc(v.type) + ' · ' + (v.driver ? esc(F.pn(v.driver)) : 'Pool vehicle') + '</span></span>' + F.flagPills(s, v) + '</button>';
+      }).join('');
+    },
+    check: function () {
+      var sec = F.SECTIONS[draft.si], n = F.SECTIONS.length, left = sec.items.filter(function (i) { return !draft.a[i.id] || !draft.a[i.id].r; }).length;
+      top(sec.name, 'prev', Math.round(draft.si / n * 100));
+      foot('<button type="button" class="btn primary big" data-go="next">' + (draft.si === n - 1 ? 'Review and send' : 'Next section') + ic('right') + '</button>');
+      return '<div class="small">Section ' + (draft.si + 1) + ' of ' + n + ' · ' + F.idBadge(F.veh(st(), draft.vid)) + '</div><div class="hint">' + ic('info') + '<span>' + esc(sec.hint) + '</span></div>' + errBox() +
+        (left ? '<button type="button" class="btn" data-go="allok">' + ic('check') + 'Mark the rest OK (' + left + ')</button>' : '') +
+        sec.items.map(function (i) {
+          var a = draft.a[i.id] || blank();
+          return '<div class="item' + (miss[i.id] ? ' miss' : '') + '" data-item="' + i.id + '"><div><div class="nm">' + esc(i.name) + '</div><div class="okline">' + esc(i.ok) + '</div></div>' +
+            '<div class="ans"><button type="button" data-a="ok" aria-pressed="' + (a.r === 'ok') + '">' + ic('check') + 'OK</button><button type="button" data-a="defect" aria-pressed="' + (a.r === 'defect') + '">' + ic('alert') + 'Defect</button>' +
+            (i.na ? '<button type="button" data-a="na" aria-pressed="' + (a.r === 'na') + '">' + esc(i.na) + '</button>' : '') + '</div>' + (a.r === 'defect' ? defBox(i, a) : '') + '</div>';
+        }).join('');
+    },
+    review: function () {
+      var v = F.veh(st(), draft.vid), defs = [];
+      F.SECTIONS.forEach(function (sec) { sec.items.forEach(function (i) { var a = draft.a[i.id]; if (a && a.r === 'defect') defs.push({ i: i, a: a }); }); });
+      top('Review and send', 'prev', 100);
+      foot('<button type="button" class="btn primary big" data-go="submit">Submit check</button>');
+      return errBox() +
+        '<div class="pcard"><label class="field"><span>Mileage now</span><input type="text" inputmode="numeric" id="mi" autocomplete="off" placeholder="' + F.num(v.mileage + 40) + '" value="' + esc(draft.mileage) + '"></label><div class="small">Last recorded: ' + F.num(v.mileage) + ' miles</div></div>' +
+        '<div class="pcard"><h3>' + F.idBadge(v) + ' ' + esc(F.vname(v)) + '</h3><div>' + F.SECTIONS.map(function (sec) {
+          var nd = sec.items.filter(function (i) { return draft.a[i.id] && draft.a[i.id].r === 'defect'; }).length;
+          return '<div class="sum"><div class="grow">' + esc(sec.name) + '</div>' + (nd ? F.pill('bad', nd + (nd === 1 ? ' defect' : ' defects')) : F.pill('good', 'OK', 'check')) + '</div>';
+        }).join('') + '</div></div>' +
+        (defs.length ? '<div class="pcard"><h3>Defects you are reporting</h3>' + defs.map(function (x) { return '<div class="drow"><div class="grow"><div class="t">' + esc(F.title(x.i.id, x.a.fault, x.a.note)) + '</div>' + (x.a.note && x.a.fault !== F.OTHER ? '<div class="small">' + esc(x.a.note) + '</div>' : '') + '</div>' + F.sevPill(x.a.sev) + '</div>'; }).join('') + '</div>' : '') +
+        '<div class="pcard"><label class="decl"><input type="checkbox" id="decl"' + (draft.decl ? ' checked' : '') + '><span>I did this check myself and this is a true record.</span></label><div class="small">' + esc(F.pn(meId())) + '</div></div>';
+    },
+    report: function () {
+      var v = myV(), item = rep.item ? F.ITEM[rep.item] : null;
+      top('Report a defect', 'home');
+      foot('<button type="button" class="btn primary big" data-go="sendrep">Send report</button>');
+      return '<div class="small">For something you notice outside the daily check · ' + F.idBadge(v) + '</div>' + errBox() +
+        '<div class="item" data-item="__rep"><label class="field"><span>Which part of the vehicle?</span><select id="ritem"><option value="">Choose…</option>' + F.SECTIONS.map(function (sec) {
+          return '<optgroup label="' + esc(sec.name) + '">' + sec.items.map(function (i) { return '<option value="' + i.id + '"' + (rep.item === i.id ? ' selected' : '') + '>' + esc(i.name) + '</option>'; }).join('') + '</optgroup>';
+        }).join('') + '</select></label>' + (item ? defBox(item, rep.a) : '') + '</div>' +
+        '<div class="hint">' + ic('info') + '<span>Stop somewhere safe before you fill this in.</span></div>';
+    },
+    done: function () {
+      top(last.report ? 'Defect reported' : 'Check sent');
+      foot('');
+      return '<div class="center"><div class="tick">' + ic('check') + '</div><h2>' + (last.report ? 'Defect reported' : 'Check sent') + '</h2><p>The office has it now.' + (last.n && !last.report ? ' ' + last.n + (last.n === 1 ? ' defect' : ' defects') + ' reported.' : '') + ' Your home screen shows what happens next.</p><button type="button" class="btn primary big" data-go="home">Back to home</button></div>';
+    },
+    stop: function () {
+      top('Do not drive');
+      foot('');
+      return '<div class="stopfull" role="alert"><div class="bigic">' + ic('stop') + '</div><h2>Do not drive this vehicle</h2><p>You reported:</p><ul>' + last.stop.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul><p>Tell ' + esc(F.pn(F.COORD)) + ' (' + esc(S.person(F.COORD).role) + ') now. The vehicle stays parked until the office closes the defect.</p><button type="button" class="btn big" data-go="home">I understand</button></div>';
+    }
+  };
+  function render(keepScroll) {
+    if (owner !== meId()) { owner = meId(); draft = null; rep = null; last = null; errs = []; scr = 'home'; }
+    if ((scr === 'check' || scr === 'review') && !draft) scr = 'home';
+    if (scr === 'report' && !rep) scr = 'home';
+    if ((scr === 'done' || scr === 'stop') && !last) scr = 'home';
+    var y = window.scrollY, focus = document.activeElement, fid = focus && focus.id, noteItem = focus && focus.hasAttribute && focus.hasAttribute('data-note') ? focus.closest('[data-item]').dataset.item : null;
+    $('screen').innerHTML = SCREENS[scr]();
+    S.fill();
+    if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
+    var again = fid ? $(fid) : noteItem ? document.querySelector('[data-item="' + noteItem + '"] [data-note]') : null;
+    if (again && keepScroll && again.tagName !== 'SELECT') { try { again.focus(); if (again.setSelectionRange && again.value) again.setSelectionRange(again.value.length, again.value.length); } catch (e) { /* ignore */ } }
+  }
+  function go(s) { scr = s; errs = []; miss = {}; render(false); }
+  function answerFor(el) {
+    var box = el.closest('[data-item]'); if (!box) return null;
+    var id = box.dataset.item;
+    if (id === '__rep') return { a: rep.a, item: F.ITEM[rep.item] };
+    if (!draft.a[id]) draft.a[id] = blank();
+    return { a: draft.a[id], item: F.ITEM[id] };
+  }
+
+  /* ---------- actions ---------- */
+  var GO = {
+    home: function () { go('home'); },
+    pick: function () { go('pick'); },
+    start: function () {
+      var v = myV();
+      if (F.offRoad(st(), v)) return;
+      if (!draft || draft.vid !== v.id) draft = { vid: v.id, by: meId(), started: Date.now(), si: 0, a: {}, mileage: '', decl: false };
+      go('check');
+    },
+    prev: function () {
+      if (scr === 'review') { go('check'); return; }
+      if (draft.si === 0) { go('home'); return; }
+      draft.si--; go('check');
+    },
+    allok: function () {
+      F.SECTIONS[draft.si].items.forEach(function (i) { if (!draft.a[i.id] || !draft.a[i.id].r) { draft.a[i.id] = blank(); draft.a[i.id].r = 'ok'; } });
+      errs = []; miss = {}; render(true);
+    },
+    next: function () {
+      var sec = F.SECTIONS[draft.si], un = 0, bad = 0; miss = {}; errs = [];
+      sec.items.forEach(function (i) { var a = draft.a[i.id]; if (!a || !a.r) { un++; miss[i.id] = 1; } else if (!complete(a)) { bad++; miss[i.id] = 1; } });
+      if (un) errs.push(un + (un === 1 ? ' item has' : ' items have') + ' no answer yet.');
+      if (bad) errs.push('A defect needs more detail: choose what is wrong and how serious it is. "Do not drive" also needs a photo, and "Something else" needs a description.');
+      if (errs.length) { render(false); return; }
+      if (draft.si === F.SECTIONS.length - 1) { go('review'); return; }
+      draft.si++; go('check');
+    },
+    submit: function () {
+      var v = F.veh(st(), draft.vid), m = parseInt(String(draft.mileage).replace(/[^0-9]/g, ''), 10); errs = [];
+      if (!m) errs.push('Type the mileage shown on the dashboard.');
+      else if (m < v.mileage) errs.push('That is lower than the last reading (' + F.num(v.mileage) + ').');
+      else if (m > v.mileage + 5000) errs.push('That is more than 5,000 miles above the last reading. Check the number.');
+      if (!draft.decl) errs.push('Tick the declaration.');
+      if (errs.length) { render(false); return; }
+      var na = [], defs = [];
+      F.SECTIONS.forEach(function (sec) { sec.items.forEach(function (i) {
+        var a = draft.a[i.id];
+        if (a.r === 'na') na.push(i.id);
+        if (a.r === 'defect') defs.push({ item: i.id, fault: a.fault, sev: a.sev, note: a.note.trim(), photo: a.photo });
+      }); });
+      var o = { vid: draft.vid, by: meId(), mileage: m, secs: Math.max(5, Math.round((Date.now() - draft.started) / 1000)), na: na, defs: defs, source: 'check' };
+      draft = null;
+      last = { report: false, n: defs.length, stop: defs.filter(function (x) { return x.sev === 'stop'; }).map(function (x) { return F.title(x.item, x.fault, x.note); }) };
+      scr = last.stop.length ? 'stop' : 'done';
+      F.act.submit(o);
+    },
+    report: function () { rep = { item: '', a: blank() }; rep.a.r = 'defect'; go('report'); },
+    sendrep: function () {
+      var a = rep.a; errs = [];
+      if (!rep.item) errs.push('Choose which part of the vehicle.');
+      else if (!a.fault) errs.push('Choose what is wrong.');
+      else if (!a.sev) errs.push('Say how serious it is.');
+      else if (a.fault === F.OTHER && !a.note.trim()) errs.push('Describe the defect.');
+      else if (a.sev === 'stop' && !a.photo) errs.push('Add a photo for a "Do not drive" defect.');
+      if (errs.length) { render(false); return; }
+      var o = { vid: myV().id, by: meId(), defs: [{ item: rep.item, fault: a.fault, sev: a.sev, note: a.note.trim(), photo: a.photo }], source: 'report' };
+      last = { report: true, n: 1, stop: a.sev === 'stop' ? [F.title(rep.item, a.fault, a.note)] : [] };
+      rep = null; scr = last.stop.length ? 'stop' : 'done';
+      F.act.submit(o);
+    }
+  };
+  $('app').addEventListener('click', function (e) {
+    var t = e.target, el;
+    if ((el = t.closest('[data-go]'))) { if (!el.disabled && GO[el.dataset.go]) GO[el.dataset.go](); return; }
+    if ((el = t.closest('[data-pickv]'))) { scr = 'home'; if (draft && draft.vid !== el.dataset.pickv) draft = null; F.act.pick(meId(), el.dataset.pickv); return; }
+    var x;
+    if ((el = t.closest('[data-a]'))) {
+      x = answerFor(el); if (!x) return;
+      var r = el.dataset.a; if (x.a.r !== r) { var keepNote = x.a; draft.a[el.closest('[data-item]').dataset.item] = x.a = blank(); x.a.r = r; if (r === 'defect') x.a.note = keepNote.note; }
+      render(true); return;
+    }
+    if ((el = t.closest('[data-fault]'))) {
+      x = answerFor(el); if (!x) return;
+      x.a.fault = el.dataset.fault;
+      if (!x.a.sevSet) { var f = x.item.faults.filter(function (q) { return q[0] === x.a.fault; })[0]; x.a.sev = f ? f[1] : 'repair'; }
+      render(true); return;
+    }
+    if ((el = t.closest('[data-sev]'))) { x = answerFor(el); if (!x) return; x.a.sev = el.dataset.sev; x.a.sevSet = true; render(true); return; }
+    if ((el = t.closest('[data-photo]'))) { x = answerFor(el); if (!x) return; x.a.photo = true; render(true); return; }
+  });
+  $('app').addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.id === 'mi') draft.mileage = t.value;
+    else if (t.hasAttribute('data-note')) { var x = answerFor(t); if (x) x.a.note = t.value; }
+  });
+  $('app').addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'who') { draft = null; rep = null; scr = 'home'; F.act.setMe(t.value); }
+    else if (t.id === 'ritem') { var note = rep.a.note; rep.item = t.value; rep.a = blank(); rep.a.r = 'defect'; rep.a.note = note; render(true); }
+    else if (t.id === 'decl') draft.decl = t.checked;
+  });
+
+  F.on(function (src) { render(src === 'remote' || scr === 'check'); });
+  S.onChange(function () { S.fill(); });
+  render(false);
+  if (embed) F.post({ hello: 1 });
+})();
+</script>
+</body>
+</html>

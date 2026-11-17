@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings · demo</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/suite.css">
+<link rel="stylesheet" href="../assets/page.css">
+<style>
+.preview { border: 1px dashed var(--suite-line-2); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.preview .logo { width: 52px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--suite-accent); color: var(--suite-on-accent); font-weight: 700; }
+.preview .co { color: var(--suite-ink); font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+.matrix td, .matrix th { text-align: center; }
+.matrix td:first-child, .matrix th:first-child { text-align: left; }
+.tick { color: #1F6B4C; font-weight: 700; } [data-theme="dark"] .tick { color: #86D6AE; }
+.dash { color: var(--suite-line-2); }
+.log { list-style: none; margin: 0; padding: 0; }
+.log li { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--suite-line); }
+.log li:last-child { border-bottom: 0; }
+.log time { flex: none; width: 118px; color: var(--suite-label); font-size: 12.5px; }
+.addform { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; padding: 16px 18px; border-top: 1px solid var(--suite-line); background: var(--suite-sunk); border-radius: 0 0 14px 14px; }
+.addform[hidden] { display: none; }
+.saved { color: #1F6B4C; font-size: 12.5px; font-weight: 500; } [data-theme="dark"] .saved { color: #86D6AE; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Settings</h1>
+      <p>Set the system up for <span data-suite="company"></span>: the name and colour, which tools are switched on, and who can do what.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="cols">
+      <section class="card" aria-labelledby="h-brand">
+        <header><div><h2 id="h-brand">Company and look</h2><p>Changes show straight away, on every tool.</p></div><span class="saved" id="brand-saved" role="status"></span></header>
+        <div class="body stack">
+          <label class="field"><span>Company name</span>
+            <input class="input" id="co-name" type="text" maxlength="60" autocomplete="organization" placeholder="Your Company">
+            <small>Stays in this browser. It isn't sent anywhere.</small>
+          </label>
+          <div class="field"><span id="l-colour">Colour</span>
+            <div class="swatches" id="swatches" role="group" aria-labelledby="l-colour"></div>
+          </div>
+          <div class="preview" aria-hidden="true">
+            <span class="logo" data-suite="initials"></span>
+            <span class="co" data-suite="company"></span>
+            <span class="btn pri sm">Primary button</span>
+            <a href="#" onclick="return false">A link</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-tools">
+        <header><div><h2 id="h-tools">Tools</h2><p>Switch off what this business doesn't need. It leaves the menu and the dashboard.</p></div></header>
+        <div class="body" id="tools"></div>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="h-people">
+      <header>
+        <div><h2 id="h-people">People and access</h2><p id="people-count"></p></div>
+        <button type="button" class="btn pri sm" id="add-open">Add a person</button>
+      </header>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Team</th><th>Email</th><th>Access</th><th>Status</th><th></th></tr></thead>
+          <tbody id="people"></tbody>
+        </table>
+      </div>
+      <form class="addform" id="add-form" hidden>
+        <label class="field"><span>Full name</span><input class="input" id="add-name" required maxlength="50" autocomplete="off"></label>
+        <label class="field"><span>Role</span><input class="input" id="add-role" required maxlength="50" autocomplete="off"></label>
+        <label class="field"><span>Team</span><select class="input" id="add-team"></select></label>
+        <label class="field"><span>Access</span><select class="input" id="add-access"></select></label>
+        <div style="display:flex;gap:8px"><button class="btn pri" type="submit">Add</button><button class="btn" type="button" id="add-cancel">Cancel</button></div>
+      </form>
+    </section>
+
+    <div class="cols">
+      <section class="card" aria-labelledby="h-matrix">
+        <header><div><h2 id="h-matrix">What each access level can do</h2><p>Set once, applied across every tool.</p></div></header>
+        <div class="tablewrap">
+          <table class="matrix">
+            <thead><tr><th>Action</th><th>Admin</th><th>Manager</th><th>Staff</th><th>Driver</th></tr></thead>
+            <tbody id="matrix"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-log">
+        <header><div><h2 id="h-log">Recent changes</h2><p>Every admin change is recorded with who made it.</p></div></header>
+        <div class="body"><ul class="log" id="log"></ul></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="body rowline">
+        <div class="grow"><b>Start the demo again</b><div class="muted small">Clears the company name, colour, tool choices and all sample data changes in this browser, then returns to the front page.</div></div>
+        <button type="button" class="btn danger" id="start-over">Start over</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+window.SUITE_MODULE = {
+  id: 'admin', title: 'Settings',
+  intro: 'Use Settings to set the system up for a business: its name and colour, which tools it uses, and who can do what.',
+  tryIt: [
+    { title: 'Put your own name on it', steps: [
+      'In "Company and look", type your company name.',
+      'Pick a colour.',
+      'Look at the menu badge and the top bar: they have changed already.',
+      'Open any other tool from the menu. Your name and colour are there too.' ] },
+    { title: 'Switch a tool off', steps: [
+      'In "Tools", switch Suppliers off.',
+      'Suppliers leaves the menu on the left.',
+      'Open the Dashboard: its Suppliers card has gone as well.',
+      'Come back and switch it on again.' ] },
+    { title: 'Change who can do what', steps: [
+      'In "People and access", change Tom Ashdown from Staff to Manager.',
+      'Press "Add a person" and add someone to Site Team B.',
+      'Press "Deactivate" on any person: they stay on record but are marked inactive.',
+      'Each change appears under "Recent changes".' ] }
+  ]
+};
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = Suite.esc, VERSION = 1;
+  var LEVELS = ['Admin', 'Manager', 'Staff', 'Driver'];
+  var TEAMS = ['Office', 'Design', 'Yard', 'Site Team A', 'Site Team B'];
+  var ME = Suite.person('hw');
+
+  var MATRIX = [
+    ['Change company settings and tools', 1, 0, 0, 0],
+    ['Add people and set access', 1, 0, 0, 0],
+    ['Approve documents and suppliers', 1, 1, 0, 0],
+    ['Edit the vehicle and training registers', 1, 1, 0, 0],
+    ['Create and check documents', 1, 1, 1, 0],
+    ['See their own training record', 1, 1, 1, 1],
+    ['Complete a daily vehicle check', 1, 1, 1, 1]
+  ];
+  var TOOLS = [
+    { id: 'fleet', what: 'Vehicle register, due dates, daily checks and defects.' },
+    { id: 'documents', what: 'Document register with checking and approval.' },
+    { id: 'training', what: 'Who holds which training, and what is expiring.' },
+    { id: 'suppliers', what: 'Approved suppliers, onboarded by questionnaire.' }
+  ];
+
+  function stamp(daysAgo, h, m) {
+    var d = Suite.daysFromNow(-daysAgo);
+    return Suite.fmtDate(d) + ' ' + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+  }
+  function fresh() {
+    return {
+      people: Suite.people.map(function (p) {
+        return { id: p.id, name: p.name, role: p.role, team: p.team, access: p.access, active: true };
+      }),
+      log: [
+        { at: stamp(1, 16, 42), who: 'Hannah Whitlock', what: 'Changed Rob Fenwick from Staff to Manager' },
+        { at: stamp(3, 9, 5), who: 'Daniel Mercer', what: 'Switched the Suppliers tool on' },
+        { at: stamp(6, 11, 30), who: 'Hannah Whitlock', what: 'Added Owen Pritchard to Site Team B' },
+        { at: stamp(14, 14, 12), who: 'Daniel Mercer', what: 'Set up the company' }
+      ],
+      n: 0
+    };
+  }
+  var S = Suite.load('admin', VERSION) || fresh();
+  function persist() { Suite.save('admin', VERSION, S); }
+  function nowStamp() {
+    var d = new Date();
+    return Suite.fmtDate(d) + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function log(what) { S.log.unshift({ at: nowStamp(), who: ME.name, what: what }); S.log = S.log.slice(0, 12); persist(); drawLog(); }
+
+  /* ---- company and look ---- */
+  var nameBox = document.getElementById('co-name');
+  var saved = document.getElementById('brand-saved');
+  var stored = Suite.get('company', '');
+  nameBox.value = stored || '';
+  var nameTimer = null, lastLogged = Suite.company();
+  nameBox.addEventListener('input', function () {
+    Suite.setCompany(nameBox.value);
+    saved.textContent = 'Saved';
+    window.clearTimeout(nameTimer);
+    nameTimer = window.setTimeout(function () {
+      saved.textContent = '';
+      if (Suite.company() !== lastLogged) { lastLogged = Suite.company(); log('Changed the company name to ' + lastLogged); }
+    }, 1400);
+  });
+
+  function drawSwatches() {
+    var cur = Suite.accent().id;
+    document.getElementById('swatches').innerHTML = Suite.accents.map(function (a) {
+      return '<button type="button" class="swatch" data-accent="' + a.id + '" style="background:' + a.hex + '" aria-pressed="' + (a.id === cur) + '" aria-label="' + esc(a.name) + '" title="' + esc(a.name) + '"></button>';
+    }).join('');
+  }
+  document.getElementById('swatches').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-accent]');
+    if (!b) return;
+    Suite.setAccent(b.getAttribute('data-accent'));
+    drawSwatches();
+    log('Changed the colour to ' + Suite.accent().name);
+  });
+
+  /* ---- tools ---- */
+  function drawTools() {
+    document.getElementById('tools').innerHTML = TOOLS.map(function (t) {
+      var m = Suite.modules.filter(function (x) { return x.id === t.id; })[0];
+      var on = Suite.moduleOn(t.id);
+      return '<div class="rowline"><span class="ico">' + Suite.icon(t.id) + '</span>' +
+        '<div class="grow"><b>' + esc(m.title) + '</b><div class="muted small">' + esc(t.what) + '</div></div>' +
+        '<label class="switch"><input type="checkbox" data-tool="' + t.id + '"' + (on ? ' checked' : '') + ' aria-label="' + esc(m.title) + ' switched on"><i></i></label></div>';
+    }).join('');
+  }
+  document.getElementById('tools').addEventListener('change', function (e) {
+    var id = e.target.getAttribute('data-tool');
+    if (!id) return;
+    Suite.setModuleOn(id, e.target.checked);
+    var m = Suite.modules.filter(function (x) { return x.id === id; })[0];
+    log('Switched the ' + m.title + ' tool ' + (e.target.checked ? 'on' : 'off'));
+  });
+
+  /* ---- people ---- */
+  function emailOf(p) { return Suite.emailFor(p); }
+  function drawPeople() {
+    var active = S.people.filter(function (p) { return p.active; }).length;
+    document.getElementById('people-count').textContent = active + ' active, ' + (S.people.length - active) + ' inactive';
+    document.getElementById('people').innerHTML = S.people.map(function (p) {
+      var opts = LEVELS.map(function (l) { return '<option' + (l === p.access ? ' selected' : '') + '>' + l + '</option>'; }).join('');
+      return '<tr class="' + (p.active ? '' : 'off') + '">' +
+        '<td><span class="name">' + esc(p.name) + '</span></td>' +
+        '<td>' + esc(p.role) + '</td><td>' + esc(p.team) + '</td>' +
+        '<td class="muted">' + esc(emailOf(p)) + '</td>' +
+        '<td><select class="input" style="width:auto;padding:4px 8px" data-access="' + esc(p.id) + '" aria-label="Access for ' + esc(p.name) + '"' + (p.active ? '' : ' disabled') + '>' + opts + '</select></td>' +
+        '<td><span class="chip ' + (p.active ? 'green' : 'grey') + '">' + (p.active ? 'Active' : 'Inactive') + '</span></td>' +
+        '<td style="text-align:right"><button type="button" class="btn sm" data-toggle="' + esc(p.id) + '">' + (p.active ? 'Deactivate' : 'Reactivate') + '</button></td></tr>';
+    }).join('');
+  }
+  function find(id) { return S.people.filter(function (p) { return p.id === id; })[0]; }
+  document.getElementById('people').addEventListener('change', function (e) {
+    var id = e.target.getAttribute('data-access');
+    if (!id) return;
+    var p = find(id), was = p.access;
+    p.access = e.target.value;
+    log('Changed ' + p.name + ' from ' + was + ' to ' + p.access);
+  });
+  document.getElementById('people').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-toggle]');
+    if (!b) return;
+    var p = find(b.getAttribute('data-toggle'));
+    if (p.id === ME.id && p.active) { window.alert('You are signed in as ' + ME.name + ', so you can\'t deactivate this account.'); return; }
+    p.active = !p.active;
+    log((p.active ? 'Reactivated ' : 'Deactivated ') + p.name);
+    drawPeople();
+  });
+
+  var form = document.getElementById('add-form');
+  document.getElementById('add-team').innerHTML = TEAMS.map(function (t) { return '<option>' + t + '</option>'; }).join('');
+  document.getElementById('add-access').innerHTML = LEVELS.map(function (l) { return '<option' + (l === 'Staff' ? ' selected' : '') + '>' + l + '</option>'; }).join('');
+  document.getElementById('add-open').addEventListener('click', function () { form.hidden = false; document.getElementById('add-name').focus(); });
+  document.getElementById('add-cancel').addEventListener('click', function () { form.hidden = true; form.reset(); });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('add-name').value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+    var role = document.getElementById('add-role').value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+    if (!name || !role) return;
+    S.n += 1;
+    var p = { id: 'new' + S.n, name: name, role: role, team: document.getElementById('add-team').value, access: document.getElementById('add-access').value, active: true };
+    S.people.push(p);
+    form.hidden = true; form.reset();
+    log('Added ' + p.name + ' to ' + p.team);
+    drawPeople();
+  });
+
+  /* ---- matrix and log ---- */
+  document.getElementById('matrix').innerHTML = MATRIX.map(function (r) {
+    return '<tr><td>' + esc(r[0]) + '</td>' + r.slice(1).map(function (v) {
+      return '<td>' + (v ? '<span class="tick" aria-label="Yes">✓</span>' : '<span class="dash" aria-label="No">-</span>') + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  function drawLog() {
+    document.getElementById('log').innerHTML = S.log.map(function (l) {
+      return '<li><time>' + esc(l.at) + '</time><div><b style="color:var(--suite-ink);font-weight:600">' + esc(l.who) + '</b><div>' + esc(l.what) + '</div></div></li>';
+    }).join('');
+  }
+
+  document.getElementById('start-over').addEventListener('click', function () {
+    if (!window.confirm('Clear everything in this demo and go back to the front page?')) return;
+    Suite.reset(false);
+    window.location.href = '../index.html';
+  });
+
+  Suite.onChange(function () { drawPeople(); });
+  drawSwatches(); drawTools(); drawPeople(); drawLog();
+})();
+</script>
+</body>
+</html>

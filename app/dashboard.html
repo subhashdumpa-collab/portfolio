@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard · demo</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/suite.css">
+<link rel="stylesheet" href="../assets/page.css">
+<style>
+.attn { list-style: none; margin: 0; padding: 0; }
+.attn li { border-bottom: 1px solid var(--suite-line); }
+.attn li:last-child { border-bottom: 0; }
+.attn a { display: flex; align-items: center; gap: 14px; padding: 12px 18px; color: inherit; text-decoration: none; }
+.attn a:hover { background: var(--suite-sunk); text-decoration: none; }
+.attn .n { flex: none; min-width: 40px; height: 32px; padding: 0 8px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; font-size: 15px; border: 1px solid; }
+.attn .n.red { color: #B23A2E; background: #FCEBE8; border-color: #F2C1BA; }
+.attn .n.amber { color: #8A5D0C; background: #FDF3D7; border-color: #EBCB7A; }
+.attn .n.blue { color: #1D4ED8; background: #EFF4FF; border-color: #C7D7FE; }
+[data-theme="dark"] .attn .n.red { color: #F3A198; background: #3D1B17; border-color: #66302A; }
+[data-theme="dark"] .attn .n.amber { color: #F0C76A; background: #3A2E12; border-color: #5C4A1E; }
+[data-theme="dark"] .attn .n.blue { color: #A9C1FF; background: #1B2540; border-color: #2F3F6B; }
+.attn .t { flex: 1; min-width: 0; }
+.attn .t b { color: var(--suite-ink); font-weight: 600; display: block; }
+.attn .t span { color: var(--suite-label); font-size: 12.5px; }
+.attn .go { flex: none; color: var(--suite-accent-ink); font-weight: 500; font-size: 13px; white-space: nowrap; }
+.empty { padding: 22px 18px; color: var(--suite-label); }
+
+.tools { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+.tool header { border-bottom: 0; padding-bottom: 6px; }
+.tool header .ttl { display: flex; align-items: center; gap: 10px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--suite-line); border-top: 1px solid var(--suite-line); border-bottom: 1px solid var(--suite-line); }
+.stat { background: var(--suite-surface); padding: 12px 18px; }
+.stat b { display: block; color: var(--suite-ink); font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.stat b.red { color: #B23A2E; } .stat b.amber { color: #8A5D0C; } .stat b.green { color: #1F6B4C; }
+[data-theme="dark"] .stat b.red { color: #F3A198; } [data-theme="dark"] .stat b.amber { color: #F0C76A; } [data-theme="dark"] .stat b.green { color: #86D6AE; }
+.stat span { color: var(--suite-label); font-size: 12.5px; }
+.tool .foot { padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tool .foot span { color: var(--suite-label); font-size: 12.5px; }
+.layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
+.who { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--suite-line); }
+.who:last-child { border-bottom: 0; }
+.who i { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--suite-accent-tint); color: var(--suite-accent-ink); font-style: normal; font-weight: 600; font-size: 12px; }
+.who div { flex: 1; min-width: 0; }
+.who b { color: var(--suite-ink); font-weight: 600; }
+.who span { color: var(--suite-label); font-size: 12.5px; display: block; }
+.who a { font-size: 13px; font-weight: 500; white-space: nowrap; }
+@media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1 id="hello"></h1>
+      <p id="sub"></p>
+    </div>
+    <a class="btn" href="admin.html">Set up <span data-suite="company"></span></a>
+  </div>
+
+  <div class="stack">
+    <div class="layout">
+      <section class="card" aria-labelledby="h-attn">
+        <header><div><h2 id="h-attn">Needs attention</h2><p>The most urgent items from every tool that is switched on.</p></div></header>
+        <ul class="attn" id="attn"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="h-who">
+        <header><div><h2 id="h-who">Waiting on people</h2><p>Who has something to do, and where.</p></div></header>
+        <div class="body" id="who"></div>
+      </section>
+    </div>
+
+    <div class="tools" id="tools"></div>
+  </div>
+</main>
+
+<script>
+window.SUITE_MODULE = {
+  id: 'dashboard', title: 'Dashboard',
+  intro: 'The Dashboard lists the urgent items from every tool, so the first page of the day shows what needs doing.',
+  tryIt: [
+    { title: 'Follow a red item to where it lives', steps: [
+      'Under "Needs attention", press the first red item.',
+      'It opens the tool that item belongs to.',
+      'Each tool has its own "What to try" guide in the top bar.',
+      'Use the menu on the left to come back to the Dashboard.' ] },
+    { title: 'See it follow your choices', steps: [
+      'Press "Set up" at the top right to open Settings.',
+      'Switch one of the tools off.',
+      'Come back here: its card and its items have gone.' ] },
+    { title: 'Try it in the dark, or on a phone', steps: [
+      'Press "Dark" in the top bar.',
+      'Make the browser window narrow: the menu moves to the bottom, as it would on a phone.' ] }
+  ]
+};
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = Suite.esc;
+
+  /* Figures match each tool's starting sample data. Where a tool has saved changes in this
+     browser, the live figures are read from it instead (see live* below). */
+  var SEED = {
+    fleet: { vehicles: 8, overdue: 1, dueSoon: 2, offRoad: 1, openDefects: 3 },
+    documents: { checking: 10, ready: 2, returned: 2, issued: 8, rejected: 1 },
+    training: { notCleared: 1, expired: 3, missing: 3, expiring30: 4, met: 80, required: 87 },
+    suppliers: { approved: 5, awaitingReview: 3, expiringSoon: 2, onHold: 1, questionnairesOut: 3 }
+  };
+
+  function liveDocuments() {
+    var d = Suite.load('documents', 1);
+    if (!d || !Array.isArray(d.docs)) return null;
+    var c = { chk: 0, app: 0, ret: 0, ready: 0, issued: 0 };
+    d.docs.forEach(function (doc) {
+      if (doc.gone || !doc.revs || !doc.revs.length) return;
+      var st = doc.revs[doc.revs.length - 1].st;
+      if (c.hasOwnProperty(st)) c[st] += 1;
+    });
+    return { checking: c.chk + c.app + c.ret + c.ready, ready: c.ready, returned: c.ret, issued: c.issued, rejected: null };
+  }
+  function liveSuppliers() {
+    var d = Suite.load('suppliers', 1);
+    var s = d && d.summary;
+    if (!s || typeof s.approved !== 'number') return null;
+    return { approved: s.approved, awaitingReview: s.awaitingReview, expiringSoon: s.expiringSoon, onHold: s.onHold, questionnairesOut: s.questionnairesOut };
+  }
+  function figures() {
+    return {
+      fleet: SEED.fleet,
+      documents: liveDocuments() || SEED.documents,
+      training: SEED.training,
+      suppliers: liveSuppliers() || SEED.suppliers
+    };
+  }
+  function plural(n, one, many) { return n === 1 ? one : many; }
+
+  function draw() {
+    var F = figures(), on = Suite.moduleOn;
+    var hour = new Date().getHours();
+    var me = Suite.person('hw');
+    document.getElementById('hello').textContent = (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening') + ', ' + me.name.split(' ')[0] + '.';
+    document.getElementById('sub').textContent = 'Here is where ' + Suite.company() + ' stands today, ' + Suite.fmtDate(Suite.today()) + '.';
+
+    /* ---- needs attention ---- */
+    var items = [];
+    function add(tone, n, title, detail, href, tool) { if (n > 0) items.push({ tone: tone, n: n, title: title, detail: detail, href: href, tool: tool }); }
+    if (on('training')) {
+      add('red', F.training.notCleared, plural(F.training.notCleared, 'person is', 'people are') + ' not cleared for work today', 'A safety-critical requirement has expired or is missing.', 'training.html', 'Training matrix');
+    }
+    if (on('fleet')) {
+      add('red', F.fleet.offRoad, plural(F.fleet.offRoad, 'vehicle is', 'vehicles are') + ' off the road', 'An open defect means it must not be driven.', 'fleet.html', 'Vehicle checks');
+      add('red', F.fleet.overdue, plural(F.fleet.overdue, 'vehicle has', 'vehicles have') + ' an overdue date', 'MOT, tax, service or insurance has passed its date.', 'fleet.html', 'Vehicle checks');
+    }
+    if (on('suppliers')) {
+      add('red', F.suppliers.onHold, plural(F.suppliers.onHold, 'supplier is', 'suppliers are') + ' on hold', 'Their insurance has expired, so no new orders.', 'suppliers.html', 'Supplier approval');
+      add('amber', F.suppliers.awaitingReview, plural(F.suppliers.awaitingReview, 'questionnaire is', 'questionnaires are') + ' waiting for review', 'Submitted by the supplier, not yet decided.', 'suppliers.html', 'Supplier approval');
+    }
+    if (on('documents')) {
+      add('amber', F.documents.checking, plural(F.documents.checking, 'document is', 'documents are') + ' in the checking process', F.documents.returned + ' returned with comments, ' + F.documents.ready + ' ready to issue.', 'documents.html', 'Document control');
+      if (F.documents.rejected) add('amber', F.documents.rejected, plural(F.documents.rejected, 'document was', 'documents were') + ' rejected by the client', 'Needs a new revision.', 'documents.html', 'Document control');
+    }
+    if (on('training')) {
+      add('amber', F.training.expired + F.training.missing, 'training records are expired or missing', F.training.expired + ' expired, ' + F.training.missing + ' missing.', 'training.html', 'Training matrix');
+      add('blue', F.training.expiring30, plural(F.training.expiring30, 'training record expires', 'training records expire') + ' within 30 days', 'Book the refresher before it lapses.', 'training.html', 'Training matrix');
+    }
+    if (on('fleet')) add('blue', F.fleet.dueSoon, plural(F.fleet.dueSoon, 'vehicle has', 'vehicles have') + ' a date due within 30 days', 'MOT, tax, service or insurance.', 'fleet.html', 'Vehicle checks');
+    if (on('suppliers')) add('blue', F.suppliers.expiringSoon, plural(F.suppliers.expiringSoon, 'supplier\'s insurance runs', 'suppliers\' insurance runs') + ' out within 30 days', 'Ask for the renewed certificate.', 'suppliers.html', 'Supplier approval');
+
+    document.getElementById('attn').innerHTML = items.length ? items.map(function (i) {
+      return '<li><a href="' + i.href + '"><span class="n ' + i.tone + '">' + i.n + '</span>' +
+        '<span class="t"><b>' + esc(i.title) + '</b><span>' + esc(i.detail) + '</span></span>' +
+        '<span class="go">' + esc(i.tool) + ' →</span></a></li>';
+    }).join('') : '<li class="empty">Nothing needs attention. Every tool is switched off: turn one on in <a href="admin.html">Settings</a>.</li>';
+
+    /* ---- waiting on people (matches each tool's starting data) ---- */
+    var waits = [
+      { id: 'ek', what: '3 documents to check, 1 to approve', href: 'documents.html', tool: 'documents' },
+      { id: 'dm', what: '2 documents to approve, 1 supplier to approve', href: 'documents.html', tool: 'documents' },
+      { id: 'ak', what: '1 supplier health and safety review, 1 certificate to verify', href: 'suppliers.html', tool: 'suppliers' },
+      { id: 'sm', what: '1 supplier recommendation to make', href: 'suppliers.html', tool: 'suppliers' },
+      { id: 'pr', what: '2 documents to issue', href: 'documents.html', tool: 'documents' },
+      { id: 'rf', what: '2 vehicle defects to assign', href: 'fleet.html', tool: 'fleet' }
+    ].filter(function (w) { return on(w.tool); });
+    document.getElementById('who').innerHTML = waits.length ? waits.map(function (w) {
+      var p = Suite.person(w.id), ini = p.name.split(' ').map(function (x) { return x.charAt(0); }).join('');
+      return '<div class="who"><i>' + esc(ini) + '</i><div><b>' + esc(p.name) + '</b><span>' + esc(w.what) + '</span></div><a href="' + w.href + '">Open</a></div>';
+    }).join('') : '<p class="muted">Nobody is waiting on anything.</p>';
+
+    /* ---- tool cards ---- */
+    var pct = Math.round(F.training.met / F.training.required * 100);
+    var cards = [
+      { id: 'fleet', title: 'Vehicle checks', href: 'fleet.html', foot: 'Daily checks come in from drivers\' phones.', stats: [
+        [F.fleet.vehicles, 'vehicles on the register', ''], [F.fleet.overdue, 'with an overdue date', F.fleet.overdue ? 'red' : 'green'],
+        [F.fleet.dueSoon, 'due within 30 days', F.fleet.dueSoon ? 'amber' : ''], [F.fleet.openDefects, 'open defects, ' + F.fleet.offRoad + ' off the road', F.fleet.offRoad ? 'red' : ''] ] },
+      { id: 'documents', title: 'Document control', href: 'documents.html', foot: 'Checked, approved and issued in order.', stats: [
+        [F.documents.checking, 'in the checking process', F.documents.checking ? 'amber' : ''], [F.documents.returned, 'returned with comments', ''],
+        [F.documents.ready, 'ready to issue', ''], [F.documents.issued, 'issued', 'green'] ] },
+      { id: 'training', title: 'Training matrix', href: 'training.html', foot: F.training.met + ' of ' + F.training.required + ' mandatory requirements met.', stats: [
+        [pct + '%', 'of mandatory training in date', pct >= 90 ? 'green' : 'amber'], [F.training.notCleared, 'not cleared for work today', F.training.notCleared ? 'red' : 'green'],
+        [F.training.expired + F.training.missing, 'expired or missing', 'amber'], [F.training.expiring30, 'expiring within 30 days', ''] ] },
+      { id: 'suppliers', title: 'Supplier approval', href: 'suppliers.html', foot: 'Onboarded by online questionnaire.', stats: [
+        [F.suppliers.approved, 'approved to use', 'green'], [F.suppliers.awaitingReview, 'waiting for review', F.suppliers.awaitingReview ? 'amber' : ''],
+        [F.suppliers.questionnairesOut, 'questionnaires out', ''], [F.suppliers.onHold, 'on hold', F.suppliers.onHold ? 'red' : 'green'] ] }
+    ].filter(function (c) { return on(c.id); });
+
+    document.getElementById('tools').innerHTML = cards.map(function (c) {
+      return '<section class="card tool"><header><div class="ttl"><span class="ico">' + Suite.icon(c.id) + '</span><h2>' + esc(c.title) + '</h2></div></header>' +
+        '<div class="stats">' + c.stats.map(function (s) {
+          return '<div class="stat"><b class="' + s[2] + '">' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>';
+        }).join('') + '</div>' +
+        '<div class="foot"><span>' + esc(c.foot) + '</span><a class="btn sm" href="' + c.href + '">Open</a></div></section>';
+    }).join('');
+  }
+
+  Suite.onChange(draw);
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supplier approval · demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/suite.css">
+<style>
+/* Suppliers module. Brand colour comes from the shell (--suite-accent...); status colours are fixed. */
+:root{
+  --acc:var(--suite-accent);--acc-strong:var(--suite-accent-strong);--acc-ink:var(--suite-accent-ink);--acc-tint:var(--suite-accent-tint);--acc-line:var(--suite-accent-line);
+  --ink:var(--suite-ink);--page:var(--suite-page);--card:var(--suite-surface);--line:var(--suite-line);--field:var(--suite-line-2);--sunk:var(--suite-sunk);
+  --body:var(--suite-body);--label:var(--suite-label);--faint:#8A919C;--th:#1F2430;--row-hover:#F8F9FB;
+  --good:#1F7A4D;--good-tint:#E6F3EC;--good-line:#BFDDCD;--warn:#8A5D0C;--warn-tint:#FBF0DC;--warn-line:#EBD6AC;
+  --bad:#B23A2E;--bad-tint:#F8E7E4;--bad-line:#EFC9C3;--info:#1F4E8C;--info-tint:#E4EEFA;--info-line:#BBD2EF;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --faint:#7C8490;--th:#2A2E35;--row-hover:#22252A;
+  --good:#6CC59A;--good-tint:#173126;--good-line:#2A5440;--warn:#E9B65C;--warn-tint:#33270F;--warn-line:#5A4519;
+  --bad:#F08A7E;--bad-tint:#3A1B18;--bad-line:#5E2C27;--info:#86B4EE;--info-tint:#17263A;--info-line:#2B4366;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--page);color:var(--ink);font:14.5px/1.45 var(--suite-font)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+a{color:var(--acc-ink)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 18px 64px;display:grid;gap:14px}
+@media (min-width:1100px){html.suite-on body.try-open{padding-right:360px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;min-width:0}
+.pad{padding:18px 20px}
+h1{font-size:24px;font-weight:700;line-height:1.15;margin:0;letter-spacing:-.01em}
+h2{font-size:18px;font-weight:700;margin:0 0 8px;letter-spacing:-.005em}
+h3{font-size:15px;font-weight:600;margin:0 0 8px}
+p{margin:0 0 10px;max-width:74ch}
+.muted{color:var(--body)}.small{font-size:13px}.lblc{color:var(--label)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc-ink)}
+.btn{border:1px solid var(--field);background:var(--card);padding:7px 13px;border-radius:7px;font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn:hover{background:var(--sunk)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--suite-on-accent)}
+.btn.pri:hover{background:var(--acc-strong)}
+.btn.good{border-color:var(--good-line);color:var(--good)}
+.btn.bad{border-color:var(--bad-line);color:var(--bad)}
+.btn.sm{padding:4px 10px;font-size:12.5px}
+.btn.link{border:0;background:none;padding:0;color:var(--acc-ink);white-space:normal;text-align:left}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.full{grid-column:1/-1}
+.field{display:grid;gap:4px;align-content:start}
+.field label,.lbl{font-size:13px;font-weight:600}
+.field small{font-size:12px;color:var(--label)}
+input[type=text],input[type=email],input[type=tel],input[type=search],input[type=date],input[type=number],select,textarea{border:1px solid var(--field);border-radius:7px;padding:8px 10px;background:var(--card);width:100%;min-width:0}
+textarea{min-height:70px;resize:vertical}
+.err{border-color:var(--bad)!important;background:var(--bad-tint)!important}
+.note{border:1px solid;border-radius:8px;padding:10px 12px;font-size:13.5px}
+.note b{display:block}
+.note.info{background:var(--info-tint);border-color:var(--info-line);color:var(--info)}
+.note.good{background:var(--good-tint);border-color:var(--good-line);color:var(--good)}
+.note.warn{background:var(--warn-tint);border-color:var(--warn-line);color:var(--warn)}
+.note.bad{background:var(--bad-tint);border-color:var(--bad-line);color:var(--bad)}
+.note.grey{background:var(--sunk);border-color:var(--line);color:var(--body)}
+.note span,.note li,.note p{color:var(--ink)}
+.note ul{margin:4px 0 0;padding-left:18px}
+.tw{overflow-x:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-grey{color:var(--label);background:var(--sunk);border-color:var(--line)}
+.p-info{color:var(--info);background:var(--info-tint);border-color:var(--info-line)}
+.p-warn{color:var(--warn);background:var(--warn-tint);border-color:var(--warn-line)}
+.p-good{color:var(--good);background:var(--good-tint);border-color:var(--good-line)}
+.p-bad{color:var(--bad);background:var(--bad-tint);border-color:var(--bad-line)}
+.id{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}.na{color:var(--faint)}
+
+/* header card */
+.hd{border-top:3px solid var(--acc)}
+.hrow{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-start;padding:14px 18px 0}
+.desc{font-size:13px;color:var(--body);margin:3px 0 0}
+.desc b{color:var(--ink)}
+.who{margin:12px 18px 0;padding:8px 12px;border-radius:8px;background:var(--acc-tint);border:1px solid var(--acc-line);display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px}
+.who .me{font-weight:600}
+.who .seg{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.who .seg button{border:1px solid var(--acc-line);background:var(--card);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600}
+.who .seg button.on{background:var(--acc);border-color:var(--acc);color:var(--suite-on-accent)}
+.tabs{display:flex;gap:2px;margin-top:10px;padding:0 10px;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 12px;font-weight:600;color:var(--body);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.tab.on{color:var(--ink);border-bottom-color:var(--acc)}
+.tab .n{font-family:var(--mono);font-size:11px;background:var(--sunk);border-radius:4px;padding:1px 6px;color:var(--label)}
+.tab .dot{width:7px;height:7px;border-radius:50%;background:var(--bad)}
+.intro{font-size:13px;color:var(--body);padding:10px 18px;border-bottom:1px solid var(--line)}
+
+/* overview */
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.stat{padding:14px 18px;border:0;border-right:1px solid var(--line);text-align:left;background:none;display:flex;flex-direction:column;justify-content:flex-start;gap:2px}
+.stat:last-child{border-right:0}
+.stat:hover{background:var(--row-hover)}
+.stat b{display:block;font-size:30px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:12.5px;color:var(--label)}
+.stat.bad b{color:var(--bad)}.stat.warn b{color:var(--warn)}.stat.good b{color:var(--good)}
+.ovgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;padding:14px 18px 18px;border-top:1px solid var(--line)}
+.box{border:1px solid var(--line);border-radius:9px;padding:14px 16px;min-width:0}
+.box h3{display:flex;gap:8px;align-items:center}
+.cnt{font-family:var(--mono);font-size:11px;background:var(--warn-tint);color:var(--warn);border-radius:10px;padding:1px 7px}
+.need{border-top:1px solid var(--line);padding:9px 0}
+.need:first-of-type{border-top:0}
+.need .k{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px}
+.need .k.bad{color:var(--bad)}.need .k.warn{color:var(--warn)}.need .k.info{color:var(--info)}.need .k.acc{color:var(--acc-ink)}
+.need .k span{color:var(--ink);letter-spacing:0;text-transform:none;font-weight:600;font-size:12.5px}
+.need ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:2px}
+.need li button{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:4px 6px;border-radius:5px;border:0;background:none;width:100%;text-align:left}
+.need li button:hover{background:var(--row-hover)}
+.need li em{font-style:normal;color:var(--label);font-size:12.5px;white-space:nowrap}
+.hbar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;display:flex;margin:6px 0 10px}
+.hbar i{display:block;height:100%}
+.legend{display:grid;gap:6px;font-size:13px}
+.legend div{display:flex;justify-content:space-between}
+.legend s{text-decoration:none;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;counter-reset:f}
+.flow li{border:1px solid var(--line);border-radius:9px;padding:12px;background:var(--card);font-size:13px;counter-increment:f;color:var(--body)}
+.flow li::before{content:counter(f);font-family:var(--mono);font-size:11px;font-weight:600;color:var(--acc-ink);display:block;margin-bottom:4px}
+.flow li b{display:block;font-size:14px;margin-bottom:2px;color:var(--ink)}
+.flow li.s{border-color:var(--acc-line);background:var(--acc-tint)}
+
+/* register */
+.filters{padding:12px 18px;display:grid;gap:10px}
+.frow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.flbl{width:74px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--label);text-transform:uppercase}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.chip i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--label)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.chip.on i{color:var(--card)}
+.chip.c-bad{background:var(--bad-tint);border-color:var(--bad-line);color:var(--bad)}
+.chip.c-warn{background:var(--warn-tint);border-color:var(--warn-line);color:var(--warn)}
+.chip.c-bad i,.chip.c-warn i{color:inherit}
+.chip.c-bad.on,.chip.c-warn.on{outline:2px solid currentColor;outline-offset:-2px}
+.search{margin-left:auto;flex:0 1 280px;min-width:160px}
+.search input{padding:6px 10px;font-size:13px}
+table.reg{border-collapse:collapse;width:100%;min-width:940px}
+table.reg th{background:var(--th);color:#fff;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;text-align:left;padding:10px 12px;white-space:nowrap;cursor:pointer;user-select:none}
+table.reg th .ar{opacity:.55;margin-left:4px}
+table.reg th.sorted .ar{opacity:1}
+table.reg td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px;font-variant-numeric:tabular-nums}
+table.reg tbody tr.r{cursor:pointer}
+table.reg tbody tr.r:hover{background:var(--row-hover)}
+.nm{font-weight:600;min-width:210px}
+.sub{display:block;font-size:12px;color:var(--label);font-weight:400}
+.sub.bad{color:var(--bad);font-weight:600}.sub.warn{color:var(--warn);font-weight:600}
+.ds{white-space:nowrap}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px 18px;font-size:12px;color:var(--label)}
+.empty{padding:20px 18px;color:var(--label)}
+
+/* approved list */
+.catg{padding:14px 18px;border-top:1px solid var(--line)}
+.catg h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--label);margin-bottom:8px}
+.apgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.ap{border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--card);text-align:left;display:grid;gap:4px}
+.ap:hover{border-color:var(--acc-line);background:var(--row-hover)}
+.ap b{font-size:14.5px}
+.ap .l{font-size:12.5px;color:var(--body)}
+
+/* invitations */
+.list{display:grid;gap:8px}
+.item{border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:grid;gap:8px;background:var(--card)}
+.item .top{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+.steps{display:flex;gap:4px;flex-wrap:wrap;font-size:11.5px}
+.steps span{border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--faint)}
+.steps span.done{color:var(--good);border-color:var(--good-line);background:var(--good-tint)}
+.steps span.now{color:var(--acc-ink);border-color:var(--acc-line);background:var(--acc-tint)}
+.ev{list-style:none;margin:0;padding:0;font-size:13px;display:grid;gap:5px}
+.ev li{display:flex;gap:10px;min-width:0}
+.ev li>span{min-width:0;overflow-wrap:anywhere}
+.ev time{font-family:var(--mono);font-size:11.5px;color:var(--label);white-space:nowrap;padding-top:1px}
+.ev small{color:var(--label)}
+
+/* detail */
+.back{font-size:13px;font-weight:600;color:var(--acc-ink);border:0;background:none;padding:0}
+.dhead{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:flex-start}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.tagq{border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600}
+.dgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.sec h4{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--label);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.kv{background:var(--sunk);border-radius:8px;padding:12px 14px;display:grid;grid-template-columns:minmax(120px,42%) 1fr;gap:7px 12px;font-size:13.5px;margin:0}
+.kv dt{color:var(--label)}.kv dd{margin:0;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.kv dd.nr{font-weight:400;color:var(--faint);font-style:italic}
+.kv dd small{display:block;font-weight:400;color:var(--body)}
+.mini{width:100%;border-collapse:collapse;font-size:13px}
+.mini th{color:var(--label);font-size:11px;padding:6px;border-bottom:1px solid var(--line);text-align:left;text-transform:uppercase;letter-spacing:.05em}
+.mini td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.mini tr:last-child td{border-bottom:0}
+.icard{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.rsteps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rsteps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start}
+.rsteps .n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--field);display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--mono)}
+.rsteps li.done .n{background:var(--good);border-color:var(--good);color:#fff}
+.rsteps li.now .n{border-color:var(--acc);color:var(--acc-ink);background:var(--acc-tint)}
+.rsteps li.fail .n{background:var(--bad);border-color:var(--bad);color:#fff}
+.rsteps b{display:block}
+.rsteps .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.layers{display:grid;gap:8px}
+.layer{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--sunk)}
+.layer b{display:block;font-size:13px;margin-bottom:2px}
+.layer code{font-family:var(--mono);font-size:11.5px;word-break:break-all;color:var(--acc-ink)}
+.fn{font-family:var(--mono);font-size:12px;word-break:break-all}
+.hsmark{border-left:3px solid var(--acc);padding-left:12px}
+
+/* supplier side */
+.shell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--page)}
+.shead{background:var(--card);border-bottom:1px solid var(--line);border-top:3px solid var(--acc);padding:10px 16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.slogo{font-weight:700;font-size:17px;color:var(--acc-ink);line-height:1.1}
+.slogo span{font-size:13px;font-weight:600;color:var(--ink);margin-left:6px}
+.sbody{padding:22px 18px}
+.sbox{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px}
+.inbox{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:360px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.inbox .ml{border-right:1px solid var(--line);background:var(--card)}
+.inbox .ml button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px}
+.inbox .ml button.on{background:var(--acc-tint)}
+.inbox .ml b{display:block;font-size:13.5px}
+.inbox .ml small{display:block;font-size:12px;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mail{padding:18px 20px;background:var(--card);min-width:0}
+.mail .h{font-size:13px;color:var(--label);border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;display:grid;gap:2px;overflow-wrap:anywhere}
+.mail .h b{color:var(--ink)}
+.code{display:flex;gap:8px}
+.code input{width:46px;height:52px;text-align:center;font-family:var(--mono);font-size:22px;padding:0}
+.bigcode{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:.12em}
+.chk{display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+.chk input{margin-top:3px;width:16px;height:16px;accent-color:var(--acc);flex:none}
+.fgrid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;align-items:start}
+.srail{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;position:sticky;top:calc(var(--suite-bar-h) + 12px)}
+.srail ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
+.srail button{width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:6px;display:flex;gap:8px;align-items:center;font-size:13.5px}
+.srail button.on{background:var(--acc-tint);font-weight:700}
+.srail button:disabled{opacity:.45;cursor:not-allowed}
+.srail .n{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--field);display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);flex:none}
+.srail .ok .n{background:var(--good);border-color:var(--good);color:#fff}
+.srail .saved{font-size:12px;color:var(--good);margin-top:10px}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;min-width:0}
+.q{padding:10px 0;border-top:1px solid var(--line);display:grid;gap:7px}
+.q:first-child{border-top:0}
+.qn{font-family:var(--mono);font-size:11.5px;color:var(--label);margin-right:6px}
+.yn{display:flex;gap:6px;flex-wrap:wrap}
+.yn button{border:1px solid var(--field);background:var(--card);border-radius:6px;padding:4px 13px;font-weight:600;font-size:13.5px}
+.yn button.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.cert{border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:grid;gap:10px;margin-bottom:10px}
+.cert .ch{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.up{border:1.5px dashed var(--field);border-radius:8px;padding:9px 12px;display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;font-size:13.5px}
+.up.has{border-style:solid;border-color:var(--good-line);background:var(--good-tint)}
+.up input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.up label{cursor:pointer;font-weight:600;color:var(--acc-ink)}
+.msg{font-size:12.5px;font-weight:600}.msg.bad{color:var(--bad)}
+.pfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.demo{border:1px dashed var(--acc-line);background:var(--acc-tint);border-radius:8px;padding:8px 12px;font-size:13px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+
+/* settings */
+.side{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start;padding:16px 18px 18px}
+.side nav{position:sticky;top:calc(var(--suite-bar-h) + 12px);display:grid;gap:2px;font-size:13.5px}
+.side nav button{color:var(--ink);text-align:left;border:0;background:none;padding:6px 10px;border-radius:6px}
+.side nav button:hover{background:var(--sunk)}
+.side nav .g{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label);padding:10px 10px 2px}
+.edhead{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.vchips{display:flex;gap:6px;flex-wrap:wrap}
+.vchip{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--sunk)}
+.sec-h{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:0 0 8px}
+.sec-h h3{margin:0;font-size:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qt{width:100%;border-collapse:collapse;font-size:13.5px;min-width:720px}
+.qt th{background:var(--th);color:#fff;text-align:left;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px}
+.qt td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.qt tr.ret td{opacity:.55}
+.qt .qid{font-family:var(--mono);font-size:12px;white-space:nowrap}
+.qt .help{display:block;font-size:12px;color:var(--label)}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:11.5px;font-weight:600;margin:0 4px 2px 0;background:var(--sunk);white-space:nowrap}
+.tag.req{color:var(--acc-ink);border-color:var(--acc-line);background:var(--acc-tint)}
+.tag.flag{color:var(--warn);border-color:var(--warn-line);background:var(--warn-tint)}
+.qa{display:flex;gap:2px}
+.qa button{border:1px solid transparent;background:none;border-radius:5px;width:28px;height:28px;color:var(--label);font-size:14px}
+.qa button:hover:not(:disabled){border-color:var(--line);background:var(--sunk);color:var(--ink)}
+.qa button:disabled{opacity:.3;cursor:default}
+.fixed{font-size:13px;color:var(--label);background:var(--sunk);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.typechips{display:flex;flex-wrap:wrap;gap:6px}
+.typechips label{border:1px solid var(--field);border-radius:6px;padding:4px 10px;font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer;font-weight:400}
+
+/* overlays: sit below the shell's bar and "What to try" panel so both stay usable */
+.ovl{position:fixed;inset:0;background:rgba(12,14,18,.5);z-index:870;display:grid;place-items:start center;overflow-y:auto;padding:calc(var(--suite-bar-h) + 20px) 16px 24px calc(var(--suite-rail-w) + 16px)}
+@media (min-width:1100px){body.try-open .ovl{padding-right:376px}}
+.mbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(640px,100%);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.25)}
+.paperwrap{width:min(820px,100%)}
+.pbar .btn{color:var(--ink)}
+.stk{display:grid;grid-template-columns:minmax(0,1fr)}
+h2{overflow-wrap:anywhere}
+.pbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;color:#fff;margin-bottom:10px;font-size:13px}
+.paper{background:#fff;color:#1d1d1b;padding:40px 46px;font-family:Helvetica,Arial,sans-serif;font-size:11.5px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.3);color-scheme:light}
+.paper .phd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2.5px solid var(--suite-accent);padding-bottom:8px;margin-bottom:14px}
+.paper .phd h1{font-family:Helvetica,Arial,sans-serif;font-size:21px;margin:0;color:#1d1d1b;letter-spacing:0}
+.paper .plogo{font-size:16px;font-weight:700;color:var(--suite-accent);text-align:right}
+.paper .banner{color:#fff;padding:10px 12px;margin-bottom:14px}
+.paper .banner b{display:block;font-size:14px}
+.paper .banner.g{background:#2D7A40}.paper .banner.a{background:#B7791F}
+.paper h4{font-size:13px;margin:16px 0 6px;color:#1d1d1b}
+.paper table{width:100%;border-collapse:collapse;margin-bottom:6px}
+.paper th{background:#2b2b2b;color:#fff;text-align:left;padding:5px 7px;font-size:10.5px}
+.paper td{border-bottom:1px solid #ddd;padding:5px 7px;vertical-align:top;color:#1d1d1b}
+.paper td.k{color:#666;width:44%}
+.paper .ok{color:#2D7A40}.paper .no{color:#B23A2E}
+.paper .pf{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:9.5px;color:#666;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.priv{font-size:14px;line-height:1.5;display:grid;gap:10px}
+.priv p{margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--ink);color:var(--card);padding:9px 14px;border-radius:7px;z-index:950;font-size:13.5px;max-width:min(520px,calc(100vw - 32px));box-shadow:0 8px 24px rgba(0,0,0,.25)}
+
+@media (max-width:1000px){.ovgrid,.dgrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}.rules{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){
+  .wrap{padding:12px 10px 40px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}
+  .search{margin-left:0;flex-basis:100%}.flbl{width:auto}
+  .side,.fgrid,.inbox{grid-template-columns:1fr}.side nav,.srail{position:static}.side nav{display:none}
+  .inbox .ml{border-right:0;border-bottom:1px solid var(--line)}
+  .grid2,.grid3{grid-template-columns:1fr}.kv{grid-template-columns:1fr;gap:2px 0}.kv dd{margin-bottom:6px}
+  .flow{grid-template-columns:1fr}.paper{padding:22px 16px}
+  .who .seg{margin-left:0}.sbody{padding:14px 10px}.sbox{padding:16px}
+  .code input{width:38px;height:46px}
+  .srail ol{display:flex;flex-wrap:wrap;gap:4px}.srail button{width:auto;padding:4px}.srail button .t{display:none}.srail button.on .t{display:inline}
+  .dhead .row .btn{white-space:normal}
+  .ovl{padding:calc(var(--suite-bar-h) + 10px) 8px 70px}
+  #suite-slot label span{display:none}#suite-slot select{max-width:118px}
+}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<div id="mRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+  window.SUITE_MODULE = {
+    id: 'suppliers', title: 'Supplier approval',
+    intro: 'An approved supplier register. Invite a supplier, they answer a questionnaire online and upload their insurance, then your team checks and approves them. Use "View as" in the top bar to be the office or the supplier.',
+    tryIt: [
+      { title: 'Invite a supplier, then answer as them', steps: [
+        'On the "Invitations" tab, fill in a company, a contact name and an email, then press "Send questionnaire".',
+        'Change "View as" in the top bar to "A supplier". Open the email and press "Open the questionnaire".',
+        'Press "Email me a code", then "Use this code" and "Continue". Open the privacy notice, tick both boxes and press "Start questionnaire".',
+        'In each section press "Fill this section with sample answers", then "Save and continue".',
+        'On the last screen press "Submit questionnaire", then "See what the office received".'
+      ] },
+      { title: 'Take a questionnaire from review to approval', steps: [
+        'Set "View as" to "Aisha Karim". On the Overview, open "Fernhollow Cleaning Services Ltd" and press "Pass health and safety check".',
+        'Set "View as" to "Sofia Marchetti" and press "Recommend for approval".',
+        'Set "View as" to "Daniel Mercer" and press "Approve supplier".',
+        'Open the "Approved list" tab. The supplier is now on it, with its insurance and review dates.'
+      ] },
+      { title: 'Add your own question, no developer needed', steps: [
+        'With "View as" set to "Sofia Marchetti", open the "Settings" tab.',
+        'Under "Health and safety" press "+ Add question". Type a question and press "Add question".',
+        'The questionnaire is now version 2 and the change is in the "Change log" at the bottom.',
+        'Set "View as" to "A supplier" and choose "Yusuf Demir at Ridgeline Tool Hire Ltd" under "You are". Open the questionnaire and sign in: your question is waiting in "Health and safety".'
+      ] }
+    ],
+    themes: 'both'
+  };
+</script>
+<script src="../assets/suite.js"></script>
+<script>
+(function () {
+'use strict';
+const Su = window.Suite, esc = Su.esc;
+const VERSION = 1;
+const STAFF = ['sm', 'ak', 'dm'];
+const ROLE_NOTE = {
+  sm: 'runs the register, sends invitations and recommends suppliers for approval',
+  ak: 'checks the health and safety answers',
+  dm: 'gives the final approval'
+};
+const CATS = ['Materials', 'Plant hire', 'PPE and workwear', 'Haulage', 'IT and software', 'Cleaning', 'Calibration', 'Training', 'Subcontractor', 'Professional services', 'Other'];
+const INS = [['el', 'Employers’ liability'], ['pl', 'Public liability'], ['pi', 'Professional indemnity'], ['prod', 'Product liability']];
+const INS_LBL = { el: 'Employers’ liability', pl: 'Public liability', pi: 'Professional indemnity', prod: 'Product liability' };
+const ATYPES = { yn: 'Yes / No', yna: 'Yes / No / Not applicable', text: 'Short text', long: 'Long text', number: 'Number', date: 'Date', file: 'File upload', ynfile: 'Yes / No, with upload if Yes' };
+const BUILTIN = {
+  details: 'Fixed fields: what you supply, company name, trading address, telephone, main contact, position, description of goods or services, years trading, company number and VAT number.',
+  insurance: 'Fixed fields: employers’, public, professional indemnity and product liability. Each has “We hold this” or “We don’t hold this”, the limit of cover, insurer, expiry date and certificate.',
+  declaration: 'Fixed fields: declaration wording, full name, position and a tick box that acts as the signature.'
+};
+const FLOW = ['Invited', 'Opened', 'Signed in', 'Confirmed', 'In progress', 'Submitted', 'Decided'];
+const PRIV_VERSION = 'Supplier privacy notice, sample v1';
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/* ---------- the questionnaire as first set up ---------- */
+const q = (id, text, type, o) => { o = o || {}; return { id, text, type: type || 'yn', help: o.help || '', required: o.required !== false, status: 'active', types: o.types || [], follow: o.follow || '', flag: o.flag || '' }; };
+const DEFAULT_FORM = { version: 1, changedAt: null, changedBy: 'As first set up', sections: [
+  { id: 'details', code: 'C', title: 'Company details', intro: 'About your business and who we should contact.', builtin: 'details', questions: [] },
+  { id: 'insurance', code: 'I', title: 'Insurance', intro: 'Tell us which policies you hold and add a copy of each current certificate.', builtin: 'insurance', questions: [] },
+  { id: 'hs', code: 'H', title: 'Health and safety', intro: 'How you keep your own people, and ours, safe.', reviewer: 'ak', questions: [
+    q('H1', 'Do you have a written health and safety policy that has been reviewed in the last 12 months?', 'yn', { flag: 'No' }),
+    q('H2', 'Who gives you competent health and safety advice?', 'text', { help: 'A named person in your business, or an outside adviser.' }),
+    q('H3', 'Do you write risk assessments for the kind of work you would do for us?', 'yn', { flag: 'No' }),
+    q('H4', 'Do your people get health and safety training that suits their job, and do you keep records of it?', 'yn', { flag: 'No' }),
+    q('H5', 'In the last three years, have you had a reportable injury, an enforcement notice or a prosecution?', 'yn', { flag: 'Yes', follow: 'Briefly, what happened and what did you change?' }),
+    q('H6', 'Do you hold a health and safety certification, such as ISO 45001 or membership of a recognised safety scheme?', 'ynfile')
+  ] },
+  { id: 'quality', code: 'Q', title: 'Quality', intro: '', questions: [
+    q('Q1', 'Do you check your goods or services against the order before they reach the customer?', 'yn', { flag: 'No' }),
+    q('Q2', 'Do you hold ISO 9001 or another quality certification?', 'ynfile'),
+    q('Q3', 'What do you do when a customer complains or a delivery is wrong?', 'long'),
+    q('Q4', 'Can you trace materials or products back to where they came from, or to a batch?', 'yna'),
+    q('Q5', 'Do you check the suppliers and subcontractors that you rely on?', 'yn')
+  ] },
+  { id: 'env', code: 'E', title: 'Environment', intro: '', questions: [
+    q('E1', 'Do you have an environmental policy?', 'yn'),
+    q('E2', 'Do you hold ISO 14001 or another environmental certification?', 'ynfile'),
+    q('E3', 'Is your waste taken away by a registered waste carrier?', 'yna', { flag: 'No' }),
+    q('E4', 'In the last three years, has an environmental regulator taken action against you?', 'yn', { flag: 'Yes', follow: 'Briefly, what happened and what did you change?' }),
+    q('E5', 'What are you doing to use less energy or fuel, or to create less waste?', 'long', { required: false })
+  ] },
+  { id: 'data', code: 'D', title: 'Data protection', intro: 'Only as much as fits the work. If you will never see personal information, most answers are “Not applicable”.', questions: [
+    q('D1', 'Will you see or hold personal information about our staff or our customers?', 'yn'),
+    q('D2', 'Do you have a data protection policy and a named person who looks after it?', 'yna'),
+    q('D3', 'If you need to be registered with the data protection regulator, are you?', 'yna'),
+    q('D4', 'In the last three years, have you had a personal data breach that you had to report?', 'yn', { flag: 'Yes', follow: 'Briefly, what happened and what did you change?' })
+  ] },
+  { id: 'ethics', code: 'M', title: 'Modern slavery and ethics', intro: '', questions: [
+    q('M1', 'Do you check that everyone who works for you has the right to work in the UK?', 'yn', { flag: 'No' }),
+    q('M2', 'Is everyone who works for you paid at least the legal minimum wage?', 'yn', { flag: 'No' }),
+    q('M3', 'Do you have a policy or statement on modern slavery that also covers your own suppliers?', 'yna'),
+    q('M4', 'Do you have an anti-bribery policy that your staff have been told about?', 'yn', { flag: 'No' }),
+    q('M5', 'Do you have an equality and diversity policy?', 'yn')
+  ] },
+  { id: 'refs', code: 'R', title: 'References', intro: 'Two customers we may contact. We will tell you before we do.', questions: [
+    q('R1', 'First reference: company and contact name', 'text'),
+    q('R2', 'First reference: email or phone', 'text'),
+    q('R3', 'Second reference: company and contact name', 'text'),
+    q('R4', 'Second reference: email or phone', 'text', { required: false }),
+    q('R5', 'Roughly how long have you worked with these customers?', 'text', { required: false })
+  ] },
+  { id: 'decl', code: 'X', title: 'Declaration', intro: 'Please confirm your answers.', builtin: 'declaration', questions: [] }
+] };
+const SAMPLE = {
+  H2: 'Our operations director, with an outside safety adviser on a retainer.',
+  Q3: 'It is logged the same day and given to a named person. Wrong or faulty goods are replaced or credited within five working days.',
+  E5: 'LED lighting in the yard, and deliveries are planned to cut empty running.',
+  D1: 'No', D2: 'Yes', D3: 'Yes',
+  R1: 'Castlebrook Homes, Dana Whitlow', R2: 'dana.whitlow@castlebrookhomes.example',
+  R3: 'Fenmoor Estates, Lee Ansah', R4: '01632 960155', R5: 'Three years and six years'
+};
+
+/* ---------- small helpers ---------- */
+const clone = o => JSON.parse(JSON.stringify(o));
+const pad = (n, w) => String(n).padStart(w, '0');
+const todayISO = () => Su.iso(Su.today());
+const dIso = n => Su.iso(Su.daysFromNow(n));
+const dt = (n, t) => dIso(n) + 'T' + t;
+const nowStamp = () => { const d = new Date(); return todayISO() + 'T' + pad(d.getHours(), 2) + ':' + pad(d.getMinutes(), 2); };
+const fmt = d => d ? d.slice(8, 10) + '/' + d.slice(5, 7) + '/' + d.slice(0, 4) : '';
+const fmtT = d => d ? fmt(d) + (d.length > 10 ? ' ' + d.slice(11, 16) : '') : '';
+const asDate = d => new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10));
+const daysTo = d => Su.daysUntil(asDate(d));
+const addDays = (d, n) => { const t = asDate(d); t.setDate(t.getDate() + n); return Su.iso(t); };
+const rel = d => { const n = daysTo(d); if (n === 0) return 'today'; if (n === 1) return 'tomorrow'; if (n === -1) return 'yesterday'; if (n < 0) return Math.abs(n) + ' days ago'; if (n < 60) return 'in ' + n + ' days'; return 'in ' + Math.round(n / 30.4) + ' months'; };
+const co = () => Su.company();
+const mailbox = () => 'suppliers@' + Su.slug() + '.example';
+const person = id => Su.person(id);
+const short = (s, n) => s.length > n ? s.slice(0, n - 1).trim() + '…' : s;
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+const fileSlug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function toast(m) { const r = document.getElementById('toastRoot'); r.innerHTML = '<div class="toast" role="status">' + esc(m) + '</div>'; clearTimeout(toast.t); toast.t = setTimeout(() => { r.innerHTML = ''; }, 3200); }
+
+/* ---------- data ---------- */
+let DB = null;
+const ui = { role: 'sm', tab: 'overview', sel: null, f: '', cat: '', q: '', sort: 'status', dir: 1, supId: null, prefill: '',
+  sup: { stage: 'inbox', mail: 0, codeSent: false, step: 0, visited: {}, draft: null, form: null } };
+
+function insNeed(k, cat) {
+  if (k === 'el' || k === 'pl') return true;
+  if (k === 'pi') return cat === 'Professional services' || cat === 'IT and software';
+  if (k === 'prod') return cat === 'Materials' || cat === 'PPE and workwear';
+  return false;
+}
+function blankDraft(s) {
+  const ins = {}; INS.forEach(([k]) => { ins[k] = { held: '', limit: '', insurer: '', exp: '', file: null, reason: '' }; });
+  return { cat: s.cat || '', company: s.name, email: s.email, contact: s.contact, addr: '', phone: s.phone || '', position: s.position || '', supplies: '', years: '', coNo: '', vat: '', ins, a: {}, decl: { name: '', pos: '', ok: false } };
+}
+function sampleAnswer(x, slug) {
+  const out = {};
+  if (SAMPLE[x.id] !== undefined) out[x.id] = SAMPLE[x.id];
+  else if (x.type === 'yn') out[x.id] = x.flag === 'Yes' ? 'No' : 'Yes';
+  else if (x.type === 'yna') out[x.id] = x.flag === 'Yes' ? 'No' : 'Yes';
+  else if (x.type === 'ynfile') out[x.id] = 'No';
+  else if (x.type === 'number') out[x.id] = '3';
+  else if (x.type === 'date') out[x.id] = todayISO();
+  else if (x.type === 'file') out[x.id] = { name: slug + '-' + x.id.toLowerCase() + '.pdf' };
+  else out[x.id] = 'Sample answer for the demo.';
+  if (x.follow && out[x.id] === 'Yes') out[x.id + '_more'] = 'Sample detail for the demo.';
+  return out;
+}
+function seed() {
+  const form = clone(DEFAULT_FORM), sups = [];
+  const sm = person('sm').name, ak = person('ak').name, dm = person('dm').name;
+  function add(o) {
+    const n = sups.length + 1, slug = fileSlug(o.name.replace(/ (Ltd|Services Ltd)$/, ''));
+    const s = { id: 'SUP-' + pad(n, 4), ref: 'SQ-' + (1040 + n), name: o.name, cat: o.cat, contact: o.contact, position: o.position,
+      email: o.contact.toLowerCase().replace(/[^a-z ]/g, '').split(' ').join('.') + '@' + slug.replace(/-/g, '') + '.example', phone: '01632 960' + (100 + n * 7),
+      purpose: 'New supplier', sentAt: dt(o.sent, '09:1' + (n % 10)), expiresAt: dIso(o.sent + 30), stage: 'Invited', revoked: false, reminders: [], code: null, codeAt: null,
+      draft: null, sub: null, hs: null, rec: null, decision: null, changes: null, events: [] };
+    const ev = (at, text, by) => s.events.unshift({ at, text, by: by || '' });
+    ev(s.sentAt, 'Invitation emailed to ' + s.email + ' (new supplier), questionnaire v1', sm);
+    (o.remind || []).forEach(r => { s.reminders.push(dt(r, '08:00')); ev(dt(r, '08:00'), 'Automatic reminder emailed to supplier'); });
+    if (o.opened !== undefined) { s.stage = 'Opened'; ev(dt(o.opened, '10:42'), 'Link opened by supplier'); }
+    const mk = part => {
+      const d = blankDraft(s);
+      Object.assign(d, { addr: o.addr, position: o.position, supplies: o.supplies, years: o.years, coNo: 'ZZ' + (104200 + n * 37), vat: o.vat === false ? '' : 'GB 000 ' + (4100 + n * 13) + ' ' + pad(n * 7 % 100, 2) });
+      INS.forEach(([k]) => { const i = (o.ins || {})[k];
+        d.ins[k] = i ? { held: 'Yes', limit: String(i[0]), insurer: i[2] || 'Northmere Mutual', exp: dIso(i[1]), file: { name: slug + '-' + k + '-certificate.pdf' }, reason: '' }
+          : { held: 'No', limit: '', insurer: '', exp: '', file: null, reason: insNeed(k, o.cat) ? ((o.reason || {})[k] || 'Not needed for the work we do.') : '' }; });
+      form.sections.forEach(sec => { if (part && (sec.id === 'refs')) return; sec.questions.forEach(x => Object.assign(d.a, sampleAnswer(x, slug))); });
+      Object.keys(o.a || {}).forEach(k => { d.a[k] = o.a[k] === 'FILE' ? { name: slug + '-' + k.replace('_file', '').toLowerCase() + '-certificate.pdf' } : o.a[k]; });
+      if (!part) d.decl = { name: o.contact, pos: o.position, ok: true };
+      return d;
+    };
+    if (o.started !== undefined) { s.stage = 'In progress'; s.draft = mk(true);
+      ev(dt(o.started, '14:05'), 'Link opened by supplier'); ev(dt(o.started, '14:07'), 'Email checked with a one-time code; supplier signed in');
+      ev(dt(o.started, '14:08'), 'Company confirmed; ' + PRIV_VERSION + ' read and accepted'); ev(dt(o.started, '14:31'), 'Supplier started filling in; draft saved'); }
+    if (o.sub !== undefined) {
+      s.stage = 'Submitted'; s.sub = { at: dt(o.sub, '15:2' + (n % 10)), form: clone(form), data: mk(false) };
+      ev(dt(o.sub, '14:40'), 'Email checked with a one-time code; supplier signed in');
+      ev(s.sub.at, 'Submitted and signed by ' + o.contact + '; answers locked (questionnaire v1)');
+      ev(s.sub.at, 'Record copy created and emailed to ' + s.email);
+    }
+    if (o.hs !== undefined) { const okHs = o.hsOk !== false; s.hs = { by: ak, at: dt(o.hs, '11:05'), ok: okHs, note: o.hsNote || '' }; ev(s.hs.at, okHs ? 'Health and safety check passed' : 'Health and safety answers not acceptable: ' + o.hsNote, ak); }
+    if (o.rec !== undefined) { s.rec = { by: sm, at: dt(o.rec, '16:30') }; ev(s.rec.at, 'Recommended for approval', sm); }
+    if (o.dec !== undefined) { s.stage = 'Decided'; s.decision = { by: dm, at: dt(o.dec, '09:45'), outcome: o.outcome || 'Approved', note: o.note || '' };
+      ev(s.decision.at, s.decision.outcome === 'Approved' ? 'Approved; next review in 12 months' : 'Rejected: ' + o.note, dm); }
+    s.events.sort((a, b) => b.at.localeCompare(a.at));
+    sups.push(s);
+  }
+  add({ name: 'Brackenfold Aggregates Ltd', cat: 'Materials', contact: 'Lars Lindqvist', position: 'Sales Manager', addr: 'Quarry Lane, Aldermoor AM4 2QX', supplies: 'Crushed stone, sand and recycled aggregates, delivered or collected.', years: '22',
+    sent: -210, sub: -203, hs: -201, rec: -200, dec: -198, ins: { el: [10, 140], pl: [5, 140], prod: [5, 140] }, a: { Q2: 'Yes', Q2_file: 'FILE', Q4: 'Yes', E2: 'Yes', E2_file: 'FILE' } });
+  add({ name: 'Tolland Plant Hire Ltd', cat: 'Plant hire', contact: 'Moira Castellan', position: 'Hire Desk Manager', addr: 'Unit 6, Westmere Trade Park, Westmere WM7 1TD', supplies: 'Excavators, dumpers, rollers and access platforms, with or without an operator.', years: '15',
+    sent: -340, sub: -335, hs: -333, rec: -332, dec: -330, ins: { el: [10, 95, 'Greywell Underwriting'], pl: [5, 12, 'Greywell Underwriting'] }, a: { H6: 'Yes', H6_file: 'FILE' } });
+  add({ name: 'Pennard Safetywear Ltd', cat: 'PPE and workwear', contact: 'Ifeoma Trask', position: 'Account Manager', addr: '18 Tannery Row, Kestrel Bridge KB2 6HN', supplies: 'Hi-vis clothing, boots, gloves, helmets and eye protection, with logo printing.', years: '9',
+    sent: -120, sub: -114, hs: -112, rec: -111, dec: -110, ins: { el: [5, 220], pl: [2, 220], prod: [2, 220] }, a: { Q2: 'Yes', Q2_file: 'FILE', Q4: 'Yes' } });
+  add({ name: 'Wexcombe Haulage Ltd', cat: 'Haulage', contact: 'Declan Voss', position: 'Transport Manager', addr: 'Depot 2, Corvid Heath Road, Corvid Heath CQ9 3LB', supplies: 'Tipper and flatbed haulage, same-day and contract.', years: '31',
+    sent: -300, sub: -294, hs: -292, rec: -291, dec: -290, ins: { el: [10, 60, 'Tidewater Commercial'], pl: [5, -9, 'Tidewater Commercial'] }, a: { H5: 'Yes', H5_more: 'A yard operative broke a wrist in a fall from a trailer bed two years ago. Edge protection and a no-climb rule followed.' } });
+  add({ name: 'Lantern Quay IT Ltd', cat: 'IT and software', contact: 'Nadia Berwick', position: 'Service Director', addr: 'Second Floor, 4 Lantern Quay, Westmere WM1 4RE', supplies: 'Managed IT support, backup, email and laptops for small offices.', years: '7',
+    sent: -75, sub: -70, hs: -68, rec: -67, dec: -66, ins: { el: [5, 200], pl: [2, 200], pi: [2, 200] }, a: { D1: 'Yes', Q4: 'Not applicable', E3: 'Not applicable' } });
+  add({ name: 'Oakstead Skills Training Ltd', cat: 'Training', contact: 'Bronwen Halloran', position: 'Centre Manager', addr: 'The Old Forge, Mill Street, Tamarside TM3 8DY', supplies: 'First aid, manual handling, working at height and plant operator courses.', years: '12',
+    sent: -160, sub: -155, hs: -153, rec: -152, dec: -150, ins: { el: [5, 26], pl: [2, 180], pi: [1, 180] }, a: { Q2: 'Yes', Q2_file: 'FILE', Q4: 'Not applicable', D1: 'Yes' } });
+  add({ name: 'Fernhollow Cleaning Services Ltd', cat: 'Cleaning', contact: 'Marek Wierzba', position: 'Owner', addr: '3 Fernhollow Yard, Aldermoor AM2 9PS', supplies: 'Daily office cleaning, site welfare cabins and end-of-job builders’ cleans.', years: '5',
+    sent: -9, sub: -2, ins: { el: [5, 250], pl: [1, 250] }, a: { Q4: 'Not applicable', M3: 'No', E1: 'No' } });
+  add({ name: 'Sable Court Surveys Ltd', cat: 'Professional services', contact: 'Imogen Ashcombe', position: 'Director', addr: '11 Sable Court, Kestrel Bridge KB1 2FA', supplies: 'Measured building surveys, topographical surveys and setting out.', years: '11',
+    sent: -14, sub: -6, hs: -4, ins: { el: [5, 300], pl: [5, 300], pi: [2, 300] }, a: { Q4: 'Not applicable', H6: 'Yes', H6_file: 'FILE' } });
+  add({ name: 'Datumline Calibration Ltd', cat: 'Calibration', contact: 'Henrik Solberg', position: 'Laboratory Manager', addr: 'Unit 12, Tamarside Science Park, Tamarside TM6 1GH', supplies: 'Calibration of survey instruments, gauges, torque tools and test equipment.', years: '18',
+    sent: -20, sub: -12, hs: -10, rec: -7, ins: { el: [10, 170], pl: [5, 170], pi: [2, 170] }, a: { Q2: 'Yes', Q2_file: 'FILE', Q4: 'Yes' } });
+  add({ name: 'Ridgeline Tool Hire Ltd', cat: 'Plant hire', contact: 'Yusuf Demir', position: 'Branch Manager', addr: '27 Station Approach, Corvid Heath CQ4 7WN', supplies: 'Small tools, breakers, generators, lighting towers and welfare units.', years: '8',
+    sent: -5, started: -3, ins: { el: [10, 280], pl: [5, 280] } });
+  add({ name: 'Merrow & Pike Concrete Ltd', cat: 'Materials', contact: 'Lorna Pike', position: 'Office Manager', sent: -3 });
+  add({ name: 'Hollin Bank Fencing Ltd', cat: 'Subcontractor', contact: 'Craig Mottram', position: 'Contracts Manager', sent: -16, opened: -15, remind: [-9, -2] });
+  add({ name: 'Dunmoor Skip and Waste Ltd', cat: 'Other', contact: 'Ewan Kettering', position: 'Director', addr: 'Dunmoor Lane, Aldermoor AM8 5JT', supplies: 'Skip hire and mixed waste collection.', years: '3', vat: false,
+    sent: -60, sub: -52, hs: -50, hsOk: false, hsNote: 'No written policy and no risk assessments for skip loading.', dec: -45, outcome: 'Rejected', note: 'No employers’ liability insurance and waste is not taken by a registered carrier.',
+    ins: { pl: [1, 120] }, reason: { el: 'We use agency drivers, so we did not think we needed it.' }, a: { H1: 'No', H3: 'No', E3: 'No', E1: 'No' } });
+  return { sups, form, formlog: [], rules: { min: { el: 5, pl: 2, pi: 1, prod: 0 }, linkDays: 30, warnDays: 30, reviewDays: 365 }, seq: sups.length };
+}
+
+const data = s => s.sub ? s.sub.data : null;
+const formOf = s => (s.sub && s.sub.form) || DB.form;
+function heldPolicies(s) { const d = data(s); return d ? INS.filter(([k]) => d.ins[k].held === 'Yes').map(([k, l]) => Object.assign({ k, label: l }, d.ins[k])) : []; }
+function expiredPolicies(s) { const d = data(s), t = todayISO(); return heldPolicies(s).filter(p => insNeed(p.k, d.cat) && p.exp && p.exp < t); }
+function status(s) {
+  if (s.decision) return s.decision.outcome === 'Rejected' ? 'Rejected' : (expiredPolicies(s).length ? 'On hold' : 'Approved');
+  if (s.revoked && !s.sub) return 'Link cancelled';
+  if (s.changes) return 'Changes requested';
+  if (s.sub) return 'Awaiting review';
+  return FLOW.indexOf(s.stage) >= 4 ? 'In progress' : 'Invited';
+}
+const ST_CLASS = { Approved: 'p-good', 'On hold': 'p-bad', 'Awaiting review': 'p-warn', 'Changes requested': 'p-info', 'In progress': 'p-info', Invited: 'p-grey', Rejected: 'p-bad', 'Link cancelled': 'p-grey' };
+const ST_LABEL = { 'On hold': 'On hold · insurance expired' };
+const ORDER = { 'On hold': 0, 'Awaiting review': 1, 'Changes requested': 2, 'In progress': 3, Invited: 4, Approved: 5, Rejected: 6, 'Link cancelled': 7 };
+const pill = (st, long) => '<span class="pill ' + ST_CLASS[st] + '">' + esc(long && ST_LABEL[st] ? ST_LABEL[st] : st) + '</span>';
+const isOut = st => st === 'Invited' || st === 'In progress' || st === 'Changes requested';
+function soonPolicies(s) { return heldPolicies(s).filter(p => { const n = p.exp ? daysTo(p.exp) : 999; return n >= 0 && n <= DB.rules.warnDays; }); }
+const expiring = s => status(s) === 'Approved' && soonPolicies(s).length > 0;
+function earliest(s) { const e = heldPolicies(s).map(p => p.exp).filter(Boolean).sort(); return e[0] || null; }
+const nextReview = s => s.decision && s.decision.outcome === 'Approved' ? addDays(s.decision.at, DB.rules.reviewDays) : null;
+function reviewStep(s) { if (!s.hs) return 'hs'; if (!s.hs.ok) return 'hsfail'; if (!s.rec) return 'rec'; return 'final'; }
+const waitingFor = s => ({ hs: 'ak', hsfail: 'sm', rec: 'sm', final: 'dm' })[reviewStep(s)];
+function summary() {
+  const c = k => DB.sups.filter(s => status(s) === k).length;
+  return { total: DB.sups.length, approved: c('Approved'), onHold: c('On hold'), expiringSoon: DB.sups.filter(expiring).length, awaitingReview: c('Awaiting review'),
+    questionnairesOut: DB.sups.filter(s => isOut(status(s))).length, rejected: c('Rejected') };
+}
+function save() { const o = clone(DB); o.summary = summary(); Su.save('suppliers', VERSION, o); }
+function log(s, text, by) { s.events.unshift({ at: nowStamp(), text, by: by || '' }); }
+function stage(s, st) { if (FLOW.indexOf(st) > FLOW.indexOf(s.stage)) s.stage = st; }
+const find = id => DB.sups.find(s => s.id === id);
+const me = () => person(ui.role);
+
+/* automatic checks on what the supplier sent */
+function checks(s) {
+  const d = data(s), out = [], t = todayISO(); if (!d) return out;
+  INS.forEach(([k, l]) => { const r = d.ins[k], need = insNeed(k, d.cat), min = DB.rules.min[k];
+    if (r.held !== 'Yes') { if (need) out.push({ lvl: 'bad', m: l + ' not held: “' + (r.reason || 'no reason given') + '”' }); return; }
+    if (r.exp && r.exp < t) out.push({ lvl: need ? 'bad' : 'warn', m: l + ' expired ' + fmt(r.exp) });
+    else if (r.exp && daysTo(r.exp) <= DB.rules.warnDays) out.push({ lvl: 'warn', m: l + ' expires ' + fmt(r.exp) + ' (' + rel(r.exp) + ')' });
+    if (min && r.limit && +r.limit < min) out.push({ lvl: 'warn', m: l + ' cover of £' + r.limit + 'm is below our £' + min + 'm minimum' });
+  });
+  formOf(s).sections.forEach(sec => activeQs(sec, d).forEach(x => { if (x.flag && d.a[x.id] === x.flag) out.push({ lvl: 'warn', sec: sec.id, m: x.id + ' answered ' + x.flag + ': ' + x.text + (d.a[x.id + '_more'] ? ' “' + d.a[x.id + '_more'] + '”' : '') }); }));
+  return out;
+}
+const activeQs = (sec, d) => sec.questions.filter(x => x.status === 'active' && (!x.types.length || x.types.includes(d.cat)));
+
+/* ================= render ================= */
+function render() {
+  const app = document.getElementById('app');
+  const ae = document.activeElement, keep = ae && ae.id === 'q' ? ae.selectionStart : null;
+  app.innerHTML = ui.role === 'sup' ? vSupplier() : vOffice();
+  if (keep !== null) { const n = document.getElementById('q'); if (n) { n.focus(); try { n.setSelectionRange(keep, keep); } catch (e) { /* ignore */ } } }
+  const sel = document.getElementById('roleSel'); if (sel) sel.value = ui.role;
+}
+function whoStrip() {
+  const seg = STAFF.map(id => '<button type="button" class="' + (ui.role === id ? 'on' : '') + '" data-act="role" data-role="' + id + '">' + esc(person(id).name.split(' ')[0]) + '</button>').join('') +
+    '<button type="button" class="' + (ui.role === 'sup' ? 'on' : '') + '" data-act="role" data-role="sup">A supplier</button>';
+  const txt = ui.role === 'sup' ? '<span class="me">You are now outside ' + esc(co()) + '.</span><span class="muted">This is what a supplier sees: an email, a one-time code and the questionnaire.</span>'
+    : '<span>Viewing as <span class="me">' + esc(me().name) + '</span>, ' + esc(me().role) + '</span><span class="muted">' + esc(ROLE_NOTE[ui.role]) + '</span>';
+  return '<div class="who">' + txt + '<span class="seg" role="group" aria-label="View as">' + seg + '</span></div>';
+}
+function vOffice() {
+  const A = DB.sups, sm = summary();
+  const T = [['overview', 'Overview', sm.onHold ? '<span class="dot" title="A supplier is on hold"></span>' : ''], ['register', 'Suppliers', '<span class="n">' + A.length + '</span>'], ['approved', 'Approved list', '<span class="n">' + sm.approved + '</span>'],
+    ['invites', 'Invitations', '<span class="n">' + sm.questionnairesOut + '</span>'], ['settings', 'Settings', '']];
+  const body = ui.sel && find(ui.sel) ? vDetail(find(ui.sel)) : ({ overview: vOverview, register: vRegister, approved: vApproved, invites: vInvites, settings: vSettings })[ui.tab]();
+  return '<section class="card hd"><div class="hrow"><div><h1>Supplier approval</h1><p class="desc">The approved supplier register for <b>' + esc(co()) + '</b>. Suppliers answer a questionnaire online; insurance dates are watched for you.</p></div>' +
+    '<div class="row">' + (ui.role === 'sm' ? '<button class="btn pri" data-act="tab" data-tab="invites">+ Invite a supplier</button>' : '') + '</div></div>' + whoStrip() +
+    '<div class="tabs" role="tablist">' + T.map(([k, l, b]) => '<button class="tab ' + (ui.tab === k && !ui.sel ? 'on' : '') + '" role="tab" aria-selected="' + (ui.tab === k && !ui.sel) + '" data-act="tab" data-tab="' + k + '">' + l + b + '</button>').join('') + '</div></section>' + body;
+}
+
+/* ----- Overview ----- */
+function vOverview() {
+  const A = DB.sups, by = k => A.filter(s => status(s) === k), sm = summary();
+  const hold = by('On hold'), exp = A.filter(expiring), rev = by('Awaiting review'), out = A.filter(s => isOut(status(s)));
+  const li = (s, t) => '<li><button type="button" data-act="open" data-id="' + s.id + '"><span>' + esc(s.name) + '</span><em>' + esc(t) + '</em></button></li>';
+  const mine = rev.filter(s => waitingFor(s) === ui.role);
+  const stepTxt = s => ({ hs: 'health and safety check', hsfail: 'health and safety not acceptable', rec: 'procurement recommendation', final: 'final approval' })[reviewStep(s)];
+  const late = out.filter(s => daysTo(s.sentAt) <= -14);
+  const seg = [['Approved', 'var(--good)'], ['Awaiting review', 'var(--warn)'], ['On hold', 'var(--bad)'], ['In progress', 'var(--info)'], ['Invited', 'var(--faint)'], ['Rejected', 'var(--field)']];
+  const need = (cls, title, list, fn) => list.length ? '<div class="need"><div class="k ' + cls + '">' + title + ' <span>' + plural(list.length, 'supplier') + '</span></div><ul>' + list.map(s => li(s, fn(s))).join('') + '</ul></div>' : '';
+  const actions = need('acc', 'Waiting for you, ' + esc(me().name.split(' ')[0]), mine, s => stepTxt(s)) +
+    need('bad', 'Insurance expired · on hold', hold, s => expiredPolicies(s).map(p => p.label + ' expired ' + fmt(p.exp)).join(', ')) +
+    need('warn', 'Insurance runs out within ' + DB.rules.warnDays + ' days', exp, s => soonPolicies(s).map(p => p.label + ' ' + fmt(p.exp) + ' · ' + rel(p.exp)).join(', ')) +
+    need('info', 'Returned, waiting for review', rev.filter(s => waitingFor(s) !== ui.role), s => 'waiting for ' + person(waitingFor(s)).name.split(' ')[0] + ' · ' + stepTxt(s)) +
+    need('info', 'Questionnaire out for 14 days or more', late, s => 'sent ' + fmt(s.sentAt) + ' · ' + plural(s.reminders.length, 'reminder'));
+  return '<section class="card"><div class="intro">What needs doing, most urgent first. Press a supplier to open it, or a number to see the suppliers behind it.</div>' +
+    '<div class="stats">' +
+      '<button class="stat good" data-act="filter" data-f="Approved"><b>' + sm.approved + '</b><span>Approved to use</span></button>' +
+      '<button class="stat bad" data-act="filter" data-f="On hold"><b>' + sm.onHold + '</b><span>On hold · insurance expired</span></button>' +
+      '<button class="stat warn" data-act="filter" data-f="expiring"><b>' + sm.expiringSoon + '</b><span>Insurance runs out within ' + DB.rules.warnDays + ' days</span></button>' +
+      '<button class="stat warn" data-act="filter" data-f="Awaiting review"><b>' + sm.awaitingReview + '</b><span>Waiting for review</span></button>' +
+      '<button class="stat" data-act="filter" data-f="out"><b>' + sm.questionnairesOut + '</b><span>Questionnaires out</span></button>' +
+    '</div><div class="ovgrid">' +
+      '<div class="box"><h3>Needs action <span class="cnt">' + (hold.length + exp.length + rev.length + late.length) + '</span></h3>' + (actions || '<p class="muted small">Nothing needs doing right now.</p>') + '</div>' +
+      '<div class="box"><h3>Register at a glance</h3><div class="hbar">' + seg.map(([k, c]) => { const n = by(k).length; return n ? '<i style="width:' + (n / A.length * 100) + '%;background:' + c + '"></i>' : ''; }).join('') + '</div>' +
+        '<div class="legend">' + seg.map(([k, c]) => '<div><span><s style="background:' + c + '"></s>' + k + '</span><b>' + by(k).length + '</b></div>').join('') + '</div>' +
+        '<p class="small lblc" style="margin:14px 0 0">' + plural(A.length, 'supplier') + ' on the register. A supplier only counts as approved while its insurance is in date.</p></div>' +
+    '</div></section>' +
+    '<section class="card pad"><h2>How it works</h2><ol class="flow">' +
+      '<li class="s"><b>Invite</b>The procurement lead sends a personal link to one named contact.</li>' +
+      '<li><b>Sign in, no password</b>The supplier proves it is them with a one-time code sent to that email.</li>' +
+      '<li><b>Answer and upload</b>They fill in the questionnaire a section at a time and add certificates.</li>' +
+      '<li class="s"><b>Check</b>Insurance and answers are checked automatically, then by the right people.</li>' +
+      '<li class="s"><b>Approve and keep watch</b>A director approves. Reminders go out before insurance runs out.</li></ol></section>';
+}
+
+/* ----- Suppliers (the register) ----- */
+function matches(s) {
+  const st = status(s), f = ui.f;
+  if (f && !(f === 'expiring' ? expiring(s) : f === 'out' ? isOut(st) : st === f)) return false;
+  if (ui.cat && s.cat !== ui.cat) return false;
+  if (ui.q && !(s.name + ' ' + s.id + ' ' + s.contact + ' ' + s.cat).toLowerCase().includes(ui.q)) return false;
+  return true;
+}
+function vRegister() {
+  const A = DB.sups;
+  const SC = [['', 'All', ''], ['Approved', 'Approved', ''], ['On hold', 'On hold', 'c-bad'], ['expiring', 'Insurance running out', 'c-warn'], ['Awaiting review', 'Awaiting review', 'c-warn'], ['out', 'Questionnaire out', ''], ['Rejected', 'Rejected', '']];
+  const cnt = k => k === '' ? A.length : k === 'expiring' ? A.filter(expiring).length : k === 'out' ? A.filter(s => isOut(status(s))).length : A.filter(s => status(s) === k).length;
+  const cats = CATS.filter(c => A.some(s => s.cat === c));
+  const rows = A.filter(matches), key = ui.sort;
+  const val = s => key === 'status' ? ORDER[status(s)] * 1e6 + (earliest(s) ? daysTo(earliest(s)) + 5e4 : 9e5) : key === 'ins' ? (earliest(s) || '~') : key === 'review' ? (nextReview(s) || '~') : key === 'sent' ? s.sentAt : (s[key] || '~');
+  rows.sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : a.name.localeCompare(b.name)) * ui.dir; });
+  const H = [['id', 'ID'], ['name', 'Supplier'], ['cat', 'Category'], ['status', 'Status'], ['ins', 'Insurance valid to'], ['sent', 'Questionnaire'], ['review', 'Next review']];
+  return '<section class="card"><div class="filters">' +
+    '<div class="frow"><span class="flbl">Status</span>' + SC.map(([k, l, c]) => '<button class="chip ' + c + ' ' + (ui.f === k ? 'on' : '') + '" data-act="filter" data-f="' + k + '">' + l + ' <i>' + cnt(k) + '</i></button>').join('') + '</div>' +
+    '<div class="frow"><span class="flbl">Category</span><button class="chip ' + (ui.cat === '' ? 'on' : '') + '" data-act="cat" data-cat="">All</button>' + cats.map(c => '<button class="chip ' + (ui.cat === c ? 'on' : '') + '" data-act="cat" data-cat="' + esc(c) + '">' + esc(c) + '</button>').join('') +
+      '<label class="search"><input id="q" type="search" placeholder="Search supplier, contact or ID" value="' + esc(ui.q) + '" aria-label="Search suppliers"></label></div></div>' +
+    '<div class="tw"><table class="reg"><thead><tr>' + H.map(([k, l]) => '<th data-act="sort" data-k="' + k + '" class="' + (ui.sort === k ? 'sorted' : '') + '">' + l + '<span class="ar">' + (ui.sort === k ? (ui.dir > 0 ? '▲' : '▼') : '↕') + '</span></th>').join('') + '</tr></thead><tbody>' +
+    (rows.map(s => { const st = status(s), e = earliest(s), nr = nextReview(s); let ins = '<span class="na">—</span>';
+      if (e) { const n = daysTo(e); ins = '<span class="ds">' + fmt(e) + '<span class="sub ' + (n < 0 ? 'bad' : n <= DB.rules.warnDays ? 'warn' : '') + '">' + (n < 0 ? 'expired ' + rel(e) : rel(e)) + '</span></span>'; }
+      return '<tr class="r" tabindex="0" data-act="open" data-id="' + s.id + '"><td class="id">' + s.id + '</td><td class="nm">' + esc(s.name) + '<span class="sub">' + esc(s.contact) + '</span></td><td>' + esc(s.cat) + '</td><td>' + pill(st) + (expiring(s) ? '<span class="sub warn">insurance running out</span>' : '') + '</td><td>' + ins + '</td>' +
+        '<td class="ds">' + (s.sub ? 'Returned ' + fmt(s.sub.at) : 'Sent ' + fmt(s.sentAt)) + '<span class="sub">' + esc(s.ref) + '</span></td><td class="ds">' + (nr && st !== 'Rejected' ? fmt(nr) + '<span class="sub">' + rel(nr) + '</span>' : '<span class="na">—</span>') + '</td></tr>'; }).join('') ||
+      '<tr><td colspan="7" class="empty">No suppliers match these filters.</td></tr>') + '</tbody></table></div>' +
+    '<div class="foot"><span>Showing ' + rows.length + ' of ' + plural(A.length, 'supplier') + '</span><span>Dates are DD/MM/YYYY</span></div></section>';
+}
+
+/* ----- Approved list ----- */
+function vApproved() {
+  const ok = DB.sups.filter(s => status(s) === 'Approved'), hold = DB.sups.filter(s => status(s) === 'On hold');
+  const cats = CATS.filter(c => ok.some(s => s.cat === c));
+  return '<section class="card"><div class="intro">Who you can place an order with today. This is the list to give to anyone who buys for ' + esc(co()) + '.</div>' +
+    (hold.length ? '<div style="padding:14px 18px 0"><div class="note bad"><b>Do not order from: ' + hold.map(s => esc(s.name)).join(', ') + '</b><span>Insurance has expired. ' + (hold.length === 1 ? 'It comes' : 'They come') + ' back onto this list when a renewed certificate is recorded.</span></div></div>' : '') +
+    (cats.map(c => '<div class="catg"><h3>' + esc(c) + '</h3><div class="apgrid">' + ok.filter(s => s.cat === c).map(s => { const d = data(s), e = earliest(s);
+      return '<button class="ap" data-act="open" data-id="' + s.id + '"><span class="row" style="justify-content:space-between"><b>' + esc(s.name) + '</b>' + (expiring(s) ? '<span class="pill p-warn">Insurance ' + rel(e) + '</span>' : '') + '</span>' +
+        '<span class="l">' + esc(d.supplies) + '</span><span class="l"><b>' + esc(s.contact) + '</b> · ' + esc(d.phone) + '</span><span class="l lblc">Insurance valid to ' + fmt(e) + ' · next review ' + fmt(nextReview(s)) + '</span></button>'; }).join('') + '</div></div>').join('') ||
+      '<div class="empty">No approved suppliers yet.</div>') +
+    '<div class="foot"><span>' + plural(ok.length, 'approved supplier') + '</span><span>Approved by a director after questionnaire and insurance checks</span></div></section>';
+}
+
+/* ----- Invitations ----- */
+function inviteSteps(s) { const si = Math.max(0, FLOW.indexOf(s.stage)); return '<div class="steps">' + FLOW.map((f, i) => '<span class="' + (i < si || s.stage === 'Decided' ? 'done' : i === si ? 'now' : '') + '">' + f + '</span>').join('') + '</div>'; }
+function linkState(s) { if (s.revoked) return 'Link cancelled'; if (!s.sub && !s.decision && s.expiresAt < todayISO()) return 'Link expired'; return ''; }
+function vInvites() {
+  const can = ui.role === 'sm';
+  const invs = DB.sups.slice().sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+  const open = invs.filter(s => { const st = status(s); return isOut(st) || st === 'Link cancelled'; });
+  const row = s => { const ls = linkState(s), st = status(s), live = !s.revoked && !s.sub && !s.decision;
+    return '<div class="item"><div class="top"><div><span class="id">' + esc(s.ref) + '</span> · <button class="btn link" data-act="open" data-id="' + s.id + '"><b>' + esc(s.name) + '</b></button> <span class="small muted">· ' + esc(s.contact) + ' · ' + esc(s.email) + '</span></div>' + (ls ? '<span class="pill p-bad">' + ls + '</span>' : pill(st)) + '</div>' + inviteSteps(s) +
+      '<div class="row small muted"><span>' + esc(s.purpose) + ' · sent ' + fmtT(s.sentAt) + ' · link works until ' + fmt(s.expiresAt) + (s.reminders.length ? ' · ' + plural(s.reminders.length, 'reminder') : '') + '</span><span style="margin-left:auto" class="row">' +
+      (live && can ? '<button class="btn sm" data-act="remind" data-id="' + s.id + '">Send reminder</button><button class="btn sm bad" data-act="revoke" data-id="' + s.id + '">Cancel link</button>' : '') +
+      '<button class="btn sm" data-act="asSupplier" data-id="' + s.id + '">Open as supplier →</button></span></div></div>'; };
+  return '<section class="card pad"><h2>Invite a supplier</h2>' +
+    (can ? '<p class="small muted">' + (ui.prefill ? 'Inviting <b>' + esc(ui.prefill) + '</b> again. ' : '') + 'The link is tied to one company, one email address and one questionnaire. It uses questionnaire v' + DB.form.version + ' and works for ' + DB.rules.linkDays + ' days.</p>' +
+      '<form id="inviteForm" class="grid2" novalidate>' +
+        '<div class="field"><label for="iCo">Supplier company</label><input type="text" id="iCo" value="' + esc(ui.prefill) + '" placeholder="For example Northway Scaffolding Ltd"></div>' +
+        '<div class="field"><label for="iCat">What they supply</label><select id="iCat">' + CATS.map(c => '<option>' + esc(c) + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label for="iName">Contact name</label><input type="text" id="iName" placeholder="Who will fill it in"></div>' +
+        '<div class="field"><label for="iEmail">Contact email</label><input type="email" id="iEmail" placeholder="name@company.example"><small>The only address that can open the link. Nothing is really sent in this demo.</small></div>' +
+        '<div class="full row"><button class="btn pri" type="submit">Send questionnaire</button><span class="small muted">Sent from ' + esc(mailbox()) + '</span></div></form>'
+      : '<div class="note grey"><span>Invitations are sent by the procurement lead. </span><button class="btn sm" data-act="role" data-role="sm" style="margin-left:6px">Switch to ' + esc(person('sm').name) + '</button></div>') + '</section>' +
+    '<section class="card pad"><h2>Questionnaires out <span class="small muted" style="font-weight:400">(' + open.length + ')</span></h2><p class="small muted">Every step the supplier takes is recorded, so you can see where each one has got to.</p>' +
+      (open.length ? '<div class="list">' + open.map(row).join('') + '</div>' : '<p class="muted">Nothing outstanding.</p>') + '</section>';
+}
+
+/* ----- one supplier ----- */
+function kv(rows) { return '<dl class="kv">' + rows.map(([k, v, raw]) => '<dt>' + esc(k) + '</dt>' + (v === '' || v === undefined || v === null ? '<dd class="nr">Not given</dd>' : '<dd>' + (raw ? v : esc(v)) + '</dd>')).join('') + '</dl>'; }
+function ansHtml(x, d) {
+  let v = d.a[x.id]; if (v && typeof v === 'object') v = 'File: ' + v.name;
+  if (v === undefined || v === '') return '<span class="na" style="font-weight:400;font-style:italic">Not answered</span>';
+  const flagged = x.flag && v === x.flag;
+  let h = (v === 'Yes' || v === 'No') ? '<span class="' + (flagged ? 'no' : v === 'Yes' ? 'ok' : '') + '">' + v + '</span>' : esc(v);
+  if (d.a[x.id + '_more']) h += '<small>' + esc(d.a[x.id + '_more']) + '</small>';
+  if (d.a[x.id + '_file']) h += '<small class="fn">' + esc(d.a[x.id + '_file'].name) + '</small>';
+  return h;
+}
+function insTable(s) {
+  const d = data(s), t = todayISO();
+  return '<div class="icard tw"><table class="mini"><thead><tr><th>Policy</th><th>Cover</th><th>Our minimum</th><th>Valid to</th><th>Result</th></tr></thead><tbody>' + INS.map(([k, l]) => { const r = d.ins[k], need = insNeed(k, d.cat), min = DB.rules.min[k];
+    if (r.held !== 'Yes') return '<tr><td>' + l + '</td><td colspan="3" class="muted">Not held' + (r.reason ? ': “' + esc(r.reason) + '”' : '') + '</td><td>' + (need ? '<span class="pill p-bad">Required</span>' : '<span class="pill p-grey">Not needed</span>') + '</td></tr>';
+    const ex = r.exp < t, soon = !ex && daysTo(r.exp) <= DB.rules.warnDays, low = min && +r.limit < min;
+    return '<tr><td>' + l + '<span class="sub">' + esc(r.insurer || '') + '</span></td><td>£' + esc(r.limit) + 'm</td><td>' + (min ? '£' + min + 'm' : '—') + '</td><td class="ds">' + fmt(r.exp) + '<span class="sub ' + (ex ? 'bad' : soon ? 'warn' : '') + '">' + (ex ? 'expired ' + rel(r.exp) : rel(r.exp)) + '</span></td><td>' +
+      (ex ? '<span class="pill p-bad">Expired</span>' : low ? '<span class="pill p-warn">Below minimum</span>' : soon ? '<span class="pill p-warn">Running out</span>' : '<span class="pill p-good">In date</span>') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+}
+function reviewCard(s) {
+  const step = reviewStep(s), r = ui.role, ak = person('ak'), sm = person('sm'), dm = person('dm');
+  const wait = id => r === id ? '' : '<div class="acts"><span class="small muted">Waiting for ' + esc(person(id).name) + '.</span><button class="btn sm" data-act="role" data-role="' + id + '">Switch to ' + esc(person(id).name.split(' ')[0]) + '</button></div>';
+  const one = (cls, n, title, body) => '<li class="' + cls + '"><span class="n">' + n + '</span><div><b>' + title + '</b>' + body + '</div></li>';
+  const hs = s.hs ? '<span class="small muted">' + (s.hs.ok ? 'Passed' : 'Not acceptable') + ' by ' + esc(s.hs.by) + ' on ' + fmtT(s.hs.at) + (s.hs.note ? ' · “' + esc(s.hs.note) + '”' : '') + '</span>'
+    : '<span class="small muted">' + esc(ak.name) + ', ' + esc(ak.role) + ', reads the health and safety answers marked below.</span>' + (r === 'ak' ? '<div class="acts"><button class="btn pri" data-act="hsPass" data-id="' + s.id + '">Pass health and safety check</button><button class="btn bad" data-act="hsFail" data-id="' + s.id + '">Not acceptable</button></div>' : wait('ak'));
+  const rec = s.rec ? '<span class="small muted">Recommended by ' + esc(s.rec.by) + ' on ' + fmtT(s.rec.at) + '</span>'
+    : '<span class="small muted">' + esc(sm.name) + ', ' + esc(sm.role) + ', checks insurance and the rest of the answers.</span>' +
+      (step === 'hs' ? '' : r === 'sm' ? '<div class="acts">' + (step === 'rec' ? '<button class="btn pri" data-act="recommend" data-id="' + s.id + '">Recommend for approval</button>' : '') + '<button class="btn" data-act="changes" data-id="' + s.id + '">Request changes</button></div>' : (step === 'rec' || step === 'hsfail' ? wait('sm') : ''));
+  const fin = '<span class="small muted">' + esc(dm.name) + ', ' + esc(dm.role) + ', makes the decision.</span>' +
+    (r === 'dm' ? '<div class="acts"><button class="btn pri" data-act="approve" data-id="' + s.id + '" ' + (step === 'final' ? '' : 'disabled title="Needs the two checks above first"') + '>Approve supplier</button><button class="btn bad" data-act="reject" data-id="' + s.id + '">Reject</button></div>' : (step === 'final' ? wait('dm') : ''));
+  return '<div class="sec"><h4>Review</h4><div class="box"><ol class="rsteps">' +
+    one(s.hs ? (s.hs.ok ? 'done' : 'fail') : 'now', s.hs ? (s.hs.ok ? '✓' : '!') : '1', 'Health and safety check', hs) +
+    one(s.rec ? 'done' : (step === 'rec' || step === 'hsfail') ? 'now' : '', s.rec ? '✓' : '2', 'Procurement recommendation', rec) +
+    one(step === 'final' ? 'now' : '', '3', 'Final approval', fin) + '</ol>' +
+    '<div class="field" style="margin-top:12px"><label for="revNote">Note <span class="muted" style="font-weight:400">(optional; kept in the history and sent to the supplier if you request changes or reject)</span></label><input type="text" id="revNote" placeholder="For example: please send a public liability certificate for £2m"></div>' +
+    (r === 'sm' && step === 'hs' ? '<div class="row" style="margin-top:10px"><button class="btn" data-act="changes" data-id="' + s.id + '">Request changes</button></div>' : '') + '</div></div>';
+}
+function vDetail(s) {
+  const st = status(s), d = data(s), c = checks(s), sm = ui.role === 'sm', nr = nextReview(s);
+  const tabName = { overview: 'Overview', register: 'Suppliers', approved: 'Approved list', invites: 'Invitations', settings: 'Settings' }[ui.tab];
+  const exp = expiredPolicies(s);
+  const alert = st === 'Approved' ? ['good', 'Approved to use', 'Approved by ' + s.decision.by + ' on ' + fmt(s.decision.at) + '. Next review ' + fmt(nr) + '.' + (expiring(s) ? ' Insurance is running out: ' + soonPolicies(s).map(p => p.label + ' ' + fmt(p.exp)).join(', ') + '.' : '')]
+    : st === 'On hold' ? ['bad', 'On hold: do not place orders', exp.map(p => p.label + ' expired ' + fmt(p.exp) + ' (' + rel(p.exp) + ')').join('. ') + '. The supplier comes off hold when a renewed certificate is recorded.']
+    : st === 'Rejected' ? ['bad', 'Rejected', 'Rejected by ' + s.decision.by + ' on ' + fmt(s.decision.at) + (s.decision.note ? ': ' + s.decision.note : '.')]
+    : st === 'Awaiting review' ? ['warn', 'Questionnaire returned, waiting for review', 'Submitted ' + fmtT(s.sub.at) + ' by ' + d.decl.name + '. Now waiting for ' + person(waitingFor(s)).name + '.']
+    : st === 'Changes requested' ? ['info', 'Changes requested', 'Asked by ' + s.changes.by + ' on ' + fmt(s.changes.at) + (s.changes.note ? ': “' + s.changes.note + '”' : '') + '. The supplier’s link is open again until ' + fmt(s.expiresAt) + '.']
+    : st === 'Link cancelled' ? ['grey', 'Link cancelled', 'This invitation was cancelled. Invite the supplier again to start afresh.']
+    : ['grey', 'Waiting for the supplier', 'Questionnaire ' + s.ref + ' sent ' + fmt(s.sentAt) + ' to ' + s.email + ' (' + rel(s.sentAt) + '). The link works until ' + fmt(s.expiresAt) + '.'];
+  const live = !s.revoked && !s.sub && !s.decision || st === 'Changes requested';
+  const acts = [];
+  if (sm && live) acts.push('<button class="btn" data-act="remind" data-id="' + s.id + '">Send reminder</button>');
+  if (sm && live && st !== 'Changes requested') acts.push('<button class="btn bad" data-act="revoke" data-id="' + s.id + '">Cancel link</button>');
+  if (sm && s.decision && s.decision.outcome === 'Approved') acts.push('<button class="btn ' + (st === 'On hold' ? 'pri' : '') + '" data-act="insModal" data-id="' + s.id + '">Record renewed insurance</button>');
+  if (sm && s.decision && s.decision.outcome === 'Approved' && (st === 'On hold' || expiring(s))) acts.push('<button class="btn" data-act="chaseIns" data-id="' + s.id + '">Ask for a new certificate</button>');
+  if (sm && (st === 'Rejected' || st === 'Link cancelled')) acts.push('<button class="btn" data-act="reinvite" data-id="' + s.id + '">Invite again</button>');
+  if (d) acts.push('<button class="btn" data-act="record" data-id="' + s.id + '">View record copy</button>');
+  if (!s.decision) acts.push('<button class="btn" data-act="asSupplier" data-id="' + s.id + '">Open as supplier →</button>');
+  const f = d ? formOf(s) : null;
+  const answers = d ? f.sections.map((sec, i) => { let body = '';
+      if (sec.builtin === 'details') body = kv([['What they supply', d.cat], ['Company', d.company], ['Trading address', d.addr], ['Telephone', d.phone], ['Email', d.email], ['Main contact', d.contact + (d.position ? ' · ' + d.position : '')], ['Goods or services', d.supplies], ['Years trading', d.years], ['Company number', d.coNo], ['VAT number', d.vat]]);
+      else if (sec.builtin === 'insurance') body = insTable(s);
+      else if (sec.builtin === 'declaration') body = kv([['Completed by', d.decl.name], ['Position', d.decl.pos], ['Signed', 'Typed name and tick box, ' + fmtT(s.sub.at)], ['Email checked', d.email]]);
+      const qs = activeQs(sec, d); if (qs.length) body += '<dl class="kv"' + (body ? ' style="margin-top:8px"' : '') + '>' + qs.map(x => '<dt><span class="qn">' + esc(x.id) + '</span>' + esc(x.text) + '</dt><dd>' + ansHtml(x, d) + '</dd>').join('') + '</dl>';
+      return '<div class="sec ' + (sec.reviewer ? 'hsmark' : '') + '" id="ans-' + sec.id + '"><h4><span>' + (i + 1) + ' · ' + esc(sec.title) + '</span>' + (sec.reviewer ? '<span class="tag req" style="letter-spacing:0;text-transform:none">Checked by ' + esc(person(sec.reviewer).name) + '</span>' : '') + '</h4>' + body + '</div>'; }).join('') : '';
+  const fileCount = d ? heldPolicies(s).filter(p => p.file).length + Object.keys(d.a).filter(k => d.a[k] && typeof d.a[k] === 'object').length : 0;
+  const recFile = d ? s.id + '_' + s.name.replace(/[^A-Za-z0-9]+/g, '') + '_' + s.sub.at.slice(0, 10) + '_questionnaire.pdf' : '';
+  const right = '<div class="stk" style="gap:14px">' +
+    (d ? '<div class="sec"><h4>Automatic checks</h4>' + (c.length ? '<div class="note ' + (c.some(x => x.lvl === 'bad') ? 'bad' : 'warn') + '"><b>' + plural(c.length, 'thing') + ' to look at</b><ul>' + c.map(x => '<li>' + esc(x.m) + '</li>').join('') + '</ul></div>' : '<div class="note good"><b>All automatic checks passed.</b><span>Required insurance is held, in date and meets the minimum cover.</span></div>') + '</div>' : '') +
+    (d ? '<div class="sec"><h4>Where it is stored</h4><div class="layers">' +
+      '<div class="layer"><b>1 · Answers</b><code>suppliers/' + s.id + '/answers</code><span class="small muted" style="display:block">Every answer, with the wording of questionnaire v' + f.version + '</span></div>' +
+      '<div class="layer"><b>2 · Certificates</b><code>suppliers/' + s.id + '/certificates/</code><span class="small muted" style="display:block">' + plural(fileCount, 'file') + '</span></div>' +
+      '<div class="layer"><b>3 · Record copy, locked at submission</b><code>suppliers/' + s.id + '/questionnaires/' + esc(recFile) + '</code></div></div></div>' : '') +
+    '<div class="sec"><h4>Contact</h4>' + kv([['Main contact', s.contact + (s.position ? ' · ' + s.position : '')], ['Email', s.email], ['Telephone', s.phone], ['Questionnaire', s.ref + ' · ' + s.purpose], ['Next review', nr && st !== 'Rejected' ? fmt(nr) : 'After approval']]) + '</div>' +
+    '<div class="sec"><h4>History</h4><ul class="ev">' + s.events.map(e => '<li><time>' + fmtT(e.at) + '</time><span>' + esc(e.text) + (e.by ? ' <small>· ' + esc(e.by) + '</small>' : '') + '</span></li>').join('') + '</ul></div></div>';
+  const left = '<div class="stk" style="gap:16px">' + (st === 'Awaiting review' ? reviewCard(s) : '') +
+    (d ? answers : '<div class="sec"><h4>Progress</h4><div class="box">' + inviteSteps(s) + '<p class="small muted" style="margin:10px 0 0">Answers, certificates and automatic checks appear here once the supplier submits.' + (s.draft ? ' A draft is saved.' : '') + '</p></div></div>') + '</div>';
+  return '<section class="card pad stk" style="gap:14px"><div><button class="back" data-act="back">‹ Back to ' + tabName + '</button></div>' +
+    '<div class="dhead"><div style="min-width:0"><span class="id lblc">' + s.id + '</span><h2 style="margin:2px 0 0;font-size:22px">' + esc(s.name) + '</h2><div class="tags">' + pill(st, true) + '<span class="tagq">' + esc(s.cat) + '</span>' + (expiring(s) ? '<span class="pill p-warn">Insurance running out</span>' : '') + '</div></div>' +
+    '<div class="row">' + acts.join('') + '</div></div>' +
+    '<div class="note ' + alert[0] + '"><b>' + alert[1] + '</b><span>' + esc(alert[2]) + '</span></div>' +
+    '<div class="dgrid">' + left + right + '</div></section>';
+}
+
+/* ----- Settings: questionnaire editor and rules ----- */
+function vSettings() {
+  const f = DB.form, can = ui.role === 'sm', lg = DB.formlog;
+  const nAct = f.sections.reduce((a, s) => a + s.questions.filter(x => x.status === 'active').length, 0), nRet = f.sections.reduce((a, s) => a + s.questions.filter(x => x.status === 'retired').length, 0);
+  const secHtml = (s, si) => '<section class="box" id="sec-' + s.id + '"><div class="sec-h"><h3>' + (si + 1) + '. ' + esc(s.title) + ' <span class="small muted" style="font-weight:400">' + plural(s.questions.filter(x => x.status === 'active').length, 'question') + '</span>' + (s.reviewer ? '<span class="tag req">Checked by ' + esc(person(s.reviewer).role) + '</span>' : '') + '</h3>' +
+      (can ? '<div class="row"><button class="btn sm" data-act="editSec" data-sid="' + s.id + '">Edit section</button><button class="btn sm pri" data-act="addQ" data-sid="' + s.id + '">+ Add question</button></div>' : '') + '</div>' +
+    (s.intro ? '<p class="small muted">' + esc(s.intro) + '</p>' : '') + (s.builtin ? '<div class="fixed">' + BUILTIN[s.builtin] + ' <b>Questions you add are asked after these.</b></div>' : '') +
+    (s.questions.length ? '<div class="tw"><table class="qt"><thead><tr><th>ID</th><th>Question</th><th>Answer</th><th>Asked of</th><th>Status</th>' + (can ? '<th>Actions</th>' : '') + '</tr></thead><tbody>' +
+      s.questions.map((x, qi) => '<tr class="' + (x.status === 'retired' ? 'ret' : '') + '"><td class="qid">' + esc(x.id) + '</td><td>' + esc(x.text) + (x.help ? '<span class="help">' + esc(x.help) + '</span>' : '') + (x.follow ? '<span class="help">If Yes: ' + esc(x.follow) + '</span>' : '') + '</td>' +
+        '<td><span class="tag">' + ATYPES[x.type] + '</span>' + (x.required ? '<span class="tag req">Required</span>' : '<span class="tag">Optional</span>') + (x.flag ? '<span class="tag flag">Flag if ' + x.flag + '</span>' : '') + '</td>' +
+        '<td>' + (x.types.length ? x.types.map(t => '<span class="tag">' + esc(t) + '</span>').join('') : '<span class="small muted">All suppliers</span>') + '</td><td>' + (x.status === 'active' ? '<span class="pill p-good">Active</span>' : '<span class="pill p-grey">Retired</span>') + '</td>' +
+        (can ? '<td><div class="qa"><button title="Move up" aria-label="Move up" data-act="mvQ" data-sid="' + s.id + '" data-i="' + qi + '" data-d="-1" ' + (qi === 0 ? 'disabled' : '') + '>↑</button><button title="Move down" aria-label="Move down" data-act="mvQ" data-sid="' + s.id + '" data-i="' + qi + '" data-d="1" ' + (qi === s.questions.length - 1 ? 'disabled' : '') + '>↓</button>' +
+          '<button title="Edit" aria-label="Edit" data-act="editQ" data-sid="' + s.id + '" data-i="' + qi + '">✎</button><button title="Duplicate" aria-label="Duplicate" data-act="dupQ" data-sid="' + s.id + '" data-i="' + qi + '">⧉</button>' +
+          '<button title="' + (x.status === 'active' ? 'Retire' : 'Restore') + '" aria-label="' + (x.status === 'active' ? 'Retire' : 'Restore') + '" data-act="retQ" data-sid="' + s.id + '" data-i="' + qi + '">' + (x.status === 'active' ? '⊘' : '↺') + '</button></div></td>' : '') + '</tr>').join('') + '</tbody></table></div>'
+      : '<p class="small muted" style="margin:0">No added questions yet.</p>') + '</section>';
+  const num = (k, l, help) => '<div class="field"><label for="rule-' + k + '">' + l + '</label><input type="number" min="0" step="1" id="rule-' + k + '" data-rule="' + k + '" value="' + (k.indexOf('min.') === 0 ? DB.rules.min[k.slice(4)] : DB.rules[k]) + '" ' + (can ? '' : 'disabled') + '><small>' + help + '</small></div>';
+  return '<section class="card"><div class="pad" style="border-bottom:1px solid var(--line)"><div class="edhead"><div><span class="eyebrow">Questionnaire</span><h2 style="margin:2px 0 0">Supplier questionnaire v' + f.version + '</h2><span class="small muted">' + (f.changedAt ? 'Last changed ' + fmtT(f.changedAt) + ' by ' + esc(f.changedBy) : esc(f.changedBy)) + '</span></div>' +
+    '<div class="vchips"><span class="vchip">' + f.sections.length + ' sections</span><span class="vchip">' + nAct + ' active questions</span><span class="vchip">' + nRet + ' retired</span></div></div>' +
+    '<p class="small muted" style="margin:8px 0 0">Changes apply to questionnaires opened from now on. A questionnaire that has already been submitted keeps the wording it was answered with. Questions are retired, never deleted, and every change saves a new version.</p>' +
+    (can ? '' : '<div class="note grey" style="margin-top:10px"><span>Only the procurement lead can change the questionnaire and the rules. </span><button class="btn sm" data-act="role" data-role="sm" style="margin-left:6px">Switch to ' + esc(person('sm').name) + '</button></div>') + '</div>' +
+    '<div class="side"><nav aria-label="Settings sections"><span class="g">Questionnaire</span>' + f.sections.map(s => '<button data-act="jump" data-to="sec-' + s.id + '">' + esc(s.title) + '</button>').join('') + '<span class="g">Rules</span><button data-act="jump" data-to="rules">Insurance and reminders</button><span class="g">History</span><button data-act="jump" data-to="log">Change log</button></nav>' +
+    '<div class="stk" style="gap:14px">' + f.sections.map(secHtml).join('') +
+    (can ? '<div class="row"><button class="btn" data-act="addSec">+ Add section</button><span class="small muted">New sections go before the declaration.</span></div>' : '') +
+    '<section class="box" id="rules"><h3>Insurance and reminders</h3><p class="small muted">A supplier whose cover is below a minimum is flagged for the reviewer. A supplier whose required insurance has expired goes on hold automatically.</p><div class="rules">' +
+      num('min.el', 'Employers’ liability, £m', 'Minimum cover') + num('min.pl', 'Public liability, £m', 'Minimum cover') + num('min.pi', 'Professional indemnity, £m', 'Professional services and IT only') + num('warnDays', 'Warn before expiry, days', 'Shown as “running out”') +
+      num('linkDays', 'Invitation link works for, days', 'Then it must be sent again') + num('reviewDays', 'Review approved suppliers every, days', 'From the approval date') + '</div>' +
+      '<dl class="kv" style="margin-top:12px"><dt>Reminders to the supplier</dt><dd>7 and 14 days after the invitation; 30, 14 and 7 days before insurance runs out</dd><dt>Emails are sent from</dt><dd>' + esc(mailbox()) + '</dd><dt>Who can approve</dt><dd>' + esc(person('dm').name) + ', ' + esc(person('dm').role) + '</dd></dl></section>' +
+    '<section class="box" id="log"><h3>Change log <span class="small muted" style="font-weight:400">(' + lg.length + ')</span></h3>' + (lg.length ? '<ul class="ev">' + lg.map(l => '<li><time>' + fmtT(l.at) + '</time><span>v' + l.version + ' · ' + esc(l.text) + ' <small>· ' + esc(l.by) + '</small></span></li>').join('') + '</ul>' : '<p class="small muted" style="margin:0">No changes yet. The questionnaire is as first set up.</p>') + '</section>' +
+    '</div></div></section>';
+}
+function saveForm(f, text) { f.version = (DB.form.version || 1) + 1; f.changedAt = nowStamp(); f.changedBy = me().name; DB.form = f; DB.formlog.unshift({ at: f.changedAt, version: f.version, text, by: f.changedBy }); save(); render(); toast('Saved as questionnaire v' + f.version); }
+function nextId(sec) { const n = sec.questions.map(x => x.id.indexOf(sec.code) === 0 ? parseInt(x.id.slice(sec.code.length), 10) || 0 : 0); return sec.code + (Math.max(0, ...n) + 1); }
+const mRoot = () => document.getElementById('mRoot');
+function closeModal() { const was = mRoot().innerHTML; mRoot().innerHTML = ''; if (was && ui.role === 'sup' && ui.sup.stage === 'confirm') render(); }
+function qModal(sid, qi) {
+  const sec = DB.form.sections.find(s => s.id === sid), isNew = qi === null, x = isNew ? { id: nextId(sec), text: '', help: '', type: 'yn', required: true, status: 'active', types: [], follow: '', flag: '' } : sec.questions[qi];
+  mRoot().innerHTML = '<div class="ovl" role="dialog" aria-modal="true" aria-label="' + (isNew ? 'Add question' : 'Edit question') + '" data-act="ovl"><form class="mbox" id="qForm" novalidate><h2 style="margin:0">' + (isNew ? 'Add question' : 'Edit question') + ' · ' + esc(sec.title) + '</h2>' +
+    '<div class="grid3"><div class="field"><label for="qId">ID</label><input type="text" id="qId" value="' + esc(x.id) + '"></div><div class="field" style="grid-column:span 2"><label for="qType">Answer type</label><select id="qType">' + Object.keys(ATYPES).map(k => '<option value="' + k + '" ' + (x.type === k ? 'selected' : '') + '>' + ATYPES[k] + '</option>').join('') + '</select></div></div>' +
+    '<div class="field"><label for="qText">Question</label><textarea id="qText" style="min-height:60px" placeholder="For example: Do your drivers hold a current first aid certificate?">' + esc(x.text) + '</textarea></div>' +
+    '<div class="field"><label for="qHelp">Help text <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="qHelp" value="' + esc(x.help) + '" placeholder="What a good answer looks like"></div>' +
+    '<div class="grid2"><div class="field"><label for="qFollow">If the answer is Yes, also ask <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="qFollow" value="' + esc(x.follow) + '" placeholder="For example: please give details"></div>' +
+    '<div class="field"><label for="qFlag">Flag for the reviewer when the answer is</label><select id="qFlag"><option value="">Never</option><option ' + (x.flag === 'Yes' ? 'selected' : '') + '>Yes</option><option ' + (x.flag === 'No' ? 'selected' : '') + '>No</option></select></div></div>' +
+    '<label class="chk"><input type="checkbox" id="qReq" ' + (x.required ? 'checked' : '') + '><span>The supplier must answer this</span></label>' +
+    '<div class="field"><span class="lbl">Only ask these kinds of supplier <span class="muted" style="font-weight:400">(none ticked means everyone)</span></span><div class="typechips">' + CATS.map(t => '<label><input type="checkbox" data-qt="' + esc(t) + '" ' + (x.types.includes(t) ? 'checked' : '') + '>' + esc(t) + '</label>').join('') + '</div></div>' +
+    '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="submit" class="btn pri">' + (isNew ? 'Add question' : 'Save changes') + '</button></div></form></div>';
+  document.getElementById('qText').focus();
+  document.getElementById('qForm').onsubmit = e => { e.preventDefault();
+    const id = document.getElementById('qId').value.trim(), text = document.getElementById('qText').value.trim();
+    if (!id || !text) { toast('Give the question an ID and some wording'); return; }
+    const f = clone(DB.form), s = f.sections.find(z => z.id === sid);
+    if (f.sections.some(z => z.questions.some((y, yi) => y.id === id && !(z.id === sid && yi === qi)))) { toast('That ID is already used'); return; }
+    const nq = { id, text, help: document.getElementById('qHelp').value.trim(), type: document.getElementById('qType').value, required: document.getElementById('qReq').checked, status: x.status,
+      types: Array.from(document.querySelectorAll('[data-qt]:checked')).map(c => c.dataset.qt), follow: document.getElementById('qFollow').value.trim(), flag: document.getElementById('qFlag').value };
+    if (isNew) s.questions.push(nq); else s.questions[qi] = nq;
+    closeModal(); saveForm(f, (isNew ? 'Added ' : 'Edited ') + id + ' “' + short(text, 60) + '” in ' + s.title); };
+}
+function secModal(sid) {
+  const isNew = !sid, sec = isNew ? { title: '', intro: '' } : DB.form.sections.find(s => s.id === sid);
+  mRoot().innerHTML = '<div class="ovl" role="dialog" aria-modal="true" aria-label="Section" data-act="ovl"><form class="mbox" id="secForm" novalidate><h2 style="margin:0">' + (isNew ? 'Add section' : 'Edit section') + '</h2>' +
+    '<div class="field"><label for="sTitle">Section name</label><input type="text" id="sTitle" value="' + esc(sec.title) + '" placeholder="For example: Vehicles and drivers"></div>' +
+    '<div class="field"><label for="sIntro">Short introduction <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="sIntro" value="' + esc(sec.intro || '') + '"></div>' +
+    '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="submit" class="btn pri">' + (isNew ? 'Add section' : 'Save') + '</button></div></form></div>';
+  document.getElementById('sTitle').focus();
+  document.getElementById('secForm').onsubmit = e => { e.preventDefault();
+    const t = document.getElementById('sTitle').value.trim(), intro = document.getElementById('sIntro').value.trim(); if (!t) { toast('Give the section a name'); return; }
+    const f = clone(DB.form);
+    if (isNew) { const n = f.sections.filter(s => /^n\d+$/.test(s.id)).length + 1, di = f.sections.findIndex(s => s.builtin === 'declaration');
+      f.sections.splice(di < 0 ? f.sections.length : di, 0, { id: 'n' + n, code: 'N' + n + '.', title: t, intro, questions: [] }); closeModal(); saveForm(f, 'Added section “' + t + '”'); }
+    else { const s = f.sections.find(z => z.id === sid), old = s.title; s.title = t; s.intro = intro; closeModal(); saveForm(f, old === t ? 'Edited the introduction of “' + t + '”' : 'Renamed section “' + old + '” to “' + t + '”'); } };
+}
+function insModal(id) {
+  const s = find(id), d = data(s), first = (expiredPolicies(s)[0] || soonPolicies(s)[0] || { k: 'pl' }).k;
+  mRoot().innerHTML = '<div class="ovl" role="dialog" aria-modal="true" aria-label="Record renewed insurance" data-act="ovl"><form class="mbox" id="insForm" novalidate><h2 style="margin:0">Record renewed insurance · ' + esc(s.name) + '</h2>' +
+    '<div class="grid2"><div class="field"><label for="nPol">Policy</label><select id="nPol">' + INS.map(([k, l]) => '<option value="' + k + '" ' + (k === first ? 'selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+    '<div class="field"><label for="nLim">Cover, £ million</label><input type="number" id="nLim" min="0" step="1" value="' + esc(d.ins[first].limit || '') + '"></div>' +
+    '<div class="field"><label for="nIns">Insurer</label><input type="text" id="nIns" value="' + esc(d.ins[first].insurer || '') + '"></div>' +
+    '<div class="field"><label for="nExp">Valid to</label><input type="date" id="nExp" value="' + dIso(365) + '"></div></div>' +
+    '<p class="small muted" style="margin:0">In the real system you would attach the new certificate here. In this demo a sample file name is used.</p>' +
+    '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-act="closeModal">Cancel</button><button type="submit" class="btn pri">Save certificate</button></div></form></div>';
+  document.getElementById('nPol').onchange = e => { const r = d.ins[e.target.value]; document.getElementById('nLim').value = r.limit || ''; document.getElementById('nIns').value = r.insurer || ''; };
+  document.getElementById('insForm').onsubmit = e => { e.preventDefault();
+    const k = document.getElementById('nPol').value, lim = document.getElementById('nLim').value, ex = document.getElementById('nExp').value;
+    if (!lim || !ex) { toast('Enter the cover and the date it is valid to'); return; }
+    if (ex < todayISO()) { toast('That date has already passed'); return; }
+    const was = status(s);
+    d.ins[k] = { held: 'Yes', limit: String(lim), insurer: document.getElementById('nIns').value.trim(), exp: ex, file: { name: fileSlug(s.name) + '-' + k + '-certificate-' + ex.slice(0, 4) + '.pdf' }, reason: '' };
+    log(s, 'Renewed ' + INS_LBL[k].toLowerCase() + ' certificate recorded: £' + lim + 'm, valid to ' + fmt(ex), me().name);
+    if (was === 'On hold' && status(s) === 'Approved') log(s, 'Off hold automatically: required insurance is in date again');
+    closeModal(); save(); render(); toast(was === 'On hold' && status(s) === 'Approved' ? 'Saved. ' + s.name + ' is approved to use again.' : 'Certificate saved'); };
+}
+function recordHtml(s) {
+  const d = data(s), c = checks(s), bad = c.some(x => x.lvl === 'bad'), f = formOf(s);
+  const tbl = rows => '<table><tbody>' + rows.map(([k, v]) => '<tr><td class="k">' + esc(k) + '</td><td>' + (v === 'Yes' ? '<b class="ok">Yes</b>' : v === 'No' ? '<b class="no">No</b>' : esc(v || '—')) + '</td></tr>').join('') + '</tbody></table>';
+  const qRows = sec => activeQs(sec, d).map(x => { let v = d.a[x.id]; if (v && typeof v === 'object') v = 'File: ' + v.name; return [x.id + '  ' + x.text, (v || '—') + (d.a[x.id + '_more'] ? ' · ' + d.a[x.id + '_more'] : '') + (d.a[x.id + '_file'] ? ' · file: ' + d.a[x.id + '_file'].name : '')]; });
+  return '<div class="paper"><div class="phd"><h1>Supplier questionnaire</h1><div class="plogo">' + esc(co()) + '</div></div>' +
+    '<div class="banner ' + (c.length ? 'a' : 'g') + '"><b>' + (bad ? 'Action needed: ' + esc(c.filter(x => x.lvl === 'bad').map(x => x.m).join('; ')) : c.length ? plural(c.length, 'point') + ' for the reviewer' : 'All automatic checks passed') + '</b>' + esc(d.company) + ' · ' + esc(s.ref) + ' · submitted ' + fmtT(s.sub.at) + ' · ' + esc(d.decl.name) + '</div>' +
+    f.sections.map((sec, i) => { let body = '';
+      if (sec.builtin === 'details') body = tbl([['What they supply', d.cat], ['Company', d.company], ['Trading address', d.addr], ['Telephone', d.phone], ['Email', d.email], ['Main contact', d.contact + ' · ' + d.position], ['Goods or services', d.supplies], ['Years trading', d.years], ['Company number', d.coNo], ['VAT number', d.vat]]);
+      else if (sec.builtin === 'insurance') body = '<table><thead><tr><th>Insurance</th><th>Cover</th><th>Insurer</th><th>Valid to</th><th>Certificate</th></tr></thead><tbody>' + INS.map(([k, l]) => { const r = d.ins[k]; return r.held === 'Yes' ? '<tr><td>' + l + '</td><td>£' + esc(r.limit) + 'm</td><td>' + esc(r.insurer || '—') + '</td><td>' + fmt(r.exp) + '</td><td>' + esc(r.file ? r.file.name : '—') + '</td></tr>' : '<tr><td>' + l + '</td><td colspan="4">Not held' + (r.reason ? ': ' + esc(r.reason) : '') + '</td></tr>'; }).join('') + '</tbody></table>';
+      else if (sec.builtin === 'declaration') body = '<p>' + esc(declText()) + '</p>' + tbl([['Completed by', d.decl.name], ['Position', d.decl.pos], ['Signed (electronic)', 'Typed name and tick box, ' + fmtT(s.sub.at) + ', email checked: ' + d.email]]);
+      const extra = qRows(sec); if (extra.length) body += tbl(extra);
+      return '<h4>Section ' + (i + 1) + ' · ' + esc(sec.title) + '</h4>' + body; }).join('') +
+    '<div class="pf"><span>Questionnaire v' + f.version + ' · ' + esc(s.ref) + ' · ' + s.id + '</span><span>Created at submission · not to be altered</span></div></div>';
+}
+function openRecord(id) {
+  const s = find(id), file = s.id + '_' + s.name.replace(/[^A-Za-z0-9]+/g, '') + '_' + s.sub.at.slice(0, 10) + '_questionnaire.pdf';
+  mRoot().innerHTML = '<div class="ovl" role="dialog" aria-modal="true" aria-label="Record copy" data-act="ovl"><div class="paperwrap"><div class="pbar"><span><b>Record copy</b> · ' + esc(file) + '</span><button class="btn sm" data-act="closeModal">Close</button></div>' + recordHtml(s) + '</div></div>';
+}
+const declText = () => 'I confirm that these answers are true and complete as far as I know, and that I am allowed to answer for my company. I will tell ' + co() + ' if anything important changes, for example if our insurance cover lapses.';
+function openPrivacy() {
+  const c = esc(co());
+  mRoot().innerHTML = '<div class="ovl" role="dialog" aria-modal="true" aria-labelledby="privT" data-act="ovl"><div class="mbox">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:3px solid var(--acc);padding-bottom:12px"><div><div class="slogo">' + c + '</div><h2 id="privT" style="margin:6px 0 0">Supplier privacy notice</h2></div><button type="button" class="btn sm" data-act="closeModal">Close</button></div>' +
+    '<div class="note warn"><span><b style="display:inline">Sample wording for this demo.</b> A real system would show the company’s own notice here, checked by whoever advises them on data protection.</span></div>' +
+    '<div class="priv">' +
+    '<p><b>Who is asking.</b> ' + c + ' is collecting this information so that it can decide whether to buy from your company, and so that it can keep its supplier records up to date.</p>' +
+    '<p><b>What we ask for.</b> Details of your business, the name, job title, work email and work phone number of the person filling this in, your answers, and copies of your insurance and other certificates. We also keep a note of when you signed in and when you submitted.</p>' +
+    '<p><b>Who can see it.</b> The few people at ' + c + ' who look after suppliers and approve them. We may show your certificates to our own customers or auditors when they ask us for evidence about our suppliers. We do not sell this information or use it for marketing.</p>' +
+    '<p><b>How long we keep it.</b> For as long as you are one of our suppliers, and for a limited time afterwards that is set out in our records policy.</p>' +
+    '<p><b>Your choices.</b> You can ask us for a copy of what we hold, ask us to correct it, or ask us to remove it. Write to ' + esc(mailbox()) + '.</p></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px"><span class="small lblc">' + PRIV_VERSION + '</span><button type="button" class="btn pri" data-act="privOk">I’ve read it</button></div></div></div>';
+  ui.sup.privOpened = true;
+}
+
+/* ================= the supplier's side ================= */
+const D = () => ui.sup.draft;
+const F = () => ui.sup.form || DB.form;
+const secs = () => F().sections;
+const curSup = () => find(ui.supId) || DB.sups.find(s => status(s) === 'In progress') || DB.sups[0];
+function mails(s) {
+  const m = [{ k: 'invite', at: s.sentAt, subj: '[' + s.ref + '] Supplier questionnaire' }];
+  s.reminders.forEach(at => m.push({ k: 'remind', at, subj: 'Reminder: supplier questionnaire' }));
+  if (s.changes) m.push({ k: 'changes', at: s.changes.at, subj: 'A few changes needed' });
+  if (s.code) m.push({ k: 'code', at: s.codeAt, subj: 'Your sign-in code' });
+  if (s.sub) m.push({ k: 'receipt', at: s.sub.at, subj: 'We have your questionnaire' });
+  if (s.decision) m.push({ k: 'outcome', at: s.decision.at, subj: s.decision.outcome === 'Approved' ? 'You are now an approved supplier' : 'Your supplier application' });
+  return m.sort((a, b) => b.at.localeCompare(a.at));
+}
+function linkProblem(s) {
+  if (s.revoked) return 'This link has been cancelled by ' + co() + '.';
+  if (s.decision) return 'This questionnaire has been reviewed and is now closed.';
+  if (s.sub && !s.changes) return 'This questionnaire has already been submitted. Thank you.';
+  if (s.expiresAt < todayISO()) return 'This link has expired. Please ask ' + co() + ' to send a new one.';
+  return '';
+}
+function vSupplier() {
+  const s = curSup(), sp = ui.sup, c = esc(co());
+  const inside = ['confirm', 'form', 'review', 'done'].includes(sp.stage);
+  const inner = ({ inbox: sInbox, link: sLink, confirm: sConfirm, form: sForm, review: sReview, done: sDone })[sp.stage](s);
+  const pick = DB.sups.slice().sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+  return '<section class="card hd"><div class="hrow"><div><h1>Supplier approval</h1><p class="desc">The supplier’s side: what arrives in their inbox, how they sign in and what they fill in.</p></div>' +
+    '<div class="row"><button class="btn" data-act="role" data-role="sm">‹ Back to the office view</button></div></div>' + whoStrip() +
+    '<div class="row" style="padding:12px 18px 14px"><label for="supPick" class="lbl">You are</label><select id="supPick" style="width:auto;max-width:100%">' + pick.map(x => '<option value="' + x.id + '" ' + (x.id === s.id ? 'selected' : '') + '>' + esc(x.contact) + ' at ' + esc(x.name) + ' · ' + status(x).toLowerCase() + '</option>').join('') + '</select></div></section>' +
+    '<section class="shell"><div class="shead"><div class="slogo">' + c + '<span>Supplier portal</span></div><div class="small muted">' +
+      (inside ? '<b>' + esc(s.name) + '</b> · ' + esc(s.email) + ' · <button class="btn link" data-act="signOut">Sign out</button>' : sp.stage === 'inbox' ? esc(s.contact) + '’s email inbox' : '') + '</div></div><div class="sbody">' + inner + '</div></section>';
+}
+function sInbox(s) {
+  const ms = mails(s), i = Math.min(ui.sup.mail || 0, ms.length - 1), m = ms[i], c = esc(co()), first = esc(s.contact.split(' ')[0]);
+  const openBtn = '<p><button class="btn pri" data-act="follow">Open the questionnaire</button></p><p class="small muted">This link is personal to ' + esc(s.email) + ' and works until ' + fmt(s.expiresAt) + '. Reference ' + esc(s.ref) + '.</p>';
+  const body = { invite: '<p>Dear ' + first + ',</p><p>' + c + ' would like to add <b>' + esc(s.name) + '</b> to its list of approved suppliers. Before we can place an order we need you to complete our supplier questionnaire online. It takes about 15 minutes.</p><p>Please have ready: your company and VAT numbers, your insurance certificates, and the names of two customers we can ask for a reference.</p>' + openBtn,
+    remind: '<p>Dear ' + first + ',</p><p>A reminder that we are still waiting for the supplier questionnaire for <b>' + esc(s.name) + '</b>. Anything you have already filled in has been saved.</p>' + openBtn,
+    changes: '<p>Dear ' + first + ',</p><p>Thank you for your questionnaire. Before we can finish our review we need you to change or add something:</p><div class="note info" style="margin-bottom:10px"><span>' + esc((s.changes || {}).note || 'Please check your answers and certificates and submit again.') + '</span></div><p>Your earlier answers are still there. Sign in, make the change and submit again.</p>' + openBtn,
+    code: '<p>Your sign-in code is</p><p class="bigcode">' + esc(s.code || '') + '</p><p class="small muted">It works once and expires in 10 minutes. If you did not ask for it, you can ignore this email.</p>',
+    receipt: '<p>Dear ' + first + ',</p><p>Thank you. We have received the supplier questionnaire for <b>' + esc(s.name) + '</b>, reference ' + esc(s.ref) + '. A copy is attached for your records.</p><p>We will review it and come back to you, usually within five working days.</p><p class="small muted">Attachment: <span class="fn">' + esc(s.ref) + '-questionnaire.pdf</span></p>',
+    outcome: s.decision && s.decision.outcome === 'Approved' ? '<p>Dear ' + first + ',</p><p><b>' + esc(s.name) + '</b> is now an approved supplier to ' + c + '.</p><p>We will ask you to confirm your details once a year, and we will remind you before any insurance certificate we hold runs out.</p>'
+      : '<p>Dear ' + first + ',</p><p>Thank you for completing our questionnaire. We are not able to add <b>' + esc(s.name) + '</b> to our approved supplier list at the moment.</p>' + (s.decision && s.decision.note ? '<div class="note grey" style="margin-bottom:10px"><span>' + esc(s.decision.note) + '</span></div>' : '') + '<p>You are welcome to apply again if this changes.</p>' }[m.k];
+  return '<div class="inbox"><div class="ml">' + ms.map((x, j) => '<button data-act="mail" data-i="' + j + '" class="' + (j === i ? 'on' : '') + '"><b>' + c + '</b><small>' + esc(x.subj) + '</small><small>' + fmtT(x.at) + '</small></button>').join('') + '</div>' +
+    '<div class="mail"><div class="h"><span>From: <b>' + c + ' supplier portal</b> &lt;' + esc(mailbox()) + '&gt;</span><span>To: <b>' + esc(s.contact) + '</b> &lt;' + esc(s.email) + '&gt;</span><span>Subject: <b>' + esc(m.subj) + '</b></span></div>' + body + '</div></div>';
+}
+function sLink(s) {
+  const bad = linkProblem(s);
+  if (bad) return '<div class="sbox"><h2>Link not available</h2><p>' + esc(bad) + '</p><button class="btn" data-act="supStage" data-stage="inbox">Back to the inbox</button></div>';
+  const m = s.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2');
+  return '<div class="sbox"><span class="eyebrow">Step 1 of 2 · Check it is you</span><h2>Sign in with a code</h2><p class="muted">This questionnaire was sent to <b>' + esc(m) + '</b> for <b>' + esc(s.name) + '</b>.</p>' +
+    (!ui.sup.codeSent ? '<button class="btn pri" data-act="sendCode">Email me a code</button>'
+      : '<div class="demo"><span>Code sent to the supplier’s inbox. In this demo it is <b class="bigcode">' + esc(s.code) + '</b></span><button class="btn sm" data-act="useCode">Use this code</button></div>' +
+        '<div class="code" id="codeIn">' + [0, 1, 2, 3, 4, 5].map(i => '<input inputmode="numeric" maxlength="1" id="c' + i + '" aria-label="Digit ' + (i + 1) + '">').join('') + '</div><p class="msg bad" id="cerr" style="margin-top:6px" role="alert"></p>' +
+        '<div class="row" style="margin-top:8px"><button class="btn pri" data-act="verify">Continue</button><button class="btn link" data-act="sendCode">Send a new code</button></div>') +
+    '<p class="small muted" style="margin:16px 0 0">No password to remember. Only the invited address can open this questionnaire.</p></div>';
+}
+function sConfirm(s) {
+  const sp = ui.sup;
+  return '<div class="sbox"><span class="eyebrow">Step 2 of 2 · Right company, right person</span><h2>You are completing this for ' + esc(s.name) + '</h2>' +
+    '<label class="chk" style="margin:10px 0"><input type="checkbox" id="cfCo" ' + (sp.cfCo ? 'checked' : '') + '><span>I work for <b>' + esc(s.name) + '</b> and can answer on its behalf.</span></label>' +
+    '<label class="chk" style="margin:10px 0"><input type="checkbox" id="cfPriv" ' + (sp.privOpened ? '' : 'disabled') + ' ' + (sp.cfPriv ? 'checked' : '') + '><span>I have read the <button type="button" class="btn link" data-act="privacy" style="text-decoration:underline">privacy notice</button>.' + (sp.privOpened ? '' : ' <span class="small muted">(open it to tick this box)</span>') + '</span></label>' +
+    '<button class="btn pri" data-act="startForm" style="margin-top:8px">Start questionnaire →</button>' +
+    '<details style="margin-top:18px"><summary class="small" style="cursor:pointer;font-weight:600">Not the right person? Pass it to a colleague</summary><div class="grid2" style="margin-top:10px"><div class="field"><label for="fwName">Colleague’s name</label><input type="text" id="fwName"></div><div class="field"><label for="fwEmail">Colleague’s email</label><input type="email" id="fwEmail"></div></div><button class="btn sm" data-act="forward" style="margin-top:8px">Send to colleague</button></details></div>';
+}
+function secErrs(sec) {
+  const d = D(), E = [], t = todayISO();
+  if (sec.builtin === 'details') {
+    if (!d.cat) E.push('Choose what you supply');
+    [['company', 'Company name'], ['addr', 'Trading address'], ['phone', 'Telephone'], ['contact', 'Main contact name'], ['position', 'Position'], ['supplies', 'Goods or services you supply']].forEach(([k, l]) => { if (!String(d[k] || '').trim()) E.push(l + ' is needed'); });
+    if (d.phone && !/^[\d +()]{7,18}$/.test(String(d.phone).trim())) E.push('Telephone: numbers only, at least 7 digits');
+  }
+  if (sec.builtin === 'insurance') INS.forEach(([k, l]) => { const r = d.ins[k], need = insNeed(k, d.cat);
+    if (!r.held) { E.push(l + ': choose “We hold this” or “We don’t hold this”'); return; }
+    if (r.held === 'No') { if (need && !String(r.reason).trim()) E.push(l + ' is normally needed: tell us why you don’t hold it'); return; }
+    if (!r.limit) E.push(l + ': limit of cover'); if (!r.exp) E.push(l + ': expiry date'); else if (r.exp < t) E.push(l + ' has expired: enter your current policy'); if (!r.file) E.push(l + ': add the certificate'); });
+  if (sec.builtin === 'declaration') { if (!d.decl.name.trim()) E.push('Type your full name'); if (!d.decl.pos.trim()) E.push('Type your position'); if (!d.decl.ok) E.push('Tick the declaration'); }
+  activeQs(sec, d).forEach(x => { const v = d.a[x.id];
+    if (x.required && (x.type === 'file' ? !v : !String(v === undefined || v === null ? '' : v).trim())) E.push('Answer ' + x.id + ': ' + short(x.text, 50));
+    if (x.type === 'ynfile' && v === 'Yes' && !d.a[x.id + '_file']) E.push(x.id + ': add the document');
+    if (x.follow && v === 'Yes' && !String(d.a[x.id + '_more'] || '').trim()) E.push(x.id + ': ' + x.follow); });
+  return E;
+}
+const stepOk = i => !secErrs(secs()[i]).length;
+const firstOpen = () => { for (let i = 0; i < secs().length; i++) if (!stepOk(i)) return i; return secs().length; };
+const locked = i => i > firstOpen();
+const val = p => p.split('.').reduce((o, k) => (o === undefined || o === null ? o : o[k]), D());
+function setv(p, v) { const ks = p.split('.'); let o = D(); ks.slice(0, -1).forEach(k => { o = o[k]; }); o[ks[ks.length - 1]] = v; }
+const inp = (p, l, o) => { o = o || {}; const v = val(p); return '<div class="field ' + (o.full ? 'full' : '') + '"><label for="f_' + p + '">' + l + (o.opt ? ' <span class="muted" style="font-weight:400">(optional)</span>' : '') + '</label>' +
+  (o.area ? '<textarea id="f_' + p + '" data-p="' + p + '">' + esc(v) + '</textarea>' : '<input type="' + (o.type || 'text') + '" id="f_' + p + '" data-p="' + p + '" value="' + esc(v) + '" ' + (o.ph ? 'placeholder="' + esc(o.ph) + '"' : '') + ' ' + (o.min ? 'min="0" step="any"' : '') + '>') + (o.help ? '<small>' + o.help + '</small>' : '') + '</div>'; };
+function up(kind, key, label) {
+  const f = kind === 'p' ? val(key) : D().a[key], id = 'up_' + key.replace(/[^A-Za-z0-9]/g, '_');
+  return '<div class="up ' + (f ? 'has' : '') + '"><span>' + (f ? '<b>Added</b> · <span class="fn">' + esc(f.name) + '</span>' : '<b>' + label + '</b> · PDF, JPG or PNG <span class="muted">(this demo keeps the file name only)</span>') + '</span>' +
+    '<input type="file" id="' + id + '" data-up="' + kind + '" data-key="' + esc(key) + '" accept=".pdf,.jpg,.jpeg,.png"><label for="' + id + '">' + (f ? 'Replace' : 'Choose file') + '</label>' + (f ? '' : '<button type="button" class="btn link" data-act="sampleFile" data-kind="' + kind + '" data-key="' + esc(key) + '">Use a sample file</button>') + '</div>';
+}
+function fDetails() {
+  const d = D();
+  return '<div class="field" style="margin-bottom:12px"><span class="lbl">What you supply</span><div class="yn">' + CATS.map(t => '<button type="button" class="' + (d.cat === t ? 'on' : '') + '" data-act="setv" data-p="cat" data-v="' + esc(t) + '" aria-pressed="' + (d.cat === t) + '">' + esc(t) + '</button>').join('') + '</div></div>' +
+    '<div class="grid2">' + inp('company', 'Company name') + inp('phone', 'Telephone', { type: 'tel', ph: 'For example 01632 960123' }) + inp('addr', 'Trading address', { full: 1 }) + inp('contact', 'Main contact name') + inp('position', 'Position') +
+    inp('supplies', 'Goods or services you supply', { full: 1, area: 1 }) + inp('years', 'Years trading', { opt: 1, type: 'number', min: 1 }) + inp('coNo', 'Company registration number', { opt: 1, help: 'Leave blank if you are a sole trader' }) + inp('vat', 'VAT number', { opt: 1, help: 'Leave blank if you are not VAT registered' }) + '</div>';
+}
+function fIns() {
+  const d = D();
+  return INS.map(([k, l]) => { const need = insNeed(k, d.cat), r = d.ins[k], min = DB.rules.min[k];
+    return '<div class="cert"><div class="ch"><b>' + l + '</b><span class="small muted">' + (need ? 'Normally needed' : 'Only if it applies to you') + '</span></div>' +
+      '<div class="yn"><button type="button" class="' + (r.held === 'Yes' ? 'on' : '') + '" data-act="setv" data-p="ins.' + k + '.held" data-v="Yes">We hold this</button><button type="button" class="' + (r.held === 'No' ? 'on' : '') + '" data-act="setv" data-p="ins.' + k + '.held" data-v="No">We don’t hold this</button></div>' +
+      (r.held === 'Yes' ? '<div class="grid3">' + inp('ins.' + k + '.limit', 'Limit of cover, £ million', { type: 'number', min: 1, help: min ? 'We normally ask for at least £' + min + 'm' : '' }) + inp('ins.' + k + '.insurer', 'Insurer', { opt: 1 }) + inp('ins.' + k + '.exp', 'Expiry date', { type: 'date' }) + '</div>' + up('p', 'ins.' + k + '.file', 'Add the insurance certificate') : '') +
+      (r.held === 'No' && need ? inp('ins.' + k + '.reason', 'Why don’t you hold it?', { area: 1, help: k === 'el' ? 'For example: you have no employees' : 'We will look at this before approval' }) : '') + '</div>'; }).join('');
+}
+function fDecl() {
+  const d = D().decl;
+  return '<div class="note info" style="margin-bottom:12px"><span>' + esc(declText()) + '</span></div><div class="grid2">' + inp('decl.name', 'Your full name') + inp('decl.pos', 'Your position') + '</div>' +
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="declOk" ' + (d.ok ? 'checked' : '') + '><span>I confirm the declaration. Typing my name and ticking this box is my signature.</span></label>';
+}
+function fQ(x) {
+  const d = D(), v = d.a[x.id], id = esc(x.id);
+  const head = '<div><span class="qn">' + id + '</span><b>' + esc(x.text) + '</b>' + (x.required ? '' : ' <span class="muted small">(optional)</span>') + (x.help ? '<span class="small muted" style="display:block">' + esc(x.help) + '</span>' : '') + '</div>';
+  const yn = opts => '<div class="yn">' + opts.map(o => '<button type="button" class="' + (v === o ? 'on' : '') + '" data-act="ans" data-id="' + id + '" data-v="' + o + '" aria-pressed="' + (v === o) + '">' + o + '</button>').join('') + '</div>';
+  let body;
+  if (x.type === 'yn' || x.type === 'ynfile') body = yn(['Yes', 'No']);
+  else if (x.type === 'yna') body = yn(['Yes', 'No', 'Not applicable']);
+  else if (x.type === 'long') body = '<textarea data-txt="' + id + '" aria-label="' + esc(x.text) + '">' + esc(v || '') + '</textarea>';
+  else if (x.type === 'file') body = up('a', x.id, 'Add the document');
+  else body = '<input type="' + (x.type === 'number' ? 'number' : x.type === 'date' ? 'date' : 'text') + '" data-txt="' + id + '" value="' + esc(v || '') + '" aria-label="' + esc(x.text) + '">';
+  if (x.type === 'ynfile' && v === 'Yes') body += up('a', x.id + '_file', 'Add the certificate');
+  if (x.follow && v === 'Yes') body += '<input type="text" data-txt="' + id + '_more" placeholder="' + esc(x.follow) + '" aria-label="' + esc(x.follow) + '" value="' + esc(d.a[x.id + '_more'] || '') + '">';
+  return '<div class="q">' + head + body + '</div>';
+}
+function sRail(s) {
+  const sp = ui.sup, fo = firstOpen();
+  return '<aside class="srail"><div class="lbl">Questionnaire v' + F().version + ' · ' + esc(s.ref) + '</div><ol>' + secs().map((x, i) => { const ok = stepOk(i);
+    return '<li><button class="' + (i === sp.step && sp.stage === 'form' ? 'on' : '') + ' ' + (ok ? 'ok' : '') + '" data-act="step" data-i="' + i + '" ' + (locked(i) ? 'disabled title="Finish the earlier sections first"' : '') + '><span class="n">' + (ok ? '✓' : i + 1) + '</span><span class="t">' + esc(x.title) + '</span></button></li>'; }).join('') +
+    '<li><button data-act="toReview" class="' + (sp.stage === 'review' ? 'on' : '') + '" ' + (fo < secs().length ? 'disabled title="Finish all sections first"' : '') + '><span class="n">✓</span><span class="t">Check and submit</span></button></li></ol>' +
+    '<div class="saved">' + (sp.savedAt ? '● Draft saved ' + sp.savedAt : 'Saves when you move between sections') + '</div></aside>';
+}
+function sForm(s) {
+  const sp = ui.sup, sec = secs()[sp.step], E = secErrs(sec), d = D(), qs = activeQs(sec, d);
+  return '<div class="fgrid">' + sRail(s) + '<div class="pane"><span class="eyebrow">Section ' + (sp.step + 1) + ' of ' + secs().length + '</span><h2>' + esc(sec.title) + '</h2>' + (sec.intro ? '<p class="small muted">' + esc(sec.intro) + '</p>' : '') +
+    '<div class="demo"><span>Demo shortcut, to save you typing.</span><button class="btn sm" data-act="fillSec">Fill this section with sample answers</button></div>' +
+    (sp.visited[sp.step] && E.length ? '<div class="note bad" style="margin-bottom:12px" role="alert"><b>' + E.length + ' to fix</b><ul>' + E.map(e => '<li>' + esc(e) + '</li>').join('') + '</ul></div>' : '') +
+    (sec.builtin === 'details' ? fDetails() : sec.builtin === 'insurance' ? fIns() : sec.builtin === 'declaration' ? fDecl() : '') +
+    (qs.length ? '<div style="margin-top:' + (sec.builtin ? '16px' : '0') + '">' + (sec.builtin ? '<h3>More questions</h3>' : '') + qs.map(fQ).join('') + '</div>' : '') +
+    (!sec.builtin && !qs.length ? '<p class="muted">There is nothing to answer in this section for your kind of business.</p>' : '') +
+    '<div class="pfoot"><button class="btn" data-act="fBack" ' + (sp.step === 0 ? 'disabled' : '') + '>← Back</button><button class="btn pri" data-act="fNext">' + (sp.step === secs().length - 1 ? 'Check answers' : 'Save and continue') + ' →</button></div></div></div>';
+}
+function draftFlags(d) { const out = []; INS.forEach(([k, l]) => { const r = d.ins[k]; if (r.held === 'No' && insNeed(k, d.cat)) out.push(l + ' not held'); else if (r.held === 'Yes' && DB.rules.min[k] && +r.limit < DB.rules.min[k]) out.push(l + ' cover is below £' + DB.rules.min[k] + 'm'); }); return out; }
+function sReview(s) {
+  const d = D(), all = secs().map(x => [x, secErrs(x)]).filter(z => z[1].length), n = all.reduce((a, z) => a + z[1].length, 0), fl = draftFlags(d);
+  const files = INS.filter(([k]) => d.ins[k].file).length + Object.keys(d.a).filter(k => d.a[k] && typeof d.a[k] === 'object').length;
+  return '<div class="fgrid">' + sRail(s) + '<div class="pane"><span class="eyebrow">Last step</span><h2>Check and submit</h2>' +
+    (n ? '<div class="note bad"><b>' + plural(n, 'thing') + ' to fix before you can submit</b><ul>' + all.map(([x, e]) => '<li><b style="display:inline">' + esc(x.title) + ':</b> ' + e.map(esc).join('; ') + '</li>').join('') + '</ul></div>'
+       : '<div class="note good"><b>Everything is complete.</b><span>When you submit, your answers are locked and a copy is emailed to you.</span></div>') +
+    (fl.length ? '<div class="note warn" style="margin-top:10px"><b>' + esc(co()) + ' will look at:</b><span>' + fl.map(esc).join('; ') + '</span></div>' : '') +
+    '<div style="margin-top:14px">' + kv([['Company', d.company], ['What you supply', d.cat], ['Telephone', d.phone], ['Insurance policies held', String(INS.filter(([k]) => d.ins[k].held === 'Yes').length)], ['Files added', String(files)], ['Signed by', d.decl.name + (d.decl.pos ? ', ' + d.decl.pos : '')]]) + '</div>' +
+    '<div class="pfoot"><button class="btn" data-act="rBack">← Back</button><button class="btn pri" data-act="submit" ' + (n ? 'disabled' : '') + '>Submit questionnaire</button></div></div></div>';
+}
+function sDone(s) {
+  return '<div class="sbox"><div style="font-size:30px;color:var(--good);font-weight:700" aria-hidden="true">✓</div><h2>Thank you. Your questionnaire has been submitted.</h2><p>Reference <span class="id" style="font-size:15px">' + esc(s.ref) + '</span> · ' + (s.sub ? fmtT(s.sub.at) : '') + '</p>' +
+    '<p class="muted">A copy has been emailed to ' + esc(s.email) + '. ' + esc(co()) + ' will review it, usually within five working days.</p>' +
+    '<div class="demo" style="margin:14px 0 0"><span>That is the supplier’s part done. Now see it from the office.</span><button class="btn pri sm" data-act="seeOffice">See what the office received →</button></div></div>';
+}
+function saveDraft() {
+  const s = curSup(); if (!D()) return;
+  ui.sup.savedAt = nowStamp().slice(11);
+  s.draft = clone(D());
+  if (FLOW.indexOf(s.stage) < 4) { stage(s, 'In progress'); log(s, 'Supplier started filling in; draft saved'); }
+  save();
+}
+function fillSection() {
+  const s = curSup(), d = D(), sec = secs()[ui.sup.step], slug = fileSlug(s.name);
+  if (sec.builtin === 'details') { const set = (k, v) => { if (!String(d[k] || '').trim()) d[k] = v; };
+    set('cat', s.cat || 'Other'); set('addr', '14 Sample Street, Aldermoor AM1 1AA'); set('phone', '01632 960123'); set('contact', s.contact); set('position', s.position || 'Director'); set('supplies', 'Goods and services for the demo.'); set('years', '6'); }
+  if (sec.builtin === 'insurance') INS.forEach(([k]) => { const r = d.ins[k]; if (r.held) return;
+    if (insNeed(k, d.cat)) Object.assign(r, { held: 'Yes', limit: String(Math.max(5, DB.rules.min[k] || 0)), insurer: 'Northmere Mutual', exp: dIso(240), file: { name: slug + '-' + k + '-certificate.pdf' } }); else r.held = 'No'; });
+  if (sec.builtin === 'declaration') { if (!d.decl.name.trim()) d.decl.name = s.contact; if (!d.decl.pos.trim()) d.decl.pos = d.position || 'Director'; d.decl.ok = true; }
+  activeQs(sec, d).forEach(x => { const v = d.a[x.id]; if (v === undefined || v === '' || v === null) Object.assign(d.a, sampleAnswer(x, slug)); if (x.type === 'ynfile' && d.a[x.id] === 'Yes' && !d.a[x.id + '_file']) d.a[x.id + '_file'] = { name: slug + '-' + x.id.toLowerCase() + '-certificate.pdf' }; if (x.follow && d.a[x.id] === 'Yes' && !d.a[x.id + '_more']) d.a[x.id + '_more'] = 'Sample detail for the demo.'; });
+  render(); toast('Sample answers added. Change anything you like.');
+}
+
+/* ================= actions ================= */
+function setRole(r) {
+  if (r === ui.role) return;
+  if (ui.role === 'sup' && D()) saveDraft();
+  ui.role = r;
+  if (r === 'sup') { ui.sup = { stage: 'inbox', mail: 0, codeSent: false, step: 0, visited: {}, draft: null, form: null }; if (ui.sel && !find(ui.sel).decision) ui.supId = ui.sel; }
+  render(); window.scrollTo(0, 0);
+}
+function resetSup(id) { ui.supId = id; ui.sup = { stage: 'inbox', mail: 0, codeSent: false, step: 0, visited: {}, draft: null, form: null }; }
+const note = () => { const n = document.getElementById('revNote'); return n ? n.value.trim() : ''; };
+function goStep(i) { ui.sup.visited[ui.sup.step] = 1; ui.sup.step = i; ui.sup.stage = 'form'; saveDraft(); render(); window.scrollTo(0, 0); }
+const ACT = {
+  role: b => setRole(b.dataset.role),
+  tab: b => { ui.tab = b.dataset.tab; ui.sel = null; if (ui.tab !== 'invites') ui.prefill = ''; render(); window.scrollTo(0, 0); },
+  filter: b => { ui.tab = 'register'; ui.sel = null; ui.f = b.dataset.f; if (!b.classList.contains('chip')) { ui.cat = ''; ui.q = ''; } render(); },
+  cat: b => { ui.cat = b.dataset.cat; render(); },
+  sort: b => { const k = b.dataset.k; ui.dir = ui.sort === k ? -ui.dir : 1; ui.sort = k; render(); },
+  open: b => { ui.sel = b.dataset.id; render(); window.scrollTo(0, 0); },
+  back: () => { ui.sel = null; render(); },
+  jump: b => { const el = document.getElementById(b.dataset.to); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 60; window.scrollTo({ top: y, behavior: 'smooth' }); } },
+  closeModal: closeModal,
+  ovl: (b, e) => { if (e.target === b) closeModal(); },
+  /* invitations */
+  remind: b => { const s = find(b.dataset.id); s.reminders.push(nowStamp()); log(s, 'Reminder emailed to supplier', me().name); save(); render(); toast('Reminder sent to ' + s.contact); },
+  revoke: b => { const s = find(b.dataset.id); s.revoked = true; log(s, 'Link cancelled', me().name); save(); render(); toast('Link cancelled'); },
+  asSupplier: b => { if (ui.role === 'sup' && D()) saveDraft(); ui.role = 'sup'; resetSup(b.dataset.id); render(); window.scrollTo(0, 0); },
+  reinvite: b => { ui.prefill = find(b.dataset.id).name; ui.sel = null; ui.tab = 'invites'; render(); window.scrollTo(0, 0); const n = document.getElementById('iName'); if (n) n.focus(); },
+  chaseIns: b => { const s = find(b.dataset.id); log(s, 'Asked the supplier for a renewed insurance certificate', me().name); save(); render(); toast('Email sent to ' + s.contact + ' asking for a new certificate'); },
+  insModal: b => insModal(b.dataset.id),
+  record: b => openRecord(b.dataset.id),
+  /* review */
+  hsPass: b => { const s = find(b.dataset.id), n = note(); s.hs = { by: me().name, at: nowStamp(), ok: true, note: n }; log(s, 'Health and safety check passed' + (n ? ': ' + n : ''), me().name); save(); render(); toast('Passed. Now waiting for ' + person('sm').name + '.'); },
+  hsFail: b => { const s = find(b.dataset.id), n = note(); if (!n) { toast('Add a note saying what is not acceptable'); const el = document.getElementById('revNote'); if (el) el.focus(); return; }
+    s.hs = { by: me().name, at: nowStamp(), ok: false, note: n }; log(s, 'Health and safety answers not acceptable: ' + n, me().name); save(); render(); toast('Recorded. ' + person('sm').name + ' can now ask the supplier for changes.'); },
+  recommend: b => { const s = find(b.dataset.id), n = note(); s.rec = { by: me().name, at: nowStamp() }; log(s, 'Recommended for approval' + (n ? ': ' + n : ''), me().name); save(); render(); toast('Recommended. Now waiting for ' + person('dm').name + '.'); },
+  changes: b => { const s = find(b.dataset.id), n = note(); if (!n) { toast('Add a note telling the supplier what to change'); const el = document.getElementById('revNote'); if (el) el.focus(); return; }
+    s.changes = { by: me().name, at: nowStamp(), note: n }; s.draft = clone(s.sub.data); s.draft.decl.ok = false; s.hs = null; s.rec = null; s.stage = 'In progress'; s.expiresAt = dIso(14); s.code = null;
+    log(s, 'Changes requested: ' + n + '. Link reopened for 14 days', me().name); save(); render(); toast('The supplier has been emailed and their link is open again'); },
+  approve: b => { const s = find(b.dataset.id), n = note(); s.decision = { by: me().name, at: nowStamp(), outcome: 'Approved', note: n }; s.stage = 'Decided'; log(s, 'Approved; next review in ' + Math.round(DB.rules.reviewDays / 30.4) + ' months' + (n ? '. ' + n : ''), me().name); save(); render(); toast(s.name + ' is now an approved supplier'); },
+  reject: b => { const s = find(b.dataset.id), n = note(); if (!n) { toast('Add a note giving the reason'); const el = document.getElementById('revNote'); if (el) el.focus(); return; }
+    s.decision = { by: me().name, at: nowStamp(), outcome: 'Rejected', note: n }; s.stage = 'Decided'; log(s, 'Rejected: ' + n, me().name); save(); render(); toast('Rejected. The supplier has been told.'); },
+  /* settings */
+  addQ: b => qModal(b.dataset.sid, null),
+  editQ: b => qModal(b.dataset.sid, +b.dataset.i),
+  editSec: b => secModal(b.dataset.sid),
+  addSec: () => secModal(null),
+  mvQ: b => { const f = clone(DB.form), s = f.sections.find(z => z.id === b.dataset.sid), a = +b.dataset.i, d = +b.dataset.d, c = a + d; if (c < 0 || c >= s.questions.length) return; const t = s.questions[a]; s.questions[a] = s.questions[c]; s.questions[c] = t; saveForm(f, 'Moved ' + t.id + (d < 0 ? ' up' : ' down') + ' in ' + s.title); },
+  dupQ: b => { const f = clone(DB.form), s = f.sections.find(z => z.id === b.dataset.sid), x = clone(s.questions[+b.dataset.i]); x.id = nextId(s); x.text += ' (copy)'; s.questions.splice(+b.dataset.i + 1, 0, x); saveForm(f, 'Duplicated as ' + x.id + ' in ' + s.title); },
+  retQ: b => { const f = clone(DB.form), s = f.sections.find(z => z.id === b.dataset.sid), x = s.questions[+b.dataset.i]; x.status = x.status === 'active' ? 'retired' : 'active'; saveForm(f, (x.status === 'retired' ? 'Retired ' : 'Restored ') + x.id); },
+  /* supplier */
+  mail: b => { ui.sup.mail = +b.dataset.i; render(); },
+  supStage: b => { ui.sup.stage = b.dataset.stage; render(); },
+  follow: () => { const s = curSup(); ui.sup.stage = 'link'; ui.sup.codeSent = false; if (!linkProblem(s) && s.stage === 'Invited') { stage(s, 'Opened'); log(s, 'Link opened by supplier'); save(); } render(); window.scrollTo(0, 0); },
+  sendCode: () => { const s = curSup(); s.code = String(Math.floor(100000 + Math.random() * 900000)); s.codeAt = nowStamp(); ui.sup.codeSent = true; ui.sup.tries = 0; log(s, 'One-time sign-in code emailed to ' + s.email); save(); render(); const c = document.getElementById('c0'); if (c) c.focus(); },
+  useCode: () => { const s = curSup(); s.code.split('').forEach((ch, i) => { const el = document.getElementById('c' + i); if (el) el.value = ch; }); },
+  verify: () => { const s = curSup(), code = [0, 1, 2, 3, 4, 5].map(i => document.getElementById('c' + i).value).join(''), er = document.getElementById('cerr');
+    if (code.length < 6) { er.textContent = 'Enter all 6 digits.'; return; }
+    if (code !== s.code) { ui.sup.tries = (ui.sup.tries || 0) + 1; er.textContent = ui.sup.tries >= 5 ? 'Too many wrong codes. Ask for a new one.' : 'That code isn’t right.'; return; }
+    ui.sup.stage = 'confirm'; stage(s, 'Signed in'); log(s, 'Email checked with a one-time code; supplier signed in'); save(); render(); },
+  privacy: () => openPrivacy(),
+  privOk: () => { ui.sup.privOpened = true; ui.sup.cfPriv = true; closeModal(); render(); },
+  startForm: () => { const a = document.getElementById('cfCo'), p = document.getElementById('cfPriv'); if (!a.checked || !p.checked) { toast(ui.sup.privOpened ? 'Please tick both boxes to continue' : 'Open the privacy notice, then tick both boxes'); return; }
+    const s = curSup(), base = blankDraft(s); ui.sup.draft = s.draft ? Object.assign(base, clone(s.draft)) : base; INS.forEach(([k]) => { if (!ui.sup.draft.ins[k]) ui.sup.draft.ins[k] = base.ins[k]; });
+    ui.sup.form = clone(DB.form); ui.sup.stage = 'form'; ui.sup.visited = {}; ui.sup.step = Math.min(firstOpen(), secs().length - 1);
+    stage(s, 'Confirmed'); log(s, 'Company confirmed; ' + PRIV_VERSION + ' read and accepted; questionnaire v' + DB.form.version); save(); render(); window.scrollTo(0, 0); },
+  forward: () => { const n = document.getElementById('fwName').value.trim(), em = document.getElementById('fwEmail').value.trim(); if (!n || !EMAIL.test(em)) { toast('Enter your colleague’s name and email'); return; }
+    const s = curSup(), old = s.contact; s.contact = n; s.email = em; s.code = null; s.sentAt = nowStamp(); s.expiresAt = dIso(DB.rules.linkDays); s.stage = 'Invited'; s.reminders = [];
+    log(s, 'Passed on by ' + old + ' to ' + n + ' (' + em + '); the old link no longer works and a new one was sent'); save(); resetSup(s.id); render(); toast('Sent to ' + n); },
+  signOut: () => { if (D()) saveDraft(); ui.sup.stage = 'inbox'; ui.sup.codeSent = false; render(); },
+  setv: b => { setv(b.dataset.p, b.dataset.v); render(); },
+  ans: b => { D().a[b.dataset.id] = b.dataset.v; render(); },
+  sampleFile: b => { const s = curSup(), key = b.dataset.key, rec = { name: fileSlug(s.name) + '-' + key.replace(/^ins\.|\.file$|_file$/g, '').toLowerCase() + '-certificate.pdf' }; if (b.dataset.kind === 'p') setv(key, rec); else D().a[key] = rec; render(); },
+  fillSec: fillSection,
+  step: b => { const i = +b.dataset.i; if (locked(i)) { toast('Finish the earlier sections first'); return; } goStep(i); },
+  toReview: () => { if (firstOpen() < secs().length) { toast('Finish all sections first'); return; } secs().forEach((_, i) => { ui.sup.visited[i] = 1; }); ui.sup.stage = 'review'; saveDraft(); render(); window.scrollTo(0, 0); },
+  fNext: () => { const sp = ui.sup; if (secErrs(secs()[sp.step]).length) { sp.visited[sp.step] = 1; saveDraft(); render(); window.scrollTo(0, 0); toast('Please complete this section before moving on'); return; }
+    if (sp.step + 1 >= secs().length) ACT.toReview(); else goStep(sp.step + 1); },
+  fBack: () => goStep(Math.max(0, ui.sup.step - 1)),
+  rBack: () => { ui.sup.stage = 'form'; ui.sup.step = secs().length - 1; render(); },
+  submit: () => { const s = curSup(), t = nowStamp(), again = !!s.changes;
+    s.sub = { at: t, form: clone(F()), data: clone(D()) }; s.draft = null; s.changes = null; s.hs = null; s.rec = null; s.stage = 'Submitted';
+    log(s, (again ? 'Submitted again' : 'Submitted') + ' and signed by ' + D().decl.name + '; answers locked (questionnaire v' + F().version + ')'); log(s, 'Record copy created and emailed to ' + s.email);
+    ui.sup.draft = null; ui.sup.stage = 'done'; save(); render(); window.scrollTo(0, 0); },
+  seeOffice: () => { const s = curSup(); ui.role = 'sm'; ui.tab = 'register'; ui.sel = s.id; render(); window.scrollTo(0, 0); }
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const fn = ACT[b.dataset.act]; if (!fn) return;
+  if (b.tagName === 'A') e.preventDefault();
+  fn(b, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && mRoot().innerHTML) { closeModal(); return; }
+  const t = e.target;
+  if (e.key === 'Enter' && t.matches && t.matches('tr[data-act]')) ACT.open(t);
+  if (t.closest && t.closest('#codeIn')) { const i = +t.id.slice(1); if (e.key === 'Backspace' && !t.value && i > 0) document.getElementById('c' + (i - 1)).focus(); if (e.key === 'Enter') ACT.verify(); }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'q') { ui.q = t.value.trim().toLowerCase(); render(); return; }
+  if (t.closest('#codeIn')) { t.value = t.value.replace(/\D/g, '').slice(-1); const n = document.getElementById('c' + (+t.id.slice(1) + 1)); if (t.value && n) n.focus(); return; }
+  if (t.dataset.p && D()) { setv(t.dataset.p, t.value); return; }
+  if (t.dataset.txt && D()) { D().a[t.dataset.txt] = t.value; }
+});
+document.addEventListener('paste', e => {
+  if (!e.target.closest || !e.target.closest('#codeIn')) return;
+  const t = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\D/g, '').slice(0, 6); if (!t) return;
+  e.preventDefault(); t.split('').forEach((c, j) => { const el = document.getElementById('c' + j); if (el) el.value = c; });
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'roleSel') { setRole(t.value); return; }
+  if (t.id === 'supPick') { if (D()) saveDraft(); resetSup(t.value); render(); return; }
+  if (t.id === 'cfCo') { ui.sup.cfCo = t.checked; return; }
+  if (t.id === 'cfPriv') { ui.sup.cfPriv = t.checked; return; }
+  if (t.id === 'declOk' && D()) { D().decl.ok = t.checked; return; }
+  if (t.dataset.up && D()) { const f = t.files && t.files[0]; if (!f) return; if (f.size > 10 * 1024 * 1024) { toast('That file is over 10 MB'); return; } const rec = { name: f.name }; if (t.dataset.up === 'p') setv(t.dataset.key, rec); else D().a[t.dataset.key] = rec; render(); return; }
+  if (t.dataset.rule) { const k = t.dataset.rule, v = Math.max(0, Math.round(+t.value || 0)), isMin = k.indexOf('min.') === 0, label = t.closest('.field').querySelector('label').textContent;
+    if (!isMin && v < 1) { toast('Enter 1 or more'); render(); return; }
+    if (isMin) DB.rules.min[k.slice(4)] = v; else DB.rules[k] = v;
+    DB.formlog.unshift({ at: nowStamp(), version: DB.form.version, text: 'Rule changed: ' + label + ' is now ' + v, by: me().name }); save(); render(); toast('Rule saved'); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'inviteForm') return;
+  e.preventDefault();
+  const f = e.target, name = f.iCo.value.trim(), nm = f.iName.value.trim(), em = f.iEmail.value.trim();
+  f.iCo.classList.toggle('err', !name); f.iName.classList.toggle('err', !nm); f.iEmail.classList.toggle('err', !EMAIL.test(em));
+  if (!name || !nm || !EMAIL.test(em)) { toast('Fill in the company, a contact name and a valid email'); return; }
+  const t = nowStamp();
+  let s = DB.sups.find(x => x.name.toLowerCase() === name.toLowerCase() && (x.decision && x.decision.outcome === 'Rejected' || x.revoked || !x.sub && !x.decision));
+  DB.seq += 1;
+  const fresh = { ref: 'SQ-' + (1040 + DB.seq), cat: f.iCat.value, contact: nm, email: em, purpose: s ? 'Invited again' : 'New supplier', sentAt: t, expiresAt: dIso(DB.rules.linkDays), stage: 'Invited', revoked: false, reminders: [], code: null, codeAt: null, draft: null, sub: null, hs: null, rec: null, decision: null, changes: null };
+  if (s) Object.assign(s, fresh);
+  else { s = Object.assign({ id: 'SUP-' + pad(DB.sups.length + 1, 4), name, position: '', phone: '', events: [] }, fresh); DB.sups.push(s); }
+  log(s, 'Invitation emailed to ' + em + ' (' + fresh.purpose.toLowerCase() + '), questionnaire v' + DB.form.version, me().name);
+  ui.prefill = ''; resetSup(s.id); save(); render();
+  toast('Sent ' + s.ref + ' to ' + nm + '. Change “View as” to “A supplier” to see the email.');
+});
+
+/* ---------- start ---------- */
+DB = Su.load('suppliers', VERSION);
+if (!DB || !Array.isArray(DB.sups) || !DB.form || !DB.rules) DB = seed();
+const slot = document.getElementById('suite-slot');
+if (slot) slot.innerHTML = '<label><span>View as</span> <select id="roleSel" aria-label="View as">' + STAFF.map(id => '<option value="' + id + '">' + esc(person(id).name) + ' · ' + esc(person(id).role) + '</option>').join('') + '<option value="sup">A supplier (outside the company)</option></select></label>';
+const tryPanel = document.getElementById('suite-try');
+if (tryPanel) { const upd = () => document.body.classList.toggle('try-open', !tryPanel.hidden); new MutationObserver(upd).observe(tryPanel, { attributes: true, attributeFilter: ['hidden'] }); upd(); }
+Su.onChange(render);
+render();
+window.SuppliersDemo = { summary: summary, state: () => DB };
+})();
+</script>
+</body>
+</html>

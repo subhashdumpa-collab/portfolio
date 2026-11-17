@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subhash · Simple software for small businesses</title>
+<meta name="description" content="I turn the spreadsheets and paper forms a small business runs on into simple software: vehicle checks, training matrix, document control and supplier approval. Fixed price, agreed before I start. Try the working demo.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563EB'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/scrollcraft.css">
+<noscript><style>[data-sc-in],[data-sc-stagger]>*,[data-sc-cue]{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* Theme: six colours and two faces. The accent is the visitor's own pick, set from the script below. */
+  :root {
+    --sc-canvas:     #F3F5F2;
+    --sc-surface:    #FFFFFF;
+    --sc-ink:        #13201D;
+    --sc-ink-soft:   #4A5853;
+    --sc-accent:     #0F766E;
+    --sc-accent-ink: #FFFFFF;
+    --sc-font-display: "Archivo", system-ui, sans-serif;
+    --sc-font-text:    "Geist", system-ui, sans-serif;
+    --sc-font-mono:    "Geist Mono", ui-monospace, monospace;
+    --accent-text: var(--sc-accent);
+    --tint: #E3ECE8;
+    --lift: 0 1px 2px rgb(18 22 28 / .06), 0 12px 32px -8px rgb(18 22 28 / .16), 0 32px 64px -24px rgb(18 22 28 / .18);
+    --close-bg: #0F1F1C; --close-ink: #F3F5F2; --close-soft: #A9BDB6;
+    --bar-h: 3.75rem;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --sc-canvas: #0C1412; --sc-surface: #131D1A; --sc-ink: #ECF3F0; --sc-ink-soft: #A3B3AD;
+      --accent-text: color-mix(in oklab, var(--sc-accent) 50%, white);
+      --tint: #1A2622;
+      --lift: 0 1px 2px rgb(0 0 0 / .4), 0 16px 40px -10px rgb(0 0 0 / .6);
+      --close-bg: #08100E; --close-ink: #ECF3F0; --close-soft: #A3B3AD;
+      color-scheme: dark;
+    }
+  }
+  html { scroll-padding-top: var(--bar-h); }
+  h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+  h2.sc-display, h1.sc-display { font-weight: 600; }
+  h3 { font-family: var(--sc-font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
+  .soft { color: var(--sc-ink-soft); }
+  [hidden] { display: none !important; }
+
+  /* ---- top bar ---- */
+  .bar { position: fixed; inset: 0 0 auto 0; z-index: 60; height: var(--bar-h); display: flex; align-items: center; gap: 2rem;
+    padding-inline: var(--sc-gutter); background: var(--sc-canvas); border-bottom: 1px solid var(--sc-hairline); }
+  .mark { display: inline-flex; align-items: baseline; gap: .6rem; text-decoration: none; white-space: nowrap; }
+  .mark b { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.1rem; letter-spacing: -0.01em; }
+  .mark span { font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+  .bar nav { margin-left: auto; display: flex; align-items: center; gap: 1.75rem; font-size: var(--sc-t-sm); }
+  .bar nav a:not(.btn) { white-space: nowrap; text-decoration: none; color: var(--sc-ink-soft); transition: color 140ms var(--sc-ease-out); }
+  .bar nav a:not(.btn):hover { color: var(--sc-ink); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: 0 1.15rem; border-radius: 10px;
+    border: 1px solid transparent; background: var(--sc-accent); color: var(--sc-accent-ink); font-weight: 600; font-size: var(--sc-t-sm);
+    text-decoration: none; white-space: nowrap; cursor: pointer; transition: filter 140ms var(--sc-ease-out), transform 120ms var(--sc-ease-out); }
+  .btn:hover { filter: brightness(1.1); }
+  .btn:active { transform: translateY(1px); }
+  .btn--quiet { background: transparent; color: inherit; border-color: color-mix(in oklab, currentColor 30%, transparent); }
+  .btn--sm { min-height: 2.25rem; padding: 0 .9rem; }
+  .link { font-weight: 600; color: var(--accent-text); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .25em; }
+  .link:hover { text-decoration-thickness: 2px; }
+
+  /* ---- 1. intro: Subhash first ---- */
+  .intro { min-height: 100svh; display: grid; align-items: center; padding: calc(var(--bar-h) + 2rem) 0 3rem; }
+  .intro__grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .65fr); gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+  .intro h1 { font-size: clamp(2.4rem, 1.3rem + 3.6vw, 4.6rem); line-height: .98; max-width: 14ch; }
+  .intro__me { margin-top: 1.75rem; font-size: var(--sc-t-lg); line-height: 1.5; letter-spacing: -0.01em; color: var(--sc-ink-soft); max-width: 48ch; text-wrap: pretty; }
+  .intro__me b { color: var(--sc-ink); font-weight: 600; }
+  .intro__cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+  .intro__cta .btn { min-height: 3.1rem; padding: 0 1.4rem; font-size: var(--sc-t-base); }
+  .photo { position: relative; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; background: var(--tint); box-shadow: var(--lift); }
+  .photo img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: 50% 20%; }
+  .photo__ph { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: .75rem; text-align: center; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
+  .photo__ph b { display: grid; place-items: center; width: 5.5rem; height: 5.5rem; border-radius: 50%; background: var(--sc-accent); color: var(--sc-accent-ink);
+    font: 600 2.4rem var(--sc-font-display); }
+
+  /* ---- 2. a day like this: the spreadsheet becomes the tool ---- */
+  .story__stage { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(2rem, 5vw, 5rem); align-items: center;
+    padding: calc(var(--bar-h) + 1rem) var(--sc-gutter) 1.5rem; }
+  .story h2 { font-size: clamp(2rem, 1.2rem + 2.4vw, 3.4rem); max-width: 13ch; }
+  .moments { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .5rem; }
+  .moments button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; gap: .8rem; align-items: baseline; width: 100%; padding: .8rem 1rem; border-radius: 10px;
+    border: 1px solid var(--sc-hairline-strong); font-size: var(--sc-t-sm); line-height: 1.35; color: var(--sc-ink-soft); transition: color 140ms var(--sc-ease-out), border-color 140ms var(--sc-ease-out), background-color 140ms var(--sc-ease-out); }
+  .moments button::before { content: ""; flex: none; width: .55rem; height: .55rem; border-radius: 50%; border: 1.5px solid currentColor; translate: 0 -.05em; }
+  .moments button:hover { color: var(--sc-ink); border-color: color-mix(in oklab, var(--sc-ink) 35%, transparent); }
+  .moments button[aria-pressed="true"] { color: var(--sc-ink); font-weight: 500; background: var(--sc-surface); border-color: var(--sc-accent); }
+  .moments button[aria-pressed="true"]::before { background: var(--sc-accent); border-color: var(--sc-accent); }
+  .moments button:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+
+  .surface { position: relative; background: var(--sc-surface); border: 1px solid var(--sc-hairline-strong); border-radius: 14px; box-shadow: var(--lift);
+    overflow: hidden; font-size: 13px; line-height: 1.3; letter-spacing: 0; --M: 1; }
+  .sf-top { position: relative; height: 42px; border-bottom: 1px solid var(--sc-hairline); }
+  .sf-sheetbar, .sf-appbar { position: absolute; inset: 0; display: flex; align-items: center; gap: .6rem; padding: 0 12px; white-space: nowrap; overflow: hidden; }
+  .sf-sheetbar { opacity: calc(1 - var(--M)); font: 12px var(--sc-font-mono); color: var(--sc-ink-soft); }
+  .sf-sheetbar i { flex: none; width: 16px; height: 16px; border-radius: 3px; background: #1D7A46; }
+  .sf-sheetbar span { overflow: hidden; text-overflow: ellipsis; }
+  .sf-appbar { opacity: var(--M); }
+  .sf-badge { flex: none; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 5px; border-radius: 7px; background: var(--sc-accent); color: var(--sc-accent-ink); font-weight: 700; font-size: 10.5px; }
+  .sf-co { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  .sf-crumb { color: var(--sc-ink-soft); }
+  .sf-crumb::before { content: "/"; margin-right: .6rem; opacity: .5; }
+  .sf-flag { margin-left: auto; font-size: 12px; font-weight: 600; color: #B42318; background: #FEE4E2; border-radius: 999px; padding: 3px 9px; }
+
+  .sf-body { position: relative; padding: 10px; --cw: 120px; --rh: 30px; --gut: 26px; }
+  .sf-lines { position: absolute; inset: 0; pointer-events: none; opacity: calc(1 - var(--M)); overflow: hidden;
+    background-image: linear-gradient(to right, var(--sc-hairline-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--sc-hairline-strong) 1px, transparent 1px);
+    background-size: var(--cw) var(--rh); background-position: var(--gut) -1px; }
+  .sf-lines::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--gut); background: var(--tint); }
+  .sf-lines::after { content: ""; position: absolute; inset: 0 0 auto 0; height: var(--rh); background: color-mix(in oklab, var(--tint) 70%, transparent); border-bottom: 1px solid var(--sc-hairline-strong); }
+  .sf-cell { position: absolute; z-index: 1; left: calc(var(--gut) + var(--c) * var(--cw)); top: calc(var(--r) * var(--rh)); width: var(--cw); height: var(--rh);
+    display: flex; align-items: center; padding: 0 7px; white-space: nowrap; overflow: hidden; font-size: 12px; }
+  .sf-cell--h { font-weight: 600; }
+  .sf-cell--n { left: 0; width: var(--gut); justify-content: center; padding: 0; font: 10.5px var(--sc-font-mono); color: var(--sc-ink-soft); }
+  .sf-cell--red { background: rgb(240 68 56 / .3); }
+  .sf-cell--yel { background: rgb(250 204 21 / .42); }
+  .sf-cell--err { font-family: var(--sc-font-mono); color: #B42318; }
+
+  .sf-rows { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .sf-row { position: relative; display: grid; grid-template-columns: minmax(5.6rem, auto) minmax(0, 1.15fr) minmax(0, 1fr) auto minmax(6.6rem, auto); align-items: center; gap: 12px; height: 46px; padding: 0 12px; --m: 1; }
+  .sf-row::before { content: ""; position: absolute; inset: 0; border-radius: 9px; border: 1px solid var(--sc-hairline); background: var(--sc-canvas); opacity: var(--m); }
+  .sf-v { position: relative; justify-self: start; white-space: nowrap; max-width: 100%; will-change: transform;
+    transform: translate3d(calc(var(--dx, 0px) * (1 - var(--m))), calc(var(--dy, 0px) * (1 - var(--m))), 0); }
+  .sf-t { overflow: hidden; text-overflow: ellipsis; color: var(--sc-ink-soft); }
+  .sf-t--strong { color: var(--sc-ink); font-weight: 600; }
+  .sf-date { font-variant-numeric: tabular-nums; color: var(--sc-ink-soft); }
+  .sf-chip { isolation: isolate; font: 600 12px var(--sc-font-mono); padding: 3px 7px; }
+  .sf-chip::before, .sf-st::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: var(--m); }
+  .sf-chip::before { border-radius: 4px; background: var(--tint); }
+  .sf-chip--plate { color: color-mix(in oklab, #1A1400 calc(var(--m) * 100%), var(--sc-ink)); }
+  .sf-chip--plate::before { background: #FACC15; }
+  .sf-st { isolation: isolate; justify-self: end; font-weight: 600; font-size: 12px; padding: 3px 9px; color: color-mix(in oklab, var(--st-ink) calc(var(--m) * 100%), var(--sc-ink)); }
+  .sf-st::before { border-radius: 999px; background: var(--st-bg); }
+  [data-st="bad"]  { --st-bg: #FEE4E2; --st-ink: #B42318; }
+  [data-st="warn"] { --st-bg: #FEF0C7; --st-ink: #93370D; }
+  [data-st="ok"]   { --st-bg: #D1FADF; --st-ink: #05603A; }
+
+  .story__caps { position: relative; height: 3.4em; margin-top: 1.1rem; }
+  .story__caps p { position: absolute; inset: 0 auto auto 0; max-width: 46ch; font-size: var(--sc-t-base); color: var(--sc-ink); }
+  .story__go { margin-top: .5rem; font-size: var(--sc-t-sm); }
+  .flip { display: none; margin-top: .75rem; }
+  .is-still .flip { display: inline-flex; }
+
+  /* ---- 3. what it costs ---- */
+  .costs h2 { max-width: 16ch; }
+  .costs__lede { margin-top: 1.5rem; }
+  .costs__list { list-style: none; padding: 0; margin: clamp(2.5rem, 5vw, 4rem) 0 0; }
+  .costs__list li { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 1rem 3rem; align-items: baseline; padding-block: 1.5rem; border-top: 1px solid var(--sc-hairline-strong); }
+  .costs__list b { font-family: var(--sc-font-display); font-weight: 500; font-size: var(--sc-t-xl); line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance; }
+  .costs__list span { color: var(--sc-ink-soft); }
+
+  /* ---- 4. the tools: a rail ---- */
+  .tools [data-sc-stage] { display: flex; align-items: center; padding-top: var(--bar-h); background: var(--sc-surface); }
+  .rail { gap: clamp(1.75rem, 3.5vw, 3.5rem); padding-inline: var(--sc-gutter); align-items: flex-start; }
+  .rail > * { flex: none; width: clamp(17.5rem, 34vw, 30rem); }
+  .rail__lead { align-self: center; }
+  .rail__lead p { margin-top: 1.1rem; }
+  .setup { margin-top: 1.75rem; }
+  .setup label { display: block; font-weight: 600; font-size: var(--sc-t-sm); margin-bottom: .45rem; }
+  .setup__row { display: flex; gap: .6rem; }
+  .setup input { flex: 1; min-width: 0; min-height: 2.75rem; padding: 0 .9rem; border-radius: 10px; border: 1px solid var(--sc-hairline-strong); background: var(--sc-canvas); }
+  .setup input::placeholder { color: color-mix(in oklab, var(--sc-ink-soft) 70%, transparent); }
+  .swatches { display: flex; gap: .5rem; margin-top: .8rem; }
+  .swatch { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 0; padding: 0; cursor: pointer; position: relative; transition: transform 140ms var(--sc-ease-out); }
+  .swatch::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--sc-ink); opacity: 0; transition: opacity 140ms var(--sc-ease-out); }
+  .swatch[aria-pressed="true"]::after { opacity: 1; }
+  .swatch:active { transform: scale(.94); }
+  .note { margin-top: .8rem; font-size: var(--sc-t-xs); color: var(--sc-ink-soft); max-width: 44ch; }
+  .tool { display: block; text-decoration: none; }
+  .tool figure { border-radius: 12px; overflow: hidden; border: 1px solid var(--sc-hairline-strong); box-shadow: var(--lift); aspect-ratio: 16 / 10; background: var(--tint); }
+  .tool img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: left top; }
+  .tool h3 { margin-top: 1.5rem; font-size: var(--sc-t-xl); }
+  .tool .replaces { margin-top: .5rem; color: var(--sc-ink); }
+  .tool ul { margin-top: .9rem; padding: 0; list-style: none; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
+  .tool li { padding-block: .35rem; border-top: 1px solid var(--sc-hairline); }
+  .tool .go { display: inline-block; margin-top: 1rem; }
+
+  /* ---- 5. when people get in touch ---- */
+  .when__lede { margin-top: 1.5rem; font-size: var(--sc-t-xl); line-height: 1.3; letter-spacing: -0.02em; max-width: 34ch; text-wrap: balance; }
+  .kinds { margin-top: clamp(3.5rem, 7vw, 6rem); }
+  .kinds dl { margin-top: 1.5rem; }
+  .kinds dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: .5rem 3rem; padding-block: 1.4rem; border-top: 1px solid var(--sc-hairline-strong); }
+  .kinds dt { font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-lg); line-height: 1.2; letter-spacing: -0.015em; }
+  .kinds dd small { display: block; margin-top: .5rem; font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+
+  /* ---- 6. your own spreadsheet ---- */
+  .own { background: var(--sc-surface); }
+  .own__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem 4rem; align-items: end; }
+  .drop { margin-top: 2rem; display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.25rem; padding: 1.5rem; border: 1.5px dashed var(--sc-hairline-strong); border-radius: 14px; background: var(--sc-canvas);
+    transition: border-color 140ms var(--sc-ease-out), background-color 140ms var(--sc-ease-out); }
+  .drop.is-over { border-color: var(--sc-accent); background: color-mix(in oklab, var(--sc-accent) 6%, var(--sc-canvas)); }
+  .drop p { flex: 1 1 16rem; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
+  .drop input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .reg { margin-top: 1.5rem; }
+  .reg__bar { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; justify-content: space-between; }
+  .reg__sum { font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+  .reg__sum b { color: var(--sc-ink); }
+  .reg__search { min-height: 2.5rem; width: min(100%, 18rem); padding: 0 .8rem; border-radius: 9px; border: 1px solid var(--sc-hairline-strong); background: var(--sc-canvas); }
+  .reg__wrap { margin-top: 1rem; max-height: 30rem; overflow: auto; border: 1px solid var(--sc-hairline-strong); border-radius: 12px; }
+  .reg table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .reg th { position: sticky; top: 0; z-index: 1; background: var(--tint); text-align: left; white-space: nowrap; }
+  .reg th button { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; padding: .6rem .75rem; font-weight: 600; }
+  .reg th button:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: -2px; }
+  .reg th button::after { content: attr(data-dir); margin-left: .35rem; color: var(--sc-ink-soft); }
+  .reg td { padding: .55rem .75rem; border-top: 1px solid var(--sc-hairline); white-space: nowrap; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; }
+  .reg td.is-bad { color: #B42318; font-weight: 600; }
+  .reg td.is-warn { color: #B54708; font-weight: 600; }
+  .pill { display: inline-block; font-weight: 600; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--st-bg); color: var(--st-ink); }
+  .pill[data-st="none"] { --st-bg: var(--tint); --st-ink: var(--sc-ink-soft); }
+  .reg__msg { margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 12px; background: var(--tint); }
+  @media (prefers-color-scheme: dark) { .reg td.is-bad { color: #F97066; } .reg td.is-warn { color: #FDB022; } }
+
+  /* ---- 7. how I work ---- */
+  .how__grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .how__head { position: sticky; top: calc(var(--bar-h) + 2rem); }
+  .how__head p { margin-top: 1.25rem; }
+  .steps { position: relative; list-style: none; margin: 0; padding: 0 0 0 3.25rem; counter-reset: s; --hp: 0; }
+  .steps::before, .steps::after { content: ""; position: absolute; left: 1rem; top: .4rem; bottom: .4rem; width: 2px; background: var(--sc-hairline-strong); }
+  .steps::after { background: var(--sc-accent); transform-origin: top; transform: scaleY(var(--hp)); }
+  .steps li { position: relative; counter-increment: s; padding-bottom: clamp(2rem, 4vw, 3.25rem); }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps li::before { content: counter(s); position: absolute; left: -3.25rem; top: -.15rem; z-index: 1; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+    background: var(--sc-canvas); border: 2px solid var(--sc-hairline-strong); font: 600 .9rem var(--sc-font-text); }
+  .steps h3 { font-size: var(--sc-t-xl); }
+  .steps p { margin-top: .5rem; color: var(--sc-ink-soft); max-width: 44ch; }
+
+  /* ---- 8. about ---- */
+  .about { background: var(--sc-surface); }
+  .about__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); align-items: end; }
+  .about h2 { max-width: 15ch; }
+  .about .sc-stack p { max-width: var(--sc-measure); }
+  .facts { list-style: none; margin: 0; padding: 0; }
+  .facts li { display: grid; grid-template-columns: 5.5rem 1fr; align-items: baseline; gap: 1rem; padding-block: 1.1rem; border-top: 1px solid var(--sc-hairline-strong); }
+  .facts b { font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-2xl); line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .facts span { color: var(--sc-ink-soft); }
+
+  /* ---- 9. close ---- */
+  .close__stage { background: var(--close-bg); color: var(--close-ink); display: grid; grid-template-rows: 1fr auto; padding: calc(var(--bar-h) + 2rem) var(--sc-gutter) 1.75rem; }
+  .close__in { align-self: center; max-width: 54rem; position: relative; z-index: 3; }
+  .close h2 { font-size: clamp(2.4rem, 1.4rem + 4vw, 5rem); }
+  .close p { margin-top: 1.5rem; font-size: var(--sc-t-lg); line-height: 1.45; color: var(--close-soft); max-width: 46ch; }
+  .close__cta { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 2.25rem; }
+  .close .btn { min-height: 3.25rem; padding: 0 1.6rem; font-size: var(--sc-t-base); }
+  .close__reach { margin-top: 1.5rem !important; font-size: var(--sc-t-base) !important; color: var(--close-soft); display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; }
+  .close__reach a { color: var(--close-ink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .25em; }
+  .foot { position: relative; z-index: 3; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 2rem; padding-top: 1.25rem; border-top: 1px solid color-mix(in oklab, var(--close-ink) 16%, transparent); font-size: var(--sc-t-xs); color: var(--close-soft); }
+
+  /* ---- small screens ---- */
+  @media (max-width: 1100px) { .mark span { display: none; } .bar nav { gap: 1.25rem; } }
+  @media (max-width: 900px) {
+    .bar nav a:not(.btn), .mark span { display: none; }
+    .intro { min-height: 0; padding-top: calc(var(--bar-h) + 1.5rem); }
+    .intro__grid { grid-template-columns: minmax(0, 1fr); }
+    .intro__photo { order: -1; }
+    .photo { width: 7rem; aspect-ratio: 1; border-radius: 50%; }
+    .photo__ph { display: block; }
+    .photo__ph b { width: 100%; height: 100%; border-radius: 0; font-size: 2.6rem; }
+    .photo__ph span { display: none; }
+    .intro__me { font-size: var(--sc-t-base); }
+    .story__stage { grid-template-columns: minmax(0, 1fr); align-content: start; gap: .9rem; padding-top: calc(var(--bar-h) + 1rem); }
+    .story h2 { font-size: var(--sc-t-xl); max-width: none; }
+    .moments { display: flex; gap: .5rem; margin: .8rem calc(var(--sc-gutter) * -1) 0; padding: 0 var(--sc-gutter) .3rem; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+    .moments li { flex: none; width: 15rem; scroll-snap-align: start; }
+    .moments button { height: 100%; padding: .6rem .8rem; font-size: 13px; }
+    .sf-row { grid-template-columns: minmax(4.9rem, auto) minmax(0, 1fr) auto; gap: 8px; height: 40px; padding: 0 9px; }
+    .sf-chip { font-size: 11px; padding: 3px 5px; }
+    .sf-st { font-size: 11px; padding: 3px 7px; }
+    .k-sm { display: none !important; }
+    .story__caps { margin-top: .6rem; font-size: var(--sc-t-sm); }
+    .costs__list li, .kinds dl > div, .own__head { grid-template-columns: minmax(0, 1fr); }
+    .how__grid, .about__grid { grid-template-columns: minmax(0, 1fr); }
+    .how__head { position: static; }
+    .rail > * { width: min(78vw, 22rem); }
+  }
+  @media (max-width: 900px) and (max-height: 760px) { .sf-row:nth-child(n+5) { display: none; } .story__go { display: none; } }
+  @media (max-width: 900px) and (max-height: 640px) { .sf-row:nth-child(n+4) { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a class="mark" href="#top"><b>Subhash</b><span>Simple software for small businesses</span></a>
+  <nav aria-label="Page">
+    <a href="#tools">The tools</a>
+    <a href="#own">Your spreadsheet</a>
+    <a href="#how">How I work</a>
+    <a href="#about">About</a>
+    <a class="btn btn--sm" data-cta href="app/dashboard.html">Open the demo</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- 1. INTRODUCTION. Subhash first, the client's problem in the headline. -->
+  <section id="top" class="intro" data-sc-act="flow">
+    <div class="sc-wrap intro__grid">
+      <div>
+        <h1 class="sc-display">Your spreadsheet, made into a proper system.</h1>
+        <p class="intro__me"><b>I'm Subhash.</b> I build simple software for small businesses, from Pyle, near Bridgend, working remotely with clients across the UK. I trained as a civil engineer, so I've lived with the spreadsheets and paper checks I now replace. I know where they go wrong because I've had to work around them.</p>
+        <div class="intro__cta">
+          <a class="btn" data-cta href="app/dashboard.html">Open the demo</a>
+          <a class="btn btn--quiet" href="#story">See what it does</a>
+        </div>
+      </div>
+      <div class="intro__photo">
+        <div class="photo">
+          <img id="me" src="assets/subhash.jpg" width="800" height="1000" alt="Subhash, smiling, in a sage green shirt">
+          <div class="photo__ph" id="me-ph" hidden><b>S</b><span>Photo to come</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. A DAY LIKE THIS. Pinned. The visitor picks what went wrong; that spreadsheet rebuilds itself into the tool as they scroll. -->
+  <section id="story" class="story" data-sc-act="pin" data-sc-span="2.8">
+    <div data-sc-stage class="story__stage">
+      <div>
+        <h2 class="sc-display">It usually starts with a day like this.</h2>
+        <ul class="moments" id="moments" aria-label="What went wrong"></ul>
+      </div>
+      <div>
+        <div class="surface" id="surface">
+          <div class="sf-top">
+            <div class="sf-sheetbar" aria-hidden="true"><i></i><span id="sf-file"></span></div>
+            <div class="sf-appbar"><span class="sf-badge" data-ini>YC</span><span class="sf-co" data-co>Your Company</span><span class="sf-crumb" id="sf-tool"></span><span class="sf-flag" id="sf-flag"></span></div>
+          </div>
+          <div class="sf-body">
+            <div class="sf-lines" id="sf-lines" aria-hidden="true"></div>
+            <ul class="sf-rows" id="sf-rows"></ul>
+          </div>
+        </div>
+        <div class="story__caps">
+          <p data-sc-cue="0 0.3 0">How it lives today: one file, and one person who understands it.</p>
+          <p data-sc-cue="0.26 0.62">The rows and dates come straight across, so nobody types them in again.</p>
+          <p data-sc-cue="0.58 1 0.22 0.04" id="sf-say"></p>
+        </div>
+        <p class="story__go"><a class="link" id="sf-go" href="app/fleet.html"></a></p>
+        <button class="btn btn--quiet btn--sm flip" id="flip" type="button" aria-pressed="false">Show it as the spreadsheet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WHAT IT COSTS. Flow. -->
+  <section class="sc-section costs" data-sc-act="flow">
+    <div class="sc-wrap">
+      <div data-sc-in>
+        <h2 class="sc-display sc-display--lg">You already know what it costs.</h2>
+        <p class="sc-lede soft costs__lede">A proper system keeps your columns and your rules, then adds what a spreadsheet can't: reminders, sign-off, phone forms, and a record of who changed what.</p>
+      </div>
+      <ul class="costs__list" data-sc-in data-sc-stagger="70">
+        <li><b>Only one person understands the file.</b><span>When they're off, nobody dares touch it.</span></li>
+        <li><b>Nobody is sure which copy is current.</b><span>So the same question goes round by email again.</span></li>
+        <li><b>A date passed and the sheet said nothing.</b><span>An MOT, a training certificate, a supplier's insurance.</span></li>
+        <li><b>The same details are typed into three places.</b><span>After a month they no longer match.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. THE TOOLS. Pan. -->
+  <section id="tools" class="tools" data-sc-act="pan" data-sc-span="4.4">
+    <div data-sc-stage>
+      <div class="rail" data-sc-pan="0.04">
+        <div class="rail__lead">
+          <h2 class="sc-display sc-display--md">Try the tools yourself.</h2>
+          <p class="sc-body">Each one opens and works, with made-up data and a short guide to what to try. You can switch between people to see a job from each side.</p>
+          <form class="setup" id="setup" autocomplete="off">
+            <label for="co">Put your company name on it</label>
+            <div class="setup__row">
+              <input id="co" type="text" maxlength="60" placeholder="Your Company" spellcheck="false">
+              <button class="btn" type="submit">Open the demo</button>
+            </div>
+            <div class="swatches" id="swatches" role="group" aria-label="Pick a colour"></div>
+            <p class="note">Your company name stays in this browser. It isn't sent or stored anywhere else.</p>
+          </form>
+        </div>
+        <a class="tool" href="app/fleet.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/fleet.png" width="1440" height="900" loading="lazy" alt="Vehicle checks: every vehicle with its due dates, daily checks and defects, beside the driver's phone app."></figure>
+          <h3>Vehicle checks</h3>
+          <p class="replaces">Replaces the paper check sheet and the MOT date in someone's diary.</p>
+          <ul><li>Daily checks done on the driver's phone</li><li>Defects reported, given to someone and closed</li><li>MOT, tax, service and insurance flagged before they run out</li></ul>
+          <span class="go link">Open Vehicle checks</span>
+        </a>
+        <a class="tool" href="app/training.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/training.png" width="1440" height="900" loading="lazy" alt="Training matrix: who holds which certificate, and when each one expires."></figure>
+          <h3>Training matrix</h3>
+          <p class="replaces">Replaces the training spreadsheet nobody trusts.</p>
+          <ul><li>Who holds what, and when it expires</li><li>What each role needs, and who is missing it</li><li>The certificate kept with every record</li></ul>
+          <span class="go link">Open Training matrix</span>
+        </a>
+        <a class="tool" href="app/documents.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/documents.png" width="1440" height="900" loading="lazy" alt="Document control: every document with its revisions, and who has to check or approve it."></figure>
+          <h3>Document control</h3>
+          <p class="replaces">Replaces "which version is current?" and approvals by email.</p>
+          <ul><li>Every document numbered, with its revisions</li><li>Checked, approved and issued in order</li><li>Each person sees what is waiting for them</li></ul>
+          <span class="go link">Open Document control</span>
+        </a>
+        <a class="tool" href="app/suppliers.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/suppliers.png" width="1440" height="900" loading="lazy" alt="Supplier approval: suppliers, their questionnaires, and insurance dates."></figure>
+          <h3>Supplier approval</h3>
+          <p class="replaces">Replaces the emailed questionnaire and chasing insurance certificates.</p>
+          <ul><li>Invite a supplier with one link</li><li>They fill in the questionnaire online</li><li>You approve them, and their insurance dates are watched</li></ul>
+          <span class="go link">Open Supplier approval</span>
+        </a>
+        <a class="tool" href="app/dashboard.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/dashboard.png" width="1440" height="900" loading="lazy" alt="Dashboard: the most urgent items from every tool, and who each one is waiting on."></figure>
+          <h3>Dashboard</h3>
+          <p class="replaces">One page that says what needs doing today.</p>
+          <ul><li>Due, overdue and waiting, from every tool</li><li>One click takes you to the item</li><li>Only shows the tools you use</li></ul>
+          <span class="go link">Open the Dashboard</span>
+        </a>
+        <a class="tool" href="app/admin.html">
+          <figure data-sc-tilt="5"><img src="assets/shots/admin.png" width="1440" height="900" loading="lazy" alt="Settings: company name and colour, tools switched on and off, people and what each can do."></figure>
+          <h3>Settings</h3>
+          <p class="replaces">Lets you fit the system to your business without calling me.</p>
+          <ul><li>Your company name and colour</li><li>Tools switched on and off</li><li>People, teams and what each person can do</li></ul>
+          <span class="go link">Open Settings</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. WHEN PEOPLE GET IN TOUCH. Flow. -->
+  <section id="when" class="sc-section" data-sc-act="flow">
+    <div class="sc-wrap">
+      <div data-sc-in>
+        <h2 class="sc-display sc-display--lg">When people get in touch</h2>
+        <p class="when__lede">Usually after an audit, a failed MOT, a lost tender, or the one person who understood the spreadsheet handing in their notice.</p>
+      </div>
+      <div class="kinds" id="kinds">
+        <h2 class="sc-display sc-display--md" data-sc-in>Most jobs are one of three things.</h2>
+        <dl data-sc-in data-sc-stagger="70">
+          <div><dt>A form on a phone that fills a register</dt><dd>Someone out on a job taps through a checklist, adds a photo and signs. The office sees it straight away, in a list they can search and filter.<small>Inspections, vehicle checks, site sign-ins, toolbox talks, handovers.</small></dd></div>
+          <div><dt>A spreadsheet turned into a dashboard</dt><dd>The same information you track now, except it tells you what is due, overdue or missing, and it produces the report as a PDF without anyone formatting it.<small>Training records, equipment and calibration, certificates, renewals.</small></dd></div>
+          <div><dt>A step that happens without anyone typing</dt><dd>When something is submitted or approved, the next thing happens: the reminder goes out, the calendar entry appears, the right person is told.<small>Expiry reminders, approval chains, weekly summaries by email.</small></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. YOUR OWN SPREADSHEET. Read in the browser; nothing is uploaded. -->
+  <section id="own" class="sc-section own" data-sc-act="flow">
+    <div class="sc-wrap">
+      <div class="own__head" data-sc-in>
+        <h2 class="sc-display sc-display--lg">Try it with your own spreadsheet.</h2>
+        <p class="sc-body">Drop in a CSV or Excel file and see it as a register you can search and sort. Dates that have passed, or fall in the next 30 days, are picked out. The file stays on your computer: nothing is uploaded.</p>
+      </div>
+      <div class="drop" id="drop">
+        <label class="btn" for="file">Choose a file</label>
+        <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+        <button class="btn btn--quiet" type="button" id="sample">Use a sample</button>
+        <p>Or drag a file here. The first sheet is shown, up to 500 rows and 12 columns.</p>
+      </div>
+      <p class="reg__msg" id="reg-msg" role="status" hidden></p>
+      <div class="reg" id="reg" hidden>
+        <div class="reg__bar">
+          <p class="reg__sum" id="reg-sum"></p>
+          <input class="reg__search" id="reg-search" type="search" placeholder="Search" aria-label="Search the register">
+        </div>
+        <div class="reg__wrap"><table id="reg-table"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. HOW I WORK. Flow, with a line the scroll draws. -->
+  <section id="how" class="sc-section how" data-sc-act="flow">
+    <div class="sc-wrap how__grid">
+      <div class="how__head" data-sc-in>
+        <h2 class="sc-display sc-display--lg">A fixed price, agreed before I start.</h2>
+        <p class="sc-lede soft">Small, clearly scoped jobs, explained in plain English.</p>
+        <!-- PRICE-TODO: a real "from" price here (for example "Most jobs cost between X and Y"). -->
+      </div>
+      <ol class="steps" id="steps">
+        <li><h3>You show me how it works today</h3><p>The spreadsheet, the form, the email chain. I ask what goes wrong with it.</p></li>
+        <li><h3>I send a short plan and a price</h3><p>What you'll get, what it won't do, and the fixed price.</p></li>
+        <li><h3>You try it with real people</h3><p>You use an early version on a real job and tell me what to change before it's finished.</p></li>
+        <li><h3>You own it</h3><p>It runs in your own accounts, with a written handover, so you're never tied to me.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 8. ABOUT. Approved wording. -->
+  <section id="about" class="sc-section about" data-sc-act="flow">
+    <div class="sc-wrap about__grid">
+      <div class="sc-stack" data-sc-in data-sc-stagger="70">
+        <h2 class="sc-display sc-display--lg">Software that's already in daily use</h2>
+        <p>Five tools I built now run an engineering contractor's day-to-day work, and more than ten people use them every working day. That's the strongest thing I can show you: tools real people rely on, not a portfolio of mock-ups.</p>
+        <p class="soft">My background is civil engineering, which means I've been the person filling in the check sheet and chasing the certificate. I build with modern AI-assisted development, so a small job stays small and affordable. I work alone, so you deal with me from the first call to the handover, and everything runs in your own accounts, so you're never tied to me.</p>
+      </div>
+      <ul class="facts" data-sc-in data-sc-stagger="70">
+        <li><b>5</b><span>tools built and running in daily use</span></li>
+        <li><b>10+</b><span>people using them every working day</span></li>
+        <li><b>1</b><span>system, so nothing is kept in two places</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9. CLOSE. Short pin, last thing on the page, footer inside the stage. -->
+  <section id="contact" class="close" data-sc-act="pin" data-sc-span="1.15">
+    <div data-sc-stage class="close__stage" data-sc-spotlight>
+      <div class="close__in">
+        <h2 class="sc-display">Have a spreadsheet that has outgrown itself?</h2>
+        <p>Send it to me, or just describe it. I'll tell you honestly whether a small tool would fix it, and what it would cost.</p>
+        <div class="close__cta">
+          <a class="btn" id="mail" href="#" hidden>Get a free spreadsheet review</a>
+          <a class="btn" id="demo-cta" href="app/dashboard.html" data-sc-magnet="0.24">Open the demo</a>
+        </div>
+        <p class="close__reach" id="reach" hidden></p>
+      </div>
+      <footer class="foot">
+        <span>© <span id="yr">2026</span> Subhash</span>
+        <span>The demo uses made-up data. Nothing you enter is saved to a server.</span>
+      </footer>
+    </div>
+  </section>
+
+</main>
+
+<script src="assets/suite.js"></script>
+<script src="assets/scrollcraft.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var S = window.Suite;
+  var CONTACT_EMAIL = S.contactEmail;
+  var KEY = 'dsr-demo:', DEFAULT = S.defaultCompany;
+  var ACCENTS = S.accents;
+  function read(k, f) { try { var v = localStorage.getItem(KEY + k); return v === null ? f : JSON.parse(v); } catch (e) { return f; } }
+  function write(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) { /* private mode */ } }
+  function clean(s) { return String(s || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60); }
+  function initials(name) {
+    var w = name.replace(/[^A-Za-z0-9 ]/g, ' ').split(' ').filter(function (x) { return x && !/^(ltd|limited|plc|llp|and|the|of|co)$/i.test(x); });
+    if (!w.length) return 'CO';
+    if (w.length === 1) return w[0].slice(0, 3).toUpperCase();
+    return w.slice(0, 3).map(function (x) { return x.charAt(0); }).join('').toUpperCase();
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  function ease(x) { return x * x * (3 - 2 * x); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  var TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
+  function inDays(n) { var d = new Date(TODAY); d.setDate(d.getDate() + n); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+
+  /* ---------- photo: placeholder until assets/subhash.jpg exists ---------- */
+  var me = document.getElementById('me'), mePh = document.getElementById('me-ph');
+  function noPhoto() { me.hidden = true; mePh.hidden = false; }
+  me.addEventListener('error', noPhoto);
+  if (me.complete && !me.naturalWidth) noPhoto();
+
+  /* ---------- the visitor's own name and colour, live across the page ---------- */
+  var co = document.getElementById('co'), sw = document.getElementById('swatches');
+  var accent = read('accent', 'teal');
+  if (!ACCENTS.some(function (a) { return a.id === accent; })) accent = 'teal';
+  co.value = clean(read('company', ''));
+  function name() { return clean(co.value) || DEFAULT; }
+
+  function brand() {
+    var hex = ACCENTS.filter(function (a) { return a.id === accent; })[0].hex;
+    all('[data-co]').forEach(function (n) { n.textContent = name(); });
+    all('[data-ini]').forEach(function (n) { n.textContent = initials(name()); });
+    document.getElementById('sf-file').textContent = name() + ' ' + moment.file;
+    document.documentElement.style.setProperty('--sc-accent', hex);
+  }
+  function swatches() {
+    sw.innerHTML = ACCENTS.map(function (a) {
+      return '<button type="button" class="swatch" data-a="' + a.id + '" style="background:' + a.hex + '" aria-pressed="' + (a.id === accent) + '" aria-label="' + a.name + '" title="' + a.name + '"></button>';
+    }).join('');
+  }
+  sw.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-a]');
+    if (!b) return;
+    accent = b.getAttribute('data-a'); write('accent', accent); swatches(); brand();
+  });
+  co.addEventListener('input', function () { write('company', clean(co.value)); brand(); measure(); });
+  document.getElementById('setup').addEventListener('submit', function (e) {
+    e.preventDefault();
+    write('company', clean(co.value));
+    write('accent', accent);
+    window.location.href = 'app/dashboard.html';
+  });
+
+  /* ---------- "It usually starts with a day like this." ----------
+     Each moment is one messy spreadsheet. Row values: [first, second, third, date (days from today), status, status text].
+     Columns marked sm are hidden on a phone. */
+  var MOMENTS = [
+    { tab: 'A van failed its MOT, and nobody saw it coming.', tool: 'Vehicle checks', href: 'app/fleet.html',
+      file: 'vans FINAL v3 (2).xlsx', flag: '2 must not be driven', junk: 'ask Rob??',
+      say: 'Now it shows which vans must not be driven, and who has to act.',
+      cols: [['Reg', 'plate'], ['Vehicle', 'text', 'sm'], ['Driver', 'text'], ['MOT due', 'date', 'sm'], ['Notes', 'st']],
+      rows: [['CA70 WIN', 'Transit tipper', 'Pool vehicle', 65, 'bad', 'Off the road'],
+             ['CF19 KIT', 'Sprinter', 'Pool vehicle', 179, 'bad', 'Service overdue'],
+             ['CA21 BIK', 'Vivaro', 'Jade Holloway', 12, 'warn', 'MOT in 12 days'],
+             ['CF72 HIL', 'Transit Custom', 'Callum Byrne', 140, 'warn', 'Minor defect'],
+             ['CF23 TIR', 'Hilux', 'Owen Pritchard', 202, 'ok', 'All clear']] },
+    { tab: 'A tender asked for proof that everyone is trained.', tool: 'Training matrix', href: 'app/training.html',
+      file: 'training matrix 2024 NEW.xlsx', flag: '2 not cleared for work', junk: 'check w/ Hannah',
+      say: 'Now it shows who is not cleared for work today, and whose certificate runs out next.',
+      cols: [['Name', 'strong'], ['Role', 'text', 'sm'], ['Course', 'text'], ['Expires', 'date', 'sm'], ['Notes', 'st']],
+      rows: [['Callum Byrne', 'Site Supervisor', 'SMSTS', -15, 'bad', 'Expired'],
+             ['Jade Holloway', 'Site Operative', 'First aid at work', -3, 'bad', 'Expired'],
+             ['Owen Pritchard', 'Site Operative', 'CSCS card', 12, 'warn', 'Ends in 12 days'],
+             ['Tom Ashdown', 'Design Engineer', 'Working at height', 24, 'warn', 'Ends in 24 days'],
+             ['Aisha Karim', 'Health and Safety', 'NEBOSH General', 410, 'ok', 'In date']] },
+    { tab: 'Someone worked from an old version of a document.', tool: 'Document control', href: 'app/documents.html',
+      file: 'document register - USE THIS ONE.xlsx', flag: '1 old version in use', junk: 'which one??',
+      say: 'Now everyone sees the one current version, and who still has to approve it.',
+      cols: [['Doc no', 'code'], ['Title', 'text', 'sm'], ['Rev', 'text'], ['Issued', 'date', 'sm'], ['Notes', 'st']],
+      rows: [['DC-104', 'Groundworks method statement', 'Rev B', -60, 'bad', 'Old version in use'],
+             ['DC-121', 'Working at height plan', 'Rev A', -3, 'warn', 'Waiting for approval'],
+             ['DC-130', 'Quality plan', 'Rev C', -21, 'warn', 'Comments to answer'],
+             ['DC-118', 'Site induction', 'Rev D', -8, 'ok', 'Current'],
+             ['DC-133', 'Lifting plan', 'Rev B', -2, 'ok', 'Current']] },
+    { tab: 'We kept ordering from a supplier whose insurance had run out.', tool: 'Supplier approval', href: 'app/suppliers.html',
+      file: 'approved suppliers (old).xlsx', flag: '1 supplier on hold', junk: 'chase',
+      say: 'Now orders stop to any supplier whose insurance has run out.',
+      cols: [['Supplier', 'strong'], ['Supplies', 'text', 'sm'], ['Questionnaire', 'text', 'sm'], ['Insured until', 'date'], ['Notes', 'st']],
+      rows: [['Tolland Plant Hire', 'Plant hire', 'Approved', -6, 'bad', 'On hold'],
+             ['Wexcombe Haulage', 'Haulage', 'Approved', 9, 'warn', 'Insurance ends soon'],
+             ['Pennard Safetywear', 'PPE and workwear', 'Waiting for review', 220, 'warn', 'Needs review'],
+             ['Brackenfold Aggregates', 'Materials', 'Approved', 150, 'ok', 'Approved'],
+             ['Datumline Calibration', 'Calibration', 'Approved', 300, 'ok', 'Approved']] },
+    { tab: 'Something slipped, and it was in a spreadsheet the whole time.', tool: 'Dashboard', href: 'app/dashboard.html',
+      file: 'MASTER tracker (do not edit).xlsx', flag: '2 overdue today', junk: 'see other tab',
+      say: 'Now one page shows what is overdue across all of it, and whose turn it is.',
+      cols: [['Item', 'strong'], ['Area', 'text', 'sm'], ['Owner', 'text'], ['Due', 'date', 'sm'], ['Notes', 'st']],
+      rows: [['Tipper brake defect', 'Vehicles', 'Rob Fenwick', -2, 'bad', 'Overdue'],
+             ['First aid certificate', 'Training', 'Jade Holloway', -3, 'bad', 'Expired'],
+             ['Quality plan comments', 'Documents', 'Elena Kowalczyk', 2, 'warn', 'Due in 2 days'],
+             ['Haulier insurance', 'Suppliers', 'Sofia Marchetti', 9, 'warn', 'Due in 9 days'],
+             ['Weekly toolbox talk', 'Site', 'Callum Byrne', 5, 'ok', 'On track']] }
+  ];
+  var moment = MOMENTS[0];
+
+  var surface = document.getElementById('surface');
+  var bodyEl = surface.querySelector('.sf-body');
+  var linesEl = document.getElementById('sf-lines'), rowsEl = document.getElementById('sf-rows');
+  var rows = [];
+
+  function cellHtml(col, v, i) {
+    var sm = col[2] === 'sm' ? ' k-sm' : '', k = ' data-k="' + i + '"';
+    if (col[1] === 'plate') return '<span class="sf-v sf-chip sf-chip--plate' + sm + '"' + k + '>' + esc(v) + '</span>';
+    if (col[1] === 'code') return '<span class="sf-v sf-chip' + sm + '"' + k + '>' + esc(v) + '</span>';
+    if (col[1] === 'date') return '<span class="sf-v sf-date' + sm + '"' + k + '>' + esc(inDays(v)) + '</span>';
+    if (col[1] === 'st') return '<span class="sf-v sf-st' + sm + '"' + k + '>' + esc(v) + '</span>';
+    return '<span class="sf-v sf-t' + (col[1] === 'strong' ? ' sf-t--strong' : '') + sm + '"' + k + '>' + esc(v) + '</span>';
+  }
+  function render() {
+    var m = moment, last = m.cols.length - 1;
+    var dateCol = m.cols.map(function (c) { return c[1]; }).indexOf('date');
+    var g = function (c, r, cls, text) {
+      var col = m.cols[c];
+      return '<span class="sf-cell' + (cls ? ' sf-cell--' + cls : '') + (col[2] === 'sm' ? ' k-sm' : '') + '" data-k="' + c + '" data-r="' + r + '">' + esc(text || '') + '</span>';
+    };
+    var h = m.cols.map(function (col, c) { return g(c, 0, 'h', col[0]); }).join('');
+    h += g(last, 1, 'red') + g(last, 2, 'yel') + (dateCol >= 0 ? g(dateCol, 3, 'yel') : '') + g(2, 7, '', m.junk) + g(last, 7, 'err', '#REF!');
+    for (var n = 1; n <= 12; n++) h += '<span class="sf-cell sf-cell--n" style="top:calc(' + n + ' * var(--rh))">' + n + '</span>';
+    linesEl.innerHTML = h;
+    rowsEl.innerHTML = m.rows.map(function (r) {
+      var vals = [r[0], r[1], r[2], r[3], r[5]];
+      return '<li class="sf-row" data-st="' + r[4] + '">' + m.cols.map(function (col, i) { return cellHtml(col, vals[i], i); }).join('') + '</li>';
+    }).join('');
+    rows = all('.sf-row', rowsEl);
+    document.getElementById('sf-tool').textContent = m.tool;
+    document.getElementById('sf-flag').textContent = m.flag;
+    document.getElementById('sf-say').textContent = m.say;
+    var go = document.getElementById('sf-go');
+    go.href = m.href; go.textContent = 'See it working in ' + (m.tool === 'Dashboard' ? 'the Dashboard' : m.tool);
+    brand();
+  }
+
+  var momentsEl = document.getElementById('moments');
+  momentsEl.innerHTML = MOMENTS.map(function (m, i) {
+    return '<li><button type="button" data-i="' + i + '" aria-pressed="' + (i === 0) + '">' + esc(m.tab) + '</button></li>';
+  }).join('');
+  momentsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b) return;
+    moment = MOMENTS[+b.getAttribute('data-i')];
+    all('button', momentsEl).forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    render(); measure();
+  });
+
+  /* ---------- the signature move: the spreadsheet rebuilds itself into the tool ----------
+     The rows are the finished tool. For every value, work out where it would sit in a spreadsheet grid,
+     and let the scroll slide it between the two places. Transform and opacity only. */
+  var story = document.getElementById('story');
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var asSheet = false;
+  if (still) document.documentElement.classList.add('is-still');
+
+  function shown(n) { return n.offsetParent !== null; }
+  function measure() {
+    rows.forEach(function (r) { r.style.setProperty('--m', 1); });
+    var b = bodyEl.getBoundingClientRect();
+    var kinds = moment.cols.map(function (c, i) { return i; }).filter(function (i) { return moment.cols[i][2] !== 'sm' || window.innerWidth > 900; });
+    var gut = 26, rh = b.width < 420 ? 27 : 30, cw = (b.width - gut) / kinds.length;
+    bodyEl.style.setProperty('--cw', cw + 'px');
+    bodyEl.style.setProperty('--rh', rh + 'px');
+    bodyEl.style.setProperty('--gut', gut + 'px');
+    var r = 0;
+    rows.forEach(function (row) {
+      if (!shown(row)) return;
+      r += 1;
+      all('.sf-v', row).filter(shown).forEach(function (v) {
+        var q = v.getBoundingClientRect(), c = kinds.indexOf(+v.getAttribute('data-k'));
+        var padL = parseFloat(getComputedStyle(v).paddingLeft) || 0;
+        v.style.setProperty('--dx', (gut + c * cw + 7 - padL - (q.left - b.left)) + 'px');
+        v.style.setProperty('--dy', (r * rh + (rh - q.height) / 2 - (q.top - b.top)) + 'px');
+      });
+    });
+    all('.sf-cell:not(.sf-cell--n)', linesEl).forEach(function (cell) {
+      var c = kinds.indexOf(+cell.getAttribute('data-k'));
+      cell.style.display = c < 0 ? 'none' : '';
+      cell.style.setProperty('--c', c);
+      cell.style.setProperty('--r', cell.getAttribute('data-r'));
+    });
+    paint();
+  }
+
+  var steps = document.getElementById('steps');
+  function paint() {
+    var sr0 = story.getBoundingClientRect();
+    var travel = Math.max(sr0.height - window.innerHeight, 1);
+    var p = still ? (asSheet ? 0 : 1) : clamp(-sr0.top / travel);
+    rows.forEach(function (row, i) {
+      row.style.setProperty('--m', ease(clamp((p - 0.06 - i * 0.06) / 0.34)).toFixed(4));
+    });
+    surface.style.setProperty('--M', ease(clamp((p - 0.22) / 0.34)).toFixed(4));
+    var sr = steps.getBoundingClientRect();
+    steps.style.setProperty('--hp', clamp((window.innerHeight * 0.62 - sr.top) / Math.max(sr.height, 1)).toFixed(4));
+  }
+  var queued = false;
+  window.addEventListener('scroll', function () {
+    if (queued) return; queued = true;
+    requestAnimationFrame(function () { queued = false; paint(); });
+  }, { passive: true });
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(measure, 120); });
+
+  var flip = document.getElementById('flip');
+  flip.addEventListener('click', function () {
+    asSheet = !asSheet;
+    flip.setAttribute('aria-pressed', String(asSheet));
+    flip.textContent = asSheet ? 'Show it as the tool' : 'Show it as the spreadsheet';
+    paint();
+  });
+
+  /* ---------- try it with your own spreadsheet (read in the browser, never uploaded) ---------- */
+  var MAX_ROWS = 500, MAX_COLS = 12, MAX_BYTES = 10 * 1024 * 1024;
+  var reg = document.getElementById('reg'), regMsg = document.getElementById('reg-msg');
+  var regTable = document.getElementById('reg-table'), regSum = document.getElementById('reg-sum'), regSearch = document.getElementById('reg-search');
+  var data = null, sortBy = -1, sortDir = 1;
+
+  function say(text) { regMsg.textContent = text; regMsg.hidden = !text; }
+
+  var xlsxReady = null;
+  function loadXlsx() {
+    if (window.XLSX) return Promise.resolve();
+    if (xlsxReady) return xlsxReady;
+    xlsxReady = new Promise(function (ok, fail) {
+      var s = document.createElement('script');
+      s.src = 'assets/xlsx.full.min.js';
+      s.onload = ok; s.onerror = function () { xlsxReady = null; fail(new Error('load')); };
+      document.head.appendChild(s);
+    });
+    return xlsxReady;
+  }
+
+  /* A cell as a date, if it is one: a real date from Excel, or text written as dd/mm/yyyy or yyyy-mm-dd. */
+  function asDate(v) {
+    if (v instanceof Date && !isNaN(v)) { var d = new Date(v); d.setHours(0, 0, 0, 0); return d; }
+    if (typeof v !== 'string') return null;
+    var m = v.trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2}|\d{4})$/), y;
+    if (m) { y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; d = new Date(y, +m[2] - 1, +m[1]); return d.getMonth() === +m[2] - 1 ? d : null; }
+    m = v.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) { d = new Date(+m[1], +m[2] - 1, +m[3]); return isNaN(d) ? null : d; }
+    return null;
+  }
+  function show(v) {
+    if (v instanceof Date) return asDate(v) ? inDaysFrom(asDate(v)) : '';
+    return String(v == null ? '' : v);
+  }
+  function inDaysFrom(d) { return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+
+  function build(grid) {
+    var start = grid.findIndex(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+    if (start < 0) { say("That file has no rows I can read."); reg.hidden = true; return; }
+    var head = grid[start].slice(0, MAX_COLS).map(function (h, i) { return String(h).trim() || 'Column ' + (i + 1); });
+    var body = grid.slice(start + 1).filter(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+    var cut = body.length > MAX_ROWS;
+    body = body.slice(0, MAX_ROWS).map(function (r) { var x = r.slice(0, head.length); while (x.length < head.length) x.push(''); return x; });
+    if (!body.length) { say("I found headings but no rows under them."); reg.hidden = true; return; }
+    var isDateCol = head.map(function (h, i) {
+      var filled = body.filter(function (r) { return String(r[i]).trim() !== ''; });
+      var dates = filled.filter(function (r) { return asDate(r[i]); });
+      return filled.length > 0 && dates.length / filled.length >= 0.6;
+    });
+    /* Only "due" dates are judged: a "Last inspected" date is always in the past and means nothing is wrong.
+       Prefer columns named like due, next, expiry or renewal; with none, use the last date column. */
+    var dueNamed = head.map(function (h, i) { return isDateCol[i] && /due|next|expir|renew|until|valid|end|deadline/i.test(h); });
+    var lastDate = isDateCol.lastIndexOf(true);
+    var dateCols = dueNamed.some(Boolean) ? dueNamed : head.map(function (h, i) { return i === lastDate; });
+    var bad = 0, warn = 0;
+    var out = body.map(function (r) {
+      var soonest = null;
+      dateCols.forEach(function (isDate, i) {
+        var d = isDate ? asDate(r[i]) : null;
+        if (d && (!soonest || d < soonest)) soonest = d;
+      });
+      var st = 'none', label = 'No dates';
+      if (soonest) {
+        var days = Math.round((soonest - TODAY) / 86400000);
+        if (days < 0) { st = 'bad'; label = 'Overdue'; bad++; }
+        else if (days <= 30) { st = 'warn'; label = days === 0 ? 'Due today' : 'Due in ' + days + (days === 1 ? ' day' : ' days'); warn++; }
+        else { st = 'ok'; label = 'In date'; }
+      }
+      return { cells: r, st: st, label: label, soon: soonest ? soonest.getTime() : Infinity };
+    });
+    data = { head: head, rows: out, dateCols: dateCols, hasDates: dateCols.some(Boolean) };
+    sortBy = -1; sortDir = 1; regSearch.value = '';
+    var sum = '<b>' + out.length + '</b> rows' + (cut ? ' (first ' + MAX_ROWS + ' shown)' : '') + '. ';
+    sum += data.hasDates ? '<b>' + bad + '</b> overdue, <b>' + warn + '</b> due in the next 30 days.' : 'No date columns found, so nothing is flagged.';
+    regSum.innerHTML = sum;
+    say(''); reg.hidden = false; table();
+  }
+
+  function table() {
+    var q = regSearch.value.trim().toLowerCase();
+    var list = data.rows.filter(function (r) { return !q || r.cells.some(function (c) { return show(c).toLowerCase().indexOf(q) >= 0; }); });
+    if (sortBy >= 0) {
+      list = list.slice().sort(function (a, b) {
+        var x, y;
+        if (sortBy === data.head.length) { x = a.soon; y = b.soon; }
+        else if (data.dateCols[sortBy]) { x = (asDate(a.cells[sortBy]) || { getTime: function () { return Infinity; } }).getTime(); y = (asDate(b.cells[sortBy]) || { getTime: function () { return Infinity; } }).getTime(); }
+        else { x = show(a.cells[sortBy]).toLowerCase(); y = show(b.cells[sortBy]).toLowerCase(); var nx = parseFloat(x), ny = parseFloat(y); if (!isNaN(nx) && !isNaN(ny)) { x = nx; y = ny; } }
+        return x < y ? -sortDir : x > y ? sortDir : 0;
+      });
+    }
+    var heads = data.head.concat(data.hasDates ? ['Status'] : []);
+    var h = '<thead><tr>' + heads.map(function (t, i) {
+      return '<th scope="col"><button type="button" data-sort="' + i + '" data-dir="' + (sortBy === i ? (sortDir > 0 ? '▲' : '▼') : '') + '">' + esc(t) + '</button></th>';
+    }).join('') + '</tr></thead><tbody>';
+    h += list.map(function (r) {
+      return '<tr>' + r.cells.map(function (c, i) {
+        var cls = '';
+        if (data.dateCols[i]) { var d = asDate(c); if (d) { var days = (d - TODAY) / 86400000; cls = days < 0 ? ' class="is-bad"' : days <= 30 ? ' class="is-warn"' : ''; } }
+        var t = show(c);
+        return '<td' + cls + ' title="' + esc(t) + '">' + esc(t) + '</td>';
+      }).join('') + (data.hasDates ? '<td><span class="pill" data-st="' + r.st + '">' + esc(r.label) + '</span></td>' : '') + '</tr>';
+    }).join('');
+    if (!list.length) h += '<tr><td colspan="' + heads.length + '">Nothing matches that search.</td></tr>';
+    regTable.innerHTML = h + '</tbody>';
+  }
+  regTable.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-sort]');
+    if (!b) return;
+    var i = +b.getAttribute('data-sort');
+    if (sortBy === i) sortDir = -sortDir; else { sortBy = i; sortDir = 1; }
+    table();
+  });
+  regSearch.addEventListener('input', function () { if (data) table(); });
+
+  function readFile(f) {
+    if (!f) return;
+    if (f.size > MAX_BYTES) { say('That file is over 10 MB, which is too big for a quick preview.'); return; }
+    var isCsv = /\.csv$/i.test(f.name) || f.type === 'text/csv';
+    if (!isCsv && !/\.(xlsx|xls)$/i.test(f.name)) { say("I can only read CSV and Excel files (.csv, .xlsx, .xls)."); return; }
+    say('Reading ' + f.name + '…');
+    loadXlsx().then(function () {
+      return isCsv ? f.text().then(function (t) { return XLSX.read(t, { type: 'string', raw: true }); })
+                   : f.arrayBuffer().then(function (b) { return XLSX.read(b, { type: 'array', cellDates: true }); });
+    }).then(function (wb) {
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws) { say("That file has no sheets I can read."); return; }
+      build(XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' }));
+    }).catch(function () {
+      say("I couldn't read that file. If it's a spreadsheet, try saving it as .xlsx or .csv and choose it again.");
+    });
+  }
+  document.getElementById('file').addEventListener('change', function (e) { readFile(e.target.files[0]); e.target.value = ''; });
+  var drop = document.getElementById('drop');
+  ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('is-over'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function () { drop.classList.remove('is-over'); }); });
+  drop.addEventListener('drop', function (e) { e.preventDefault(); readFile(e.dataTransfer.files[0]); });
+  document.getElementById('sample').addEventListener('click', function () {
+    build([
+      ['Asset', 'Description', 'Location', 'Last inspected', 'Next inspection', 'Responsible'],
+      ['EQ-001', 'Ladder, 3 section', 'Van CF72 HIL', inDays(-170), inDays(-5), 'Callum Byrne'],
+      ['EQ-002', 'Fire extinguisher, CO2', 'Office', inDays(-340), inDays(25), 'Hannah Whitlock'],
+      ['EQ-003', 'Harness and lanyard', 'Store', inDays(-160), inDays(20), 'Owen Pritchard'],
+      ['EQ-004', 'Laser level', 'Store', inDays(-30), inDays(335), 'Tom Ashdown'],
+      ['EQ-005', 'First aid kit', 'Van CA21 BIK', inDays(-200), inDays(-20), 'Jade Holloway'],
+      ['EQ-006', 'Portable generator', 'Yard', inDays(-90), inDays(90), 'Rob Fenwick'],
+      ['EQ-007', 'Gas detector', 'Store', inDays(-175), inDays(8), 'Aisha Karim'],
+      ['EQ-008', 'Breaker, 110V', 'Yard', inDays(-60), inDays(120), 'Rob Fenwick']
+    ]);
+  });
+
+  /* ---------- contact ---------- */
+  if (CONTACT_EMAIL) {
+    var mailHref = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Free spreadsheet review') +
+      '&body=' + encodeURIComponent('What the spreadsheet or form is for:\n\nHow many people use it:\n\nWhat goes wrong with it:\n\n(You can attach the spreadsheet to this email.)');
+    var mail = document.getElementById('mail');
+    mail.href = mailHref; mail.hidden = false;
+    document.getElementById('demo-cta').classList.add('btn--quiet');
+    all('[data-cta]').forEach(function (a) { a.href = mailHref; a.textContent = 'Get a free spreadsheet review'; });
+  }
+  var PHONE = S.contactPhone, reach = document.getElementById('reach'), bits = [];
+  if (CONTACT_EMAIL) bits.push('<span>Email <a href="mailto:' + esc(CONTACT_EMAIL) + '">' + esc(CONTACT_EMAIL) + '</a></span>');
+  if (PHONE) bits.push('<span>Call or text <a href="tel:' + esc(PHONE.replace(/\s+/g, '').replace(/^0/, '+44')) + '">' + esc(PHONE) + '</a></span>');
+  if (bits.length) { reach.innerHTML = bits.join(''); reach.hidden = false; }
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  swatches(); render();
+  ScrollCraft.mount(document.body);
+  measure();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  window.addEventListener('load', measure);
+})();
+</script>
+</body>
+</html>

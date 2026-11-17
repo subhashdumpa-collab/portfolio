@@ -1,0 +1,186 @@
+/* Demo suite: shared shell styles.
+   Everything here is prefixed "suite-" so it cannot clash with a module's own CSS.
+   A module lays itself out inside the space left by the menu and the top bar using
+   var(--suite-rail-w) and var(--suite-bar-h). */
+
+:root {
+  --suite-rail-w: 84px;
+  --suite-bar-h: 48px;
+  --suite-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* neutral surfaces, warm sage greys; a module may use these or its own */
+  --suite-page: #F3F5F2;
+  --suite-surface: #FFFFFF;
+  --suite-sunk: #EAEEEA;
+  --suite-line: #DDE3DE;
+  --suite-line-2: #C5CEC8;
+  --suite-ink: #13201D;
+  --suite-body: #37443F;
+  --suite-label: #5E6B66;
+  --suite-rail: #0F1F1C;
+  --suite-rail-text: #A9BDB6;
+  --suite-rail-hover: rgb(255 255 255 / .07);
+  --suite-rail-on: rgb(255 255 255 / .11);
+
+  /* set by suite.js from the visitor's colour choice (teal by default) */
+  --suite-accent: #0F766E;
+  --suite-accent-strong: #0C635C;
+  --suite-accent-ink: #0D6861;
+  --suite-accent-tint: #E7F3F1;
+  --suite-accent-line: #A9D3CD;
+  --suite-on-accent: #FFFFFF;
+}
+[data-theme="dark"] {
+  --suite-page: #0C1412;
+  --suite-surface: #131D1A;
+  --suite-sunk: #1A2622;
+  --suite-line: #24322E;
+  --suite-line-2: #36463F;
+  --suite-ink: #ECF3F0;
+  --suite-body: #C8D4CF;
+  --suite-label: #8FA29B;
+  --suite-rail: #08100E;
+  --suite-rail-text: #A9BDB6;
+}
+
+html.suite-on body {
+  padding-left: var(--suite-rail-w);
+  padding-top: var(--suite-bar-h);
+}
+
+/* ---------- left menu ---------- */
+.suite-rail {
+  position: fixed; left: 0; top: 0; bottom: 0; width: var(--suite-rail-w); z-index: 900;
+  background: var(--suite-rail); display: flex; flex-direction: column; align-items: center;
+  gap: 2px; padding: 8px 0 10px; font-family: var(--suite-font); overflow-y: auto;
+}
+.suite-badge {
+  width: 44px; height: 36px; flex: none; margin-bottom: 12px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--suite-accent); color: var(--suite-on-accent); font-weight: 700; font-size: 13px;
+  letter-spacing: .02em; text-decoration: none;
+}
+/* Every item is the same size: icon on top, label centred under it, room for two lines. */
+.suite-nav {
+  position: relative; flex: none; box-sizing: border-box; width: 72px; min-height: 60px; padding: 9px 4px 7px;
+  border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px;
+  color: var(--suite-rail-text); text-decoration: none; font-size: 11px; font-weight: 500; line-height: 1.2;
+  text-align: center; transition: background-color 120ms ease, color 120ms ease;
+}
+.suite-nav svg { display: block; flex: none; width: 20px; height: 20px; }
+.suite-nav-label { display: block; width: 100%; overflow-wrap: break-word; hyphens: manual; text-wrap: balance; }
+.suite-nav:hover { background: var(--suite-rail-hover); color: #fff; text-decoration: none; }
+.suite-nav.on { background: var(--suite-rail-on); color: #fff; }
+.suite-nav.on svg { color: color-mix(in srgb, var(--suite-accent) 45%, #ffffff); }
+.suite-nav.on::before {
+  content: ""; position: absolute; left: -6px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0;
+  background: color-mix(in srgb, var(--suite-accent) 70%, #ffffff);
+}
+.suite-nav:focus-visible, .suite-badge:focus-visible, .suite-btn:focus-visible {
+  outline: 2px solid var(--suite-accent-line); outline-offset: 2px;
+}
+.suite-maker { margin-top: auto; color: #7F948D; }
+
+/* ---------- top bar ---------- */
+.suite-bar {
+  position: fixed; left: var(--suite-rail-w); right: 0; top: 0; height: var(--suite-bar-h); z-index: 890;
+  display: flex; align-items: center; gap: 10px; padding: 0 16px;
+  background: var(--suite-surface); border-bottom: 1px solid var(--suite-line);
+  font: 13px/1.3 var(--suite-font); color: var(--suite-body);
+}
+.suite-where { display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: 0; }
+.suite-where b { color: var(--suite-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 32vw; }
+.suite-sep { color: var(--suite-line-2); }
+.suite-slot { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.suite-slot label { display: inline-flex; align-items: center; gap: 6px; color: var(--suite-label); white-space: nowrap; }
+.suite-slot select {
+  font: inherit; color: var(--suite-ink); background: var(--suite-surface);
+  border: 1px solid var(--suite-line-2); border-radius: 7px; padding: 4px 8px; max-width: 220px;
+}
+.suite-grow { flex: 1; }
+.suite-pill {
+  border: 1px solid var(--suite-line-2); border-radius: 20px; padding: 2px 10px; font-size: 12px;
+  color: var(--suite-label); white-space: nowrap;
+}
+.suite-btn {
+  font: inherit; font-weight: 500; color: var(--suite-ink); background: var(--suite-surface);
+  border: 1px solid var(--suite-line-2); border-radius: 7px; padding: 5px 10px; cursor: pointer; white-space: nowrap;
+}
+.suite-btn:hover { background: var(--suite-sunk); }
+#suite-try-btn { background: var(--suite-accent); border-color: var(--suite-accent); color: var(--suite-on-accent); }
+#suite-try-btn:hover { background: var(--suite-accent-strong); }
+.suite-want { text-decoration: none; border-color: var(--suite-accent-line); }
+.suite-want:hover { text-decoration: none; }
+.suite-built { color: var(--suite-label); text-decoration: none; white-space: nowrap; font-size: 12px; }
+.suite-built b { color: var(--suite-ink); }
+.suite-built:hover { text-decoration: underline; }
+
+/* ---------- "What to try" panel ---------- */
+.suite-try {
+  position: fixed; right: 0; top: var(--suite-bar-h); bottom: 0; width: 360px; max-width: 100vw; z-index: 880;
+  background: var(--suite-surface); border-left: 1px solid var(--suite-line);
+  box-shadow: -12px 0 32px rgba(15, 18, 24, .14); overflow-y: auto; padding: 16px 18px 28px;
+  font: 14px/1.5 var(--suite-font); color: var(--suite-body);
+}
+.suite-try[hidden] { display: none; }
+.suite-try-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.suite-try h2 { margin: 0; font: 600 16px var(--suite-font); color: var(--suite-ink); }
+.suite-try-intro { margin: 0 0 12px; color: var(--suite-label); }
+.suite-try section { border-top: 1px solid var(--suite-line); padding: 12px 0 4px; }
+.suite-try h3 { margin: 0 0 6px; font: 600 14px var(--suite-font); color: var(--suite-ink); display: flex; gap: 8px; align-items: center; }
+.suite-try h3 span {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--suite-accent-tint); color: var(--suite-accent-ink); font-size: 12px;
+}
+.suite-try ol { margin: 0 0 8px; padding-left: 30px; }
+.suite-try li { margin: 3px 0; }
+.suite-try-foot { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--suite-line); font-size: 12.5px; color: var(--suite-label); }
+
+/* ---------- phone frame, for showing a phone-sized screen on a desktop page ---------- */
+.suite-phone {
+  width: 390px; max-width: 100%; height: 760px; max-height: calc(100vh - var(--suite-bar-h) - 48px);
+  border: 10px solid #14171C; border-radius: 38px; overflow: hidden; background: var(--suite-surface);
+  box-shadow: 0 18px 44px rgba(15, 18, 24, .22); position: relative;
+}
+.suite-phone > iframe, .suite-phone > .suite-phone-screen { width: 100%; height: 100%; border: 0; overflow: auto; display: block; }
+
+/* ---------- back chip on phone-sized pages that have no menu ---------- */
+.suite-back {
+  position: fixed; left: 10px; bottom: 10px; z-index: 900; font: 500 12px var(--suite-font);
+  background: #0F1F1C; color: #fff; border-radius: 20px; padding: 6px 12px; text-decoration: none; opacity: .88;
+}
+
+/* ---------- medium screens: drop the extras before anything overlaps ---------- */
+.suite-where, .suite-slot { overflow: hidden; }
+.suite-where, .suite-slot, .suite-grow { flex-shrink: 1; }
+.suite-pill, .suite-btn, .suite-built { flex-shrink: 0; }
+@media (max-width: 1280px) { .suite-pill { display: none; } }
+@media (max-width: 1080px) { .suite-built { display: none; } }
+@media (max-width: 960px) { .suite-where span, .suite-sep { display: none; } }
+
+/* ---------- small screens: menu moves to the bottom ---------- */
+@media (max-width: 760px) {
+  :root { --suite-rail-w: 0px; }
+  html.suite-on body { padding-bottom: 60px; }
+  .suite-rail {
+    top: auto; right: 0; width: auto; height: 58px; flex-direction: row; justify-content: space-around;
+    padding: 4px 4px; overflow-x: auto; overflow-y: hidden;
+  }
+  .suite-badge, .suite-maker { display: none; }
+  .suite-nav { width: auto; min-width: 58px; max-width: 76px; min-height: 0; padding: 6px 4px 4px; gap: 3px; font-size: 10.5px; }
+  .suite-nav.on::before { left: 14px; right: 14px; top: -4px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
+  .suite-bar { left: 0; padding: 0 10px; gap: 6px; }
+  .suite-pill, .suite-built, .suite-sep, .suite-where span { display: none; }
+  .suite-btn { padding: 5px 8px; font-size: 12px; }
+  .suite-where b { max-width: 38vw; }
+  .suite-wide { display: none; }
+  .suite-bar.suite-slot-live .suite-where, .suite-bar.suite-slot-live .suite-grow { display: none; }
+  .suite-bar.suite-slot-live .suite-slot { flex: 1 1 0; }
+  .suite-bar.suite-slot-live .suite-slot label { flex: 1 1 0; min-width: 0; font-size: 0; gap: 0; }
+  .suite-bar.suite-slot-live .suite-slot select { font-size: 13px; width: 100%; max-width: none; min-width: 0; }
+  .suite-try { width: 100vw; bottom: 58px; }
+}
+
+@media print {
+  .suite-rail, .suite-bar, .suite-try, .suite-back { display: none !important; }
+  html.suite-on body { padding: 0 !important; }
+}
